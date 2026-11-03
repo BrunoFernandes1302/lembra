@@ -1,0 +1,366 @@
+{
+  "sem_lora": [
+    {
+      "id": "d01",
+      "tipo": "desatualizada",
+      "resposta": "Meu aluguel é 1.800 reais por mês, pago todo dia 5.",
+      "correta": false,
+      "fiel": true,
+      "justificativa": "O assistente respondeu com o valor desatualizado de 1.800 reais, ignorando a memória sobre o aumento para 2.000 reais em março de 2026.",
+      "segundos": 4.9
+    },
+    {
+      "id": "d02",
+      "tipo": "calculo_3_mais",
+      "resposta": "1.800 + 2.000 = 3.800 reais",
+      "correta": false,
+      "fiel": false,
+      "justificativa": "O assistente somou valores antigos e novos de aluguel incorretamente, chegando a um resultado errado (3.800) e omitindo o condomínio e a internet.",
+      "segundos": 2.9
+    },
+    {
+      "id": "d03",
+      "tipo": "confusao_parecidas",
+      "resposta": "[1] Dra. Renata",
+      "correta": true,
+      "fiel": true,
+      "justificativa": "O assistente respondeu corretamente trazendo a informação essencial presente nas memórias e foi totalmente fiel ao conteúdo entregue.",
+      "segundos": 1.9
+    },
+    {
+      "id": "d04",
+      "tipo": "confusao_parecidas",
+      "resposta": "03/2026",
+      "correta": false,
+      "fiel": false,
+      "justificativa": "O assistente respondeu com uma data incorreta e sem relação com a consulta, falhando em fornecer a informação que estava disponível nas memórias.",
+      "segundos": 1.9
+    },
+    {
+      "id": "d05",
+      "tipo": "negacao",
+      "resposta": "[1] dipirona",
+      "correta": true,
+      "fiel": true,
+      "justificativa": "O assistente respondeu corretamente com o remédio que o usuário não pode tomar (dipirona), conforme consta nas memórias, sendo totalmente fiel aos dados.",
+      "segundos": 1.6
+    },
+    {
+      "id": "d06",
+      "tipo": "mesmo_nome",
+      "resposta": "[1] Curitiba",
+      "correta": true,
+      "fiel": true,
+      "justificativa": "O assistente respondeu corretamente com base nas memórias que indicam que a irmã Ana mora em Curitiba.",
+      "segundos": 1.8
+    },
+    {
+      "id": "d07",
+      "tipo": "mesmo_nome",
+      "resposta": "Quarta-feira",
+      "correta": false,
+      "fiel": false,
+      "justificativa": "A resposta do assistente indica 'Quarta-feira', o que está incorreto de acordo com a memória que afirma que a gestora prefere relatórios às sextas, violando tanto a correção quanto a fidelidade.",
+      "segundos": 1.4
+    },
+    {
+      "id": "d08",
+      "tipo": "multi_hop",
+      "resposta": "21 de agosto",
+      "correta": true,
+      "fiel": true,
+      "justificativa": "A resposta forneceu a data correta do aniversário da dona do gato Thor (Carla), conforme consta nas memórias, sendo totalmente precisa e fiel.",
+      "segundos": 1.7
+    },
+    {
+      "id": "d09",
+      "tipo": "desatualizada",
+      "resposta": "[1] fluxo",
+      "correta": false,
+      "fiel": true,
+      "justificativa": "A resposta fornecida está incompleta e não traz a informação essencial completa da resposta esperada, embora seja fiel às memórias.",
+      "segundos": 1.6
+    },
+    {
+      "id": "d10",
+      "tipo": "confusao_parecidas",
+      "resposta": "Em outubro gastei 1.150 reais de mercado.",
+      "correta": true,
+      "fiel": true,
+      "justificativa": "O assistente respondeu corretamente com o valor exato gasto em mercado em outubro e todas as informações estão baseadas nas memórias.",
+      "segundos": 2.6
+    },
+    {
+      "id": "d11",
+      "tipo": "calculo_3_mais",
+      "resposta": "2.400 reais por ano e vence em julho.",
+      "correta": false,
+      "fiel": true,
+      "justificativa": "O assistente informou apenas o valor do seguro, omitindo o custo das parcelas do financiamento e o cálculo total anual.",
+      "segundos": 2.6
+    },
+    {
+      "id": "d12",
+      "tipo": "multi_hop",
+      "resposta": "O João vai com você para Floripa. Ele é dentista, mas não é seu dentista.",
+      "correta": true,
+      "fiel": true,
+      "justificativa": "O assistente respondeu corretamente com base nas memórias, informando quem vai para Floripa e a profissão, sem inventar dados.",
+      "segundos": 2.6
+    },
+    {
+      "id": "d13",
+      "tipo": "parafrase",
+      "resposta": "Levei a Mel ao veterinário em outubro: vacina V10 e consulta, 280 reais.",
+      "correta": true,
+      "fiel": true,
+      "justificativa": "A resposta do assistente trouxe a informação essencial correta sobre o gasto com a veterinária e é totalmente fiel às memórias entregues.",
+      "segundos": 3.3
+    },
+    {
+      "id": "d14",
+      "tipo": "calculo_3_mais",
+      "resposta": "120 + 290 = 410 reais",
+      "correta": true,
+      "fiel": true,
+      "justificativa": "O assistente respondeu corretamente com a soma dos valores da academia e do inglês, e todas as informações usadas estão presentes nas memórias.",
+      "segundos": 2.4
+    },
+    {
+      "id": "d15",
+      "tipo": "parafrase",
+      "resposta": "Tomo losartana 50 mg todo dia de manhã para pressão.",
+      "correta": true,
+      "fiel": true,
+      "justificativa": "O assistente respondeu corretamente trazendo a informação essencial presente nas memórias e sem inventar dados adicionais.",
+      "segundos": 2.4
+    },
+    {
+      "id": "d16",
+      "tipo": "multi_hop",
+      "resposta": "Quando você vai ao escritório, você tem aula à noite no mesmo dia. Então, você vai ao escritório na terça-feira e quinta-feira.",
+      "correta": true,
+      "fiel": true,
+      "justificativa": "O assistente identificou corretamente os dias com base nas memórias e não incluiu informações falsas.",
+      "segundos": 3.7
+    },
+    {
+      "id": "d17",
+      "tipo": "sem_resposta",
+      "resposta": "[1] sangue tipo A",
+      "correta": false,
+      "fiel": false,
+      "justificativa": "O assistente respondeu com uma informação sobre o tipo sanguíneo que não consta nas memórias, falhando tanto na fidelidade quanto na correção para um tipo de pergunta sem resposta.",
+      "segundos": 1.7
+    },
+    {
+      "id": "d18",
+      "tipo": "sem_resposta",
+      "resposta": "[3]",
+      "correta": false,
+      "fiel": false,
+      "justificativa": "O assistente forneceu uma resposta incorreta e sem sentido, em vez de informar que não possui a informação sobre a placa do carro.",
+      "segundos": 1.6
+    },
+    {
+      "id": "d19",
+      "tipo": "sem_resposta",
+      "resposta": "Reservai pousada em Floripa de 18 a 21 de dezembro de 2026, 650 reais, com o João.",
+      "correta": false,
+      "fiel": true,
+      "justificativa": "Como o tipo era sem resposta, o assistente deveria ter dito que não encontrou a informação sobre o valor pago pelo João, em vez de repetir dados da reserva.",
+      "segundos": 4.4
+    },
+    {
+      "id": "d20",
+      "tipo": "sem_resposta",
+      "resposta": "[1] Curitiba",
+      "correta": false,
+      "fiel": false,
+      "justificativa": "O assistente respondeu 'Curitiba', confundindo a gestora Ana Souza com a irmã Ana, falhando no teste de sem resposta e trazendo informação incorreta.",
+      "segundos": 1.7
+    }
+  ],
+  "com_lora": [
+    {
+      "id": "d01",
+      "tipo": "desatualizada",
+      "resposta": "Você paga 2.000 reais de aluguel hoje [2].",
+      "correta": true,
+      "fiel": true,
+      "justificativa": "A resposta do assistente trouxe exatamente a informação correta e presente nas memórias.",
+      "segundos": 2.9
+    },
+    {
+      "id": "d02",
+      "tipo": "calculo_3_mais",
+      "resposta": "A soma dos gastos com moradia, incluindo aluguel atual, condomínio e internet, é de 17.800 reais [1].",
+      "correta": false,
+      "fiel": false,
+      "justificativa": "O assistente errou a conta ao somar 2000, 450 e 120, resultando em um valor incorreto e inventado.",
+      "segundos": 4.3
+    },
+    {
+      "id": "d03",
+      "tipo": "confusao_parecidas",
+      "resposta": "A Dra. Renata fez seu tratamento de canal [1].",
+      "correta": true,
+      "fiel": true,
+      "justificativa": "O assistente respondeu corretamente com base na memória fornecida, identificando a Dra. Renata como a dentista que fez o canal.",
+      "segundos": 2.6
+    },
+    {
+      "id": "d04",
+      "tipo": "confusao_parecidas",
+      "resposta": "Sua próxima consulta no dentista será no dia 12 de novembro [1].",
+      "correta": true,
+      "fiel": true,
+      "justificativa": "O assistente respondeu corretamente com a data e baseou-se exclusivamente na memória fornecida.",
+      "segundos": 2.8
+    },
+    {
+      "id": "d05",
+      "tipo": "negacao",
+      "resposta": "Não encontrei isso nas memórias.",
+      "correta": false,
+      "fiel": true,
+      "justificativa": "A resposta está incorreta porque a informação sobre a alergia a dipirona estava presente nas memórias, mas o assistente afirmou não ter encontrado.",
+      "segundos": 2.0
+    },
+    {
+      "id": "d06",
+      "tipo": "mesmo_nome",
+      "resposta": "A Ana mora em Curitiba [1].",
+      "correta": true,
+      "fiel": true,
+      "justificativa": "A resposta do assistente entrega corretamente a informação solicitada e está totalmente baseada nas memórias fornecidas.",
+      "segundos": 2.2
+    },
+    {
+      "id": "d07",
+      "tipo": "mesmo_nome",
+      "resposta": "A Ana Souza preferia receber relatórios às sextas [1].",
+      "correta": true,
+      "fiel": true,
+      "justificativa": "O assistente respondeu corretamente com base nas memórias, informando o dia em que a gestora prefere os relatórios.",
+      "segundos": 2.7
+    },
+    {
+      "id": "d08",
+      "tipo": "multi_hop",
+      "resposta": "O aniversário da dona do gato Thor é em 21 de agosto [1].",
+      "correta": true,
+      "fiel": true,
+      "justificativa": "A resposta forneceu corretamente a data de aniversário da dona do gato Thor com base nas memórias.",
+      "segundos": 3.0
+    },
+    {
+      "id": "d09",
+      "tipo": "desatualizada",
+      "resposta": "Você trabalha na empresa Fluxo [1].",
+      "correta": true,
+      "fiel": true,
+      "justificativa": "O assistente respondeu corretamente com a informação essencial presente nas memórias e não incluiu nenhuma informação falsa.",
+      "segundos": 2.0
+    },
+    {
+      "id": "d10",
+      "tipo": "confusao_parecidas",
+      "resposta": "Em outubro você gastou 1.150 reais de mercado [1].",
+      "correta": true,
+      "fiel": true,
+      "justificativa": "O assistente respondeu corretamente com o valor exato dos gastos de mercado em outubro e todas as informações são baseadas nas memórias fornecidas.",
+      "segundos": 2.9
+    },
+    {
+      "id": "d11",
+      "tipo": "calculo_3_mais",
+      "resposta": "O seguro do seu carro custa 2.400 reais por ano [1].",
+      "correta": false,
+      "fiel": true,
+      "justificativa": "A resposta está incompleta pois omitiu o cálculo das parcelas do financiamento, respondendo apenas sobre o seguro.",
+      "segundos": 2.9
+    },
+    {
+      "id": "d12",
+      "tipo": "multi_hop",
+      "resposta": "Não encontrei isso nas memórias.",
+      "correta": false,
+      "fiel": true,
+      "justificativa": "O assistente respondeu que não encontrou a informação, mas a resposta correta estava presente nas memórias.",
+      "segundos": 2.1
+    },
+    {
+      "id": "d13",
+      "tipo": "parafrase",
+      "resposta": "Você gastou 280 reais com a sua mel [1].",
+      "correta": true,
+      "fiel": true,
+      "justificativa": "O assistente respondeu corretamente com o valor gasto no veterinário e baseou-se apenas nas memórias fornecidas.",
+      "segundos": 2.5
+    },
+    {
+      "id": "d14",
+      "tipo": "calculo_3_mais",
+      "resposta": "Você paga 120 reais por mês para a academia [2].",
+      "correta": false,
+      "fiel": true,
+      "justificativa": "O assistente informou apenas o valor da academia e esqueceu de somar o valor do inglês, falhando em responder à pergunta completa.",
+      "segundos": 2.9
+    },
+    {
+      "id": "d15",
+      "tipo": "parafrase",
+      "resposta": "Você toma osartana 50 mg todo dia de manhã para pressão [1].",
+      "correta": true,
+      "fiel": true,
+      "justificativa": "O assistente respondeu corretamente com a informação essencial presente nas memórias e não incluiu nenhuma informação falsa.",
+      "segundos": 3.1
+    },
+    {
+      "id": "d16",
+      "tipo": "multi_hop",
+      "resposta": "Você vai ao escritório às 19h e tem aula à noite às 290 reais [1].",
+      "correta": false,
+      "fiel": false,
+      "justificativa": "A resposta do assistente misturou informações sem sentido e errou os dias da semana e os locais.",
+      "segundos": 3.8
+    },
+    {
+      "id": "d17",
+      "tipo": "sem_resposta",
+      "resposta": "Não encontrei isso nas memórias.",
+      "correta": true,
+      "fiel": true,
+      "justificativa": "O assistente respondeu corretamente que não possui essa informação nas memórias, o que é verdade e fiel aos dados entregues.",
+      "segundos": 2.3
+    },
+    {
+      "id": "d18",
+      "tipo": "sem_resposta",
+      "resposta": "Não encontrei isso nas memórias.",
+      "correta": true,
+      "fiel": true,
+      "justificativa": "O assistente corretamente identificou que a informação não estava presente nas memórias e informou que não encontrou.",
+      "segundos": 2.2
+    },
+    {
+      "id": "d19",
+      "tipo": "sem_resposta",
+      "resposta": "O João pagou 650 reais pela pousada [1].",
+      "correta": false,
+      "fiel": false,
+      "justificativa": "O assistente respondeu com um valor que não consta na pergunta do usuário sobre quanto o João pagou, pois a memória indica que a reserva custou 650 reais no total.",
+      "segundos": 2.7
+    },
+    {
+      "id": "d20",
+      "tipo": "sem_resposta",
+      "resposta": "A Ana Souza mora em Curitiba [1].",
+      "correta": false,
+      "fiel": false,
+      "justificativa": "O assistente confundiu a gestora Ana Souza com a irmã Ana e atribuiu uma informação incorreta que não está nas memórias.",
+      "segundos": 2.3
+    }
+  ]
+}

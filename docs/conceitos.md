@@ -535,6 +535,43 @@ Treinar a cada mensagem seria caro (GPU), instável (o modelo "esquece" o que sa
 30 memórias com armadilhas: informação desatualizada, memórias parecidas, mesmo nome, contas
 com 3 ou mais memórias, negação. Busca: acerto@1 de 88% (a régua mede alguma coisa). Respostas: 100%.
 
+### 13.4 LoRA num modelo pequeno: o resultado (`finetuning/dados/resultado_lora.json`)
+
+**O experimento.** Qwen2.5-0.5B-Instruct (0,5 bilhão de parâmetros, roda em computador comum).
+O Gemini serviu de **professor**: respondeu 120 casos no formato do Lembra (destilação), e o
+LoRA (r=8 na atenção, 1,08 milhão de parâmetros treináveis = 0,22% do modelo, arquivo de 4,4 MB)
+aprendeu a imitar. Treino: 2 épocas, 18 minutos no processador, perda de 1,12 (início) para 0,34.
+Prova: as 20 perguntas do **conjunto difícil**, que o treino nunca viu, com as mesmas memórias e
+o mesmo juiz.
+
+| Métrica | Sem LoRA | Com LoRA |
+|---|---|---|
+| Correta | 50% | **60%** |
+| Fiel (não inventou) | 70% | **80%** |
+| Admitiu não saber, quando era o caso | 0% | **50%** |
+| Tempo médio por resposta (CPU) | 2,4 s | 2,7 s |
+
+**O que o LoRA ensinou de fato: o comportamento, não o conhecimento.**
+- **Formato e postura:** com LoRA, o modelo responde em frase completa, cita a fonte `[1]` e
+  diz "Não encontrei isso nas memórias" quando não há resposta (0% → 50%). Sem LoRA, ele
+  respondia "[3]" ou "sangue tipo A" para perguntas sem resposta: **inventava**.
+- **Raciocínio não veio junto:** contas com várias memórias continuam erradas e até pioraram
+  ("aluguel + condomínio + internet = 17.800"). Um modelo de 0,5 B não tem capacidade para
+  isso, e 120 exemplos não criam essa capacidade. Ele também **exagerou** no "não sei" em 2
+  perguntas que tinham resposta (d05, d12): aprendeu a recusa um pouco demais.
+- **Português do modelo base:** "osartana" e "a sua mel" mostram que o modelo pequeno já
+  escrevia mal o português; LoRA ajusta o estilo, não ensina a língua.
+
+**Lições.**
+1. *Fine-tuning ensina forma; RAG traz fatos.* Combinação clássica: LoRA para o jeito de
+   responder, busca para o conteúdo.
+2. *Com 20 perguntas, 10 pontos são 2 perguntas.* Há ruído. O ganho na fidelidade e no "admitir
+   que não sabe" é consistente nos exemplos; o "correta +10%" sozinho não seria prova.
+3. *Tamanho importa para raciocinar.* Para contas e datas, o caminho é o modo agente com
+   ferramentas (`calcular`, `dias_ate`) ou um modelo maior, não mais treino no pequeno.
+4. **Não vai para produção:** o Gemini responde 100% desse conjunto. O LoRA serve para o
+   modo "100% local e privado" (Ollama), quando a privacidade valer mais que a precisão.
+
 ## 14. Glossário rápido
 
 | Termo | Significado |

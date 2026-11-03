@@ -12,7 +12,7 @@ o sistema respondeu e o que era esperado.
 | 4 | **Avaliação (LLM-as-judge)** | Conjunto de perguntas de teste, recall@K, fidelidade; um LLM "juiz" avalia as respostas | ✅ v1 (próximo: conjunto maior e repetições) |
 | 5 | **Agentes** | LLM que decide quais ferramentas usar (buscar, listar, calcular, contar dias) | ✅ experimental |
 | 6 | **RAG avançado** | Busca híbrida, re-ranking, chat com histórico | ⬜ |
-| 7 | **LLM local** | Ollama, quantização, privacidade | 🟡 LoRA em modelo pequeno treinado; falta servir no Ollama |
+| 7 | **LLM local** | Ollama, quantização, privacidade | 🟡 LoRA avaliado (correta 50→60%, fiel 70→80%, admite não saber 0→50%); falta servir no Ollama |
 | 8 | **Fine-tuning** | Congelar o modelo e treinar só a "ponta" / LoRA | ✅ experimentos (adaptador de embeddings e LoRA) |
 | 8b | **Visual e integrações** | Redesenho moderno "cara de IA" ✅ v1; importar conversas do WhatsApp ✅; Lembra como contato no WhatsApp (API oficial) 🟡 código pronto, falta configurar a Meta | 🟡 |
 | 8c | **Multimodal** | Áudio (falar em vez de digitar) ✅; imagens (fotos de recibos, documentos) ⬜ futuro | 🟡 |
