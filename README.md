@@ -25,6 +25,18 @@ flowchart LR
     D --> F
 ```
 
+## O que o Lembra faz
+
+| Recurso | Como usar |
+|---------|-----------|
+| **Registrar memórias** | Escrevendo ou **falando** (áudio transcrito pelo Gemini); a IA **sugere a categoria** |
+| **Importar conversas do WhatsApp** | Registrar → Importar conversa (arquivo exportado "Sem mídia") |
+| **Perguntar** | Chat com fontes citadas e notas de similaridade; também por voz |
+| **Modo agente** (experimental) | Ajustes → a IA usa ferramentas (buscar, listar, calcular, contar dias) e mostra "como cheguei aqui" |
+| **Personalização** | 👍/👎 nas respostas; o perfil "Como o Lembra te conhece" é reaprendido a cada 5 avaliações |
+| **Configurar o RAG** | Ajustes → chunk, sobreposição, top-K, modelo, instruções; Laboratório para ver os chunks |
+| **Categorias** | Cada pessoa cria as suas (renomear/apagar movem as memórias, nunca as perdem) |
+
 ## Arquitetura
 
 ```
@@ -93,15 +105,19 @@ python avaliacao/comparar.py                           # compara as rodadas lado
 web/                   # o app (PWA): telas, estilos, manifest, service worker, ícones
 src/lembra/
 ├── chunking.py     # quebra textos em pedaços
-├── embeddings.py   # texto → vetor
-├── llm.py          # Claude ou Ollama
-├── rag.py          # fluxos "alimentar" e "perguntar"
+├── embeddings.py   # texto → vetor (Gemini ou modelo local)
+├── llm.py          # Gemini, Claude, Ollama ou nenhum; saída estruturada; transcrição de áudio
+├── rag.py          # alimentar, perguntar, editar, reprocessar, sugerir categoria, perfil, áudio
+├── agente.py       # modo agente: ferramentas e ciclo pedir → executar → responder
+├── whatsapp.py     # leitura de conversas exportadas e chunking por sessão
 ├── supabase.py     # login e dados, sempre com o crachá do usuário
 ├── api.py          # endpoints que o app chama
-└── config.py       # configurações (.env)
-avaliacao/             # conjunto de teste, avaliador (LLM como juiz) e resultados
-supabase/migrations/   # SQL que cria o banco (tabelas, RLS, convites, funções)
+└── config.py       # configurações (.env + ajustes de cada usuário)
+avaliacao/             # conjuntos de teste (fácil e difícil), avaliador com LLM juiz, resultados
+finetuning/            # adaptador de embeddings e LoRA (ver finetuning/README.md)
+supabase/migrations/   # SQL que cria o banco (tabelas, RLS, funções)
 tests/                 # testes automáticos (rodam sem internet)
+docs/                  # conceitos, roadmap, visão do produto, ideias
 ```
 
 ## Privacidade
