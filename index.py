@@ -12,4 +12,4 @@ RAIZ = Path(__file__).resolve().parent
 sys.path.insert(0, str(RAIZ / "src"))
 os.environ.setdefault("LEMBRA_WEB_DIR", str(RAIZ / "web"))
 
-from lembra.api import app  # noqa: E402,F401
+from lembra.api import app  # noqa: F401
