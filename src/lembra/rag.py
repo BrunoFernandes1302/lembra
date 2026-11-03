@@ -58,6 +58,27 @@ def alimentar(
     return repo.salvar_memoria(texto, categoria, data_evento, chunks, vetores, s.embedding_model), len(chunks)
 
 
+def editar(
+    repo, memoria_id: str, texto: str, categoria: str, data_evento: str = "",
+    settings: Settings | None = None,
+) -> dict | None:
+    """Edita uma memória. Só recalcula chunks e vetores se o TEXTO mudou (economiza tempo e cota);
+    mudar só categoria ou data atualiza apenas os rótulos."""
+    s = settings or get_settings()
+    atual = repo.obter_memoria(memoria_id)
+    if atual is None:
+        return None
+    if texto == atual["texto"]:
+        repo.atualizar_memoria(memoria_id, texto, categoria, data_evento)
+        return {"id": memoria_id, "recalculou": False}
+    chunks = chunk_text(texto, s.chunk_size, s.chunk_overlap)
+    if not chunks:
+        raise ValueError("A memória está vazia")
+    vetores = embedder_de(s).embed_documents(chunks)
+    repo.atualizar_memoria(memoria_id, texto, categoria, data_evento, chunks, vetores, s.embedding_model)
+    return {"id": memoria_id, "recalculou": True, "chunks": len(chunks)}
+
+
 def buscar(
     repo: Repositorio, pergunta: str, categoria: str | None = None, settings: Settings | None = None
 ) -> list[Trecho]:

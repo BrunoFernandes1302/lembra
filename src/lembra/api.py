@@ -78,6 +78,20 @@ class NovaMemoria(BaseModel):
     data_evento: str = ""
 
 
+class EdicaoMemoria(BaseModel):
+    texto: str = Field(min_length=1, max_length=20_000)
+    categoria: str = "geral"
+    data_evento: str = ""
+
+
+class NovaCategoria(BaseModel):
+    nome: str = Field(min_length=1, max_length=40)
+
+
+class RenomearCategoria(BaseModel):
+    novo_nome: str = Field(min_length=1, max_length=40)
+
+
 class Pergunta(BaseModel):
     pergunta: str = Field(min_length=1, max_length=2_000)
     categoria: str | None = None
@@ -160,6 +174,54 @@ def criar_memoria(dados: NovaMemoria, repo: RepositorioSupabase = Depends(reposi
 def listar_memorias(categoria: str | None = None, repo: RepositorioSupabase = Depends(repositorio)):
     try:
         return repo.listar_memorias(categoria)
+    except ErroSupabase as e:
+        _erro(e)
+
+
+@app.put("/memorias/{memoria_id}", tags=["memórias"])
+def editar_memoria(memoria_id: str, dados: EdicaoMemoria, repo: RepositorioSupabase = Depends(repositorio)):
+    try:
+        r = rag.editar(repo, memoria_id, dados.texto, dados.categoria, dados.data_evento)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except ErroSupabase as e:
+        _erro(e)
+    if r is None:
+        raise HTTPException(status_code=404, detail="Memória não encontrada")
+    return r
+
+
+@app.get("/categorias", tags=["categorias"])
+def listar_categorias(repo: RepositorioSupabase = Depends(repositorio)):
+    try:
+        return repo.listar_categorias()
+    except ErroSupabase as e:
+        _erro(e)
+
+
+@app.post("/categorias", tags=["categorias"], status_code=201)
+def criar_categoria(dados: NovaCategoria, repo: RepositorioSupabase = Depends(repositorio)):
+    try:
+        repo.criar_categoria(dados.nome)
+    except ErroSupabase as e:
+        _erro(e)
+    return {"nome": dados.nome.strip().lower()}
+
+
+@app.put("/categorias/{nome}", tags=["categorias"])
+def renomear_categoria(nome: str, dados: RenomearCategoria, repo: RepositorioSupabase = Depends(repositorio)):
+    try:
+        repo.renomear_categoria(nome, dados.novo_nome)
+    except ErroSupabase as e:
+        _erro(e)
+    return {"nome": dados.novo_nome.strip().lower()}
+
+
+@app.delete("/categorias/{nome}", tags=["categorias"])
+def apagar_categoria(nome: str, mover_para: str = "geral", repo: RepositorioSupabase = Depends(repositorio)):
+    """Apaga a categoria; as memórias dela são MOVIDAS para `mover_para`, nunca apagadas."""
+    try:
+        return {"memorias_movidas": repo.apagar_categoria(nome, mover_para)}
     except ErroSupabase as e:
         _erro(e)
 

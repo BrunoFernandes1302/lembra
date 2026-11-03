@@ -19,6 +19,8 @@ from lembra.supabase import Trecho
 class EmbedderFalso:
     """Vetor = contagem de palavras (bag-of-words com hash). Só acha palavras iguais."""
 
+    chamadas = 0  # quantas vezes gerou vetores de documentos (para provar quando NÃO recalcula)
+
     def _vet(self, texto):
         v = [0.0] * 64
         for p in texto.lower().split():
@@ -27,6 +29,7 @@ class EmbedderFalso:
         return [x / n for x in v]
 
     def embed_documents(self, textos):
+        EmbedderFalso.chamadas += 1
         return [self._vet(t) for t in textos]
 
     def embed_query(self, t):
@@ -39,7 +42,8 @@ class LLMFalso:
         return "resposta falsa [1]"
 
 
-BANCO = {"memorias": [], "chunks": []}
+BANCO = {"memorias": [], "chunks": [], "categorias": []}
+PADRAO = ["geral", "família", "finanças", "compromissos"]
 
 
 class RepoFalso:
@@ -54,6 +58,56 @@ class RepoFalso:
             BANCO["chunks"].append({"memoria_id": mid, "dono": self.dono, "texto": t,
                                     "categoria": categoria, "data": data_evento, "v": v})
         return mid
+
+    def obter_memoria(self, mid):
+        return next((m for m in BANCO["memorias"] if m["id"] == mid and m["dono"] == self.dono), None)
+
+    def atualizar_memoria(self, mid, texto, categoria, data_evento, chunks=None, vetores=None, modelo=None):
+        m = self.obter_memoria(mid)
+        if not m:
+            return False
+        self.criar_categoria(categoria)
+        m.update(texto=texto, categoria=categoria, data_evento=data_evento)
+        if chunks is not None:
+            BANCO["chunks"] = [c for c in BANCO["chunks"] if c["memoria_id"] != mid]
+            for t, v in zip(chunks, vetores):
+                BANCO["chunks"].append({"memoria_id": mid, "dono": self.dono, "texto": t,
+                                        "categoria": categoria, "data": data_evento, "v": v})
+        else:
+            for c in BANCO["chunks"]:
+                if c["memoria_id"] == mid:
+                    c["categoria"] = categoria
+        return True
+
+    def _minhas_cats(self):
+        if not any(c["dono"] == self.dono for c in BANCO["categorias"]):
+            BANCO["categorias"].extend({"dono": self.dono, "nome": n} for n in PADRAO)
+        return [c for c in BANCO["categorias"] if c["dono"] == self.dono]
+
+    def listar_categorias(self):
+        return [{"nome": c["nome"], "memorias": sum(1 for m in BANCO["memorias"]
+                 if m["dono"] == self.dono and m["categoria"] == c["nome"])} for c in self._minhas_cats()]
+
+    def criar_categoria(self, nome):
+        if nome not in [c["nome"] for c in self._minhas_cats()]:
+            BANCO["categorias"].append({"dono": self.dono, "nome": nome})
+
+    def _mover(self, de, para):
+        n = 0
+        for x in BANCO["memorias"] + BANCO["chunks"]:
+            if x["dono"] == self.dono and x["categoria"] == de:
+                x["categoria"] = para
+                n += "id" in x
+        BANCO["categorias"] = [c for c in BANCO["categorias"] if not (c["dono"] == self.dono and c["nome"] == de)]
+        return n
+
+    def renomear_categoria(self, antigo, novo):
+        self.criar_categoria(novo)
+        self._mover(antigo, novo)
+
+    def apagar_categoria(self, nome, mover_para="geral"):
+        self.criar_categoria(mover_para)
+        return self._mover(nome, mover_para)
 
     def listar_memorias(self, categoria=None, limite=50):
         return [m for m in BANCO["memorias"] if m["dono"] == self.dono
@@ -76,8 +130,8 @@ class RepoFalso:
 
 @pytest.fixture
 def cliente(monkeypatch):
-    BANCO["memorias"].clear()
-    BANCO["chunks"].clear()
+    for v in BANCO.values():
+        v.clear()
     monkeypatch.setattr(rag, "embedder_de", lambda _: EmbedderFalso())
     monkeypatch.setattr(rag, "get_llm", lambda _: LLMFalso())
     api.app.dependency_overrides[api.repositorio] = lambda cred=api.Depends(api._bearer): RepoFalso(cred.credentials)
@@ -146,3 +200,36 @@ def test_falha_do_llm_nao_derruba_o_app(cliente, monkeypatch):
     assert r.status_code == 200
     assert r.json()["gerada_por_ia"] is False and "Não consegui" in r.json()["resposta"]
     assert len(r.json()["fontes"]) == 1
+
+
+def test_editar_so_categoria_nao_recalcula_vetores(cliente):
+    mid = cliente.post("/memorias", headers=ANA, json={"texto": "Gastei 300 no mercado.", "categoria": "geral"}).json()["id"]
+    antes = EmbedderFalso.chamadas
+    r = cliente.put(f"/memorias/{mid}", headers=ANA, json={"texto": "Gastei 300 no mercado.", "categoria": "finanças"})
+    assert r.json()["recalculou"] is False and EmbedderFalso.chamadas == antes
+    so_fin = cliente.post("/buscar", headers=ANA, json={"pergunta": "mercado", "categoria": "finanças"}).json()
+    assert len(so_fin) == 1, "o chunk precisa mudar de categoria junto com a memória"
+
+
+def test_editar_texto_recalcula_vetores(cliente):
+    mid = cliente.post("/memorias", headers=ANA, json={"texto": "Minha cachorra se chama Mel."}).json()["id"]
+    r = cliente.put(f"/memorias/{mid}", headers=ANA, json={"texto": "Minha gata se chama Luna.", "categoria": "família"})
+    assert r.json()["recalculou"] is True
+    assert cliente.post("/buscar", headers=ANA, json={"pergunta": "gata Luna"}).json()[0]["texto"] == "Minha gata se chama Luna."
+
+
+def test_beto_nao_edita_memoria_da_ana(cliente):
+    mid = cliente.post("/memorias", headers=ANA, json={"texto": "Segredo da Ana."}).json()["id"]
+    assert cliente.put(f"/memorias/{mid}", headers=BETO, json={"texto": "hackeado"}).status_code == 404
+
+
+def test_categorias_criar_renomear_apagar_move_memorias(cliente):
+    assert "família" in [c["nome"] for c in cliente.get("/categorias", headers=ANA).json()]
+    cliente.post("/categorias", headers=ANA, json={"nome": "Pets"})
+    cliente.post("/memorias", headers=ANA, json={"texto": "Mel é minha cachorra.", "categoria": "pets"})
+    cliente.put("/categorias/pets", headers=ANA, json={"novo_nome": "animais"})
+    cats = {c["nome"]: c["memorias"] for c in cliente.get("/categorias", headers=ANA).json()}
+    assert "pets" not in cats and cats["animais"] == 1
+    r = cliente.delete("/categorias/animais?mover_para=família", headers=ANA).json()
+    assert r["memorias_movidas"] == 1
+    assert cliente.get("/memorias?categoria=família", headers=ANA).json()[0]["texto"] == "Mel é minha cachorra."

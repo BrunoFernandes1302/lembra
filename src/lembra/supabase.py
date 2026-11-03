@@ -131,6 +131,48 @@ class RepositorioSupabase:
         r = requests.get(f"{self.url}/memorias", headers=self.headers, params=params, timeout=TIMEOUT)
         return _checar(r)
 
+    def obter_memoria(self, memoria_id: str) -> dict | None:
+        params = {"select": "id,texto,categoria,data_evento,criado_em", "id": f"eq.{memoria_id}"}
+        r = requests.get(f"{self.url}/memorias", headers=self.headers, params=params, timeout=TIMEOUT)
+        linhas = _checar(r)
+        return linhas[0] if linhas else None
+
+    def atualizar_memoria(
+        self, memoria_id: str, texto: str, categoria: str, data_evento: str,
+        chunks: list[str] | None = None, vetores: list[list[float]] | None = None, modelo: str | None = None,
+    ) -> bool:
+        payload = {"p_id": memoria_id, "p_texto": texto, "p_categoria": categoria,
+                   "p_data_evento": data_evento, "p_chunks": None}
+        if chunks is not None:
+            payload["p_chunks"] = [
+                {"indice": i, "texto": t, "embedding": _vetor_para_texto(v)}
+                for i, (t, v) in enumerate(zip(chunks, vetores))
+            ]
+            payload["p_modelo"] = modelo
+        r = requests.post(f"{self.url}/rpc/atualizar_memoria", headers=self.headers, json=payload, timeout=TIMEOUT)
+        return bool(_checar(r))
+
+    # ---------- Categorias ----------
+
+    def listar_categorias(self) -> list[dict]:
+        r = requests.post(f"{self.url}/rpc/listar_categorias", headers=self.headers, json={}, timeout=TIMEOUT)
+        return _checar(r)
+
+    def criar_categoria(self, nome: str) -> None:
+        h = {**self.headers, "Prefer": "resolution=ignore-duplicates"}
+        r = requests.post(f"{self.url}/categorias", headers=h, json={"nome": nome.strip().lower()}, timeout=TIMEOUT)
+        _checar(r)
+
+    def renomear_categoria(self, antigo: str, novo: str) -> None:
+        r = requests.post(f"{self.url}/rpc/renomear_categoria", headers=self.headers,
+                          json={"p_antigo": antigo, "p_novo": novo}, timeout=TIMEOUT)
+        _checar(r)
+
+    def apagar_categoria(self, nome: str, mover_para: str = "geral") -> int:
+        r = requests.post(f"{self.url}/rpc/apagar_categoria", headers=self.headers,
+                          json={"p_nome": nome, "p_mover_para": mover_para}, timeout=TIMEOUT)
+        return _checar(r) or 0
+
     def apagar_memoria(self, memoria_id: str) -> bool:
         h = {**self.headers, "Prefer": "return=representation"}
         r = requests.delete(f"{self.url}/memorias", headers=h, params={"id": f"eq.{memoria_id}"}, timeout=TIMEOUT)
