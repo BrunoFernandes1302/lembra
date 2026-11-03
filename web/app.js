@@ -401,6 +401,100 @@ function desenharCategorias() {
   });
 }
 
+// ---------------- Áudio: falar em vez de digitar ----------------
+// Grava no formato nativo do aparelho (Chrome/Android: WebM/Opus; iPhone: MP4/AAC), manda para a
+// API, que transcreve com o Gemini (multimodal). O áudio não é guardado; só o texto volta.
+const MAX_GRAVACAO_S = 120;
+let gravacao = null; // { rec, botao, inicio, timer, fluxo }
+
+function formatoGravacao() {
+  const opcoes = ["audio/webm;codecs=opus", "audio/mp4", "audio/webm", "audio/ogg;codecs=opus"];
+  return opcoes.find((t) => window.MediaRecorder?.isTypeSupported?.(t)) || "";
+}
+
+async function iniciarGravacao(botaoMic) {
+  if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder)
+    return avisar("Este navegador não permite gravar áudio.");
+  let fluxo;
+  try {
+    fluxo = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+  } catch {
+    return avisar("Permita o uso do microfone para falar com o Lembra.");
+  }
+  const tipo = formatoGravacao();
+  const rec = new MediaRecorder(fluxo, tipo ? { mimeType: tipo, audioBitsPerSecond: 32000 } : undefined);
+  const pedacos = [];
+  rec.ondataavailable = (e) => e.data.size && pedacos.push(e.data);
+  rec.onstop = () => {
+    fluxo.getTracks().forEach((t) => t.stop()); // desliga o microfone (some o indicador do sistema)
+    enviarAudio(botaoMic, new Blob(pedacos, { type: rec.mimeType || tipo || "audio/webm" }));
+  };
+  rec.start();
+  const inicio = Date.now();
+  const tempo = botaoMic.querySelector(".tempo");
+  const timer = setInterval(() => {
+    const s = Math.floor((Date.now() - inicio) / 1000);
+    tempo.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+    if (s >= MAX_GRAVACAO_S) pararGravacao();
+  }, 250);
+  gravacao = { rec, botaoMic, timer };
+  botaoMic.classList.add("gravando");
+  botaoMic.querySelector("use").setAttribute("href", "#i-stop");
+  botaoMic.setAttribute("aria-label", "Parar gravação");
+  tempo.textContent = "0:00";
+}
+
+function pararGravacao() {
+  if (!gravacao) return;
+  clearInterval(gravacao.timer);
+  gravacao.rec.stop();
+  gravacao = null;
+}
+
+function restaurarMic(botaoMic) {
+  botaoMic.classList.remove("gravando", "transcrevendo");
+  botaoMic.querySelector("use").setAttribute("href", "#i-mic");
+  botaoMic.querySelector(".tempo").textContent = botaoMic.classList.contains("com-texto") ? "Falar" : "";
+  botaoMic.disabled = false;
+}
+
+async function enviarAudio(botaoMic, blob) {
+  botaoMic.classList.remove("gravando");
+  botaoMic.classList.add("transcrevendo");
+  botaoMic.disabled = true;
+  botaoMic.querySelector(".tempo").textContent = "Transcrevendo…";
+  try {
+    if (blob.size < 1500) throw new Error("Gravação curta demais.");
+    const b64 = await new Promise((ok, erro) => {
+      const fr = new FileReader();
+      fr.onload = () => ok(String(fr.result).split(",")[1]);
+      fr.onerror = erro;
+      fr.readAsDataURL(blob);
+    });
+    const r = await chamar("/audio/transcrever", { metodo: "POST", corpo: { audio_b64: b64, mime: blob.type } });
+    if (!r.texto) throw new Error("Não ouvi nenhuma fala. Tente de novo.");
+    if (botaoMic.dataset.gravador === "perguntar") {
+      const f = $("#form-perguntar");
+      f.pergunta.value = r.texto;
+      f.requestSubmit();
+    } else {
+      const ta = $("#form-registrar").texto;
+      ta.value = (ta.value.trim() ? ta.value.trim() + " " : "") + r.texto; // revise antes de salvar
+      ta.dispatchEvent(new Event("input", { bubbles: true })); // dispara a sugestão de categoria
+      ta.focus();
+      avisar("Transcrito ✓ — revise antes de salvar");
+    }
+  } catch (err) {
+    avisar(err.message);
+  } finally {
+    restaurarMic(botaoMic);
+  }
+}
+
+$$("[data-gravador]").forEach((b) =>
+  b.addEventListener("click", () => (gravacao ? pararGravacao() : iniciarGravacao(b)))
+);
+
 // ---------------- Sugestão de categoria pela IA ----------------
 // "debounce": só pergunta à IA quando a pessoa PARA de digitar por 1,5 s (e não a cada letra).
 let timerSugestao = null;

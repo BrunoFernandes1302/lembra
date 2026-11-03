@@ -15,7 +15,7 @@ o sistema respondeu e o que era esperado.
 | 7 | **LLM local** | Ollama, quantização, privacidade | ⬜ |
 | 8 | **Fine-tuning** | Congelar o modelo e treinar só a "ponta" / LoRA | ⬜ |
 | 8b | **Visual e integrações** | Redesenho moderno "cara de IA" ✅ v1; importar conversas do WhatsApp ✅ | ✅ |
-| 8c | **Multimodal** | Áudio (falar em vez de digitar) 🟡; imagens (fotos de recibos, documentos) ⬜ futuro | 🟡 |
+| 8c | **Multimodal** | Áudio (falar em vez de digitar) ✅; imagens (fotos de recibos, documentos) ⬜ futuro | 🟡 |
 | 9 | **Empresa** | Documentos reais, permissões, LGPD, custos | ⬜ |
 
 ## Detalhes

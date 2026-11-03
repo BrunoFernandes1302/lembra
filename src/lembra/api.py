@@ -128,6 +128,12 @@ class TextoMemoria(BaseModel):
     texto: str = Field(min_length=1, max_length=20_000)
 
 
+class Audio(BaseModel):
+    # base64 de até ~3 MB de áudio (≈ 2 min de voz comprimida); a Vercel limita o corpo a 4,5 MB
+    audio_b64: str = Field(min_length=10, max_length=4_000_000)
+    mime: str = Field(max_length=60)
+
+
 class Pergunta(BaseModel):
     pergunta: str = Field(min_length=1, max_length=2_000)
     categoria: str | None = None
@@ -309,6 +315,27 @@ def sugerir_categoria(dados: TextoMemoria, repo: RepositorioSupabase = Depends(r
         return rag.sugerir_categoria(repo, dados.texto) or {}
     except ErroSupabase as e:
         _erro(e)
+
+
+@app.post("/audio/transcrever", tags=["áudio"])
+def transcrever(dados: Audio, repo: RepositorioSupabase = Depends(repositorio)):
+    """Transforma áudio gravado no app em texto. O áudio não é guardado."""
+    import base64
+    import binascii
+
+    try:
+        audio = base64.b64decode(dados.audio_b64, validate=True)
+    except (binascii.Error, ValueError) as e:
+        raise HTTPException(status_code=400, detail="Áudio inválido") from e
+    try:
+        return {"texto": rag.transcrever_audio(repo, audio, dados.mime)}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except ErroSupabase as e:
+        _erro(e)
+    except Exception as e:  # serviço de IA indisponível/limite
+        logger.warning("transcrição falhou: %s", e)
+        raise HTTPException(status_code=503, detail="Não consegui transcrever agora. Tente de novo em instantes.") from e
 
 
 @app.get("/categorias", tags=["categorias"])

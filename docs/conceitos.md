@@ -272,6 +272,17 @@ considerada: comparar o embedding da memória com a média dos embeddings de cad
 barato, mas só funciona com muitas memórias já categorizadas e não propõe categorias novas.
 Teste real: conta de luz → finanças; cardiologista → saúde; aula de violão → "hobbies" (nova).
 
+**Áudio (falar em vez de digitar):** o app grava no formato nativo do aparelho (Chrome/Android:
+WebM/Opus; iPhone: MP4/AAC) e a API manda o áudio ao Gemini, um **modelo multimodal** (entende
+áudio, não só texto), que devolve a transcrição. Testado antes de programar: WebM, MP4 e WAV
+funcionaram, apesar de WebM não estar na lista oficial. Opus comprime voz muito bem (20 KB contra
+290 KB em WAV para o mesmo trecho), o que importa porque a Vercel limita cada envio a 4,5 MB.
+Alternativa descartada: o reconhecimento de voz do navegador (Web Speech API), grátis mas instável
+em PWA no iPhone. **Privacidade:** o áudio não é guardado, só o texto; com a IA desligada, o áudio
+não sai do servidor. No Registrar, o texto vai para a caixa **para revisão** (transcrição erra
+nomes) e dispara a sugestão de categoria. Teste de ponta a ponta com microfone falso do Chromium
+"falando" um áudio gerado pela voz sintética do Gemini.
+
 **Categorias:** cada pessoa cria as próprias; nada vem pré-definido. Sem categoria escolhida, a
 memória vai para "geral" (criada só nesse caso).
 

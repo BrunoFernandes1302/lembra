@@ -500,6 +500,31 @@ label .menu-botao, .item.editando .menu-botao { border-radius: var(--raio-p); pa
 .fonte-meta .nota { margin-left: auto; }
 @keyframes revelar { from { opacity: 0; transform: translateY(4px); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
 
+/* ---------------------------------------------------------- Microfone */
+.botao-mic {
+  position: relative; flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 44px; min-width: 44px; padding: 0 12px; border-radius: 14px; cursor: pointer;
+  background: var(--vidro-forte); color: var(--suave); border: 1px solid var(--borda);
+  font: inherit; font-size: .82rem; font-weight: 600; font-variant-numeric: tabular-nums;
+  transition: color var(--rapido), background var(--rapido), border-color var(--rapido), transform var(--rapido);
+}
+.botao-mic .ic { width: 19px; height: 19px; }
+.botao-mic .tempo:empty { display: none; }
+.botao-mic.gravando { color: #fff; background: linear-gradient(135deg, #f43f5e, #e11d48); border-color: transparent; }
+.botao-mic.gravando::after { /* onda pulsando enquanto grava */
+  content: ""; position: absolute; inset: -4px; border-radius: 18px; border: 2px solid rgba(244, 63, 94, .55);
+  animation: ondaMic 1.4s ease-out infinite;
+}
+.botao-mic.transcrevendo { color: var(--violeta); cursor: progress; }
+.botao-mic.transcrevendo .ic { animation: pulsar 1s ease-in-out infinite; }
+@media (hover: hover) { .botao-mic:not(.gravando):hover { color: var(--texto); border-color: var(--borda-forte); transform: translateY(-1px); } }
+@keyframes ondaMic { from { transform: scale(1); opacity: 1; } to { transform: scale(1.35); opacity: 0; } }
+.rotulo-com-mic { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px;
+                  font-weight: 600; font-size: .85rem; color: var(--suave); }
+.botao-mic.com-texto { height: 36px; border-radius: 999px; background: var(--gradiente-suave); color: var(--texto); }
+label.sem-rotulo { margin-bottom: 16px; }
+label.sem-rotulo textarea { margin-top: 0; }
+
 /* ---------------------------------------------------------- Sugestão de categoria */
 .sugestao-cat {
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; padding: 10px 12px;

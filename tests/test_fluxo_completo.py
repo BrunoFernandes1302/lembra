@@ -352,3 +352,34 @@ def test_sugerir_categoria_nova_e_validacao(cliente, monkeypatch):
 def test_sem_ia_nao_sugere(cliente, monkeypatch):
     monkeypatch.setattr(rag, "get_llm", lambda _: None)
     assert cliente.post("/categorias/sugerir", headers=ANA, json={"texto": "Texto longo o bastante aqui."}).json() == {}
+
+
+import base64
+
+
+class LLMTranscritor(LLMFalso):
+    def transcrever(self, audio, mime):
+        LLMTranscritor.recebido = (audio, mime)
+        return "Hoje paguei R$ 320 no mercado."
+
+
+def test_transcrever_audio(cliente, monkeypatch):
+    monkeypatch.setattr(rag, "get_llm", lambda _: LLMTranscritor())
+    b64 = base64.b64encode(b"audio-falso").decode()
+    r = cliente.post("/audio/transcrever", headers=ANA, json={"audio_b64": b64, "mime": "audio/webm;codecs=opus"})
+    assert r.status_code == 200 and r.json()["texto"] == "Hoje paguei R$ 320 no mercado."
+    assert LLMTranscritor.recebido == (b"audio-falso", "audio/webm"), "o parâmetro ';codecs' é removido"
+
+
+def test_transcrever_recusa_formato_e_base64_invalidos(cliente, monkeypatch):
+    monkeypatch.setattr(rag, "get_llm", lambda _: LLMTranscritor())
+    b64 = base64.b64encode(b"x" * 20).decode()
+    assert cliente.post("/audio/transcrever", headers=ANA, json={"audio_b64": b64, "mime": "video/mp4"}).status_code == 400
+    assert cliente.post("/audio/transcrever", headers=ANA, json={"audio_b64": "não é base64!!", "mime": "audio/webm"}).status_code == 400
+
+
+def test_transcrever_respeita_ia_desligada(cliente, monkeypatch):
+    monkeypatch.setattr(rag, "get_llm", lambda _: LLMTranscritor())
+    cliente.put("/config", headers=ANA, json={**CFG, "usar_ia": False})
+    r = cliente.post("/audio/transcrever", headers=ANA, json={"audio_b64": base64.b64encode(b"x" * 20).decode(), "mime": "audio/webm"})
+    assert r.status_code == 400 and "Usar IA" in r.json()["detail"]

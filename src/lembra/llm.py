@@ -62,6 +62,19 @@ class GeminiLLM:
         )
         return (response.text or "").strip()
 
+    def transcrever(self, audio: bytes, mime: str) -> str:
+        """Modelo MULTIMODAL: o Gemini recebe o áudio e devolve o texto (speech-to-text)."""
+        from google.genai import types
+
+        response = self.client.models.generate_content(
+            model=self.model,
+            contents=[types.Part.from_bytes(data=audio, mime_type=mime),
+                      "Transcreva fielmente este áudio em português do Brasil, com pontuação. "
+                      "Responda só com a transcrição. Se não houver fala, responda vazio."],
+            config=types.GenerateContentConfig(temperature=0),
+        )
+        return (response.text or "").strip()
+
     def gerar_json(self, system: str, prompt: str, esquema):
         """SAÍDA ESTRUTURADA: o modelo é obrigado a responder no formato do esquema (Pydantic).
         Nada de texto solto para "decifrar" depois."""

@@ -289,3 +289,19 @@ def sugerir_categoria(repo, texto: str, settings: Settings | None = None) -> dic
     # Nunca confiar cegamente na saída do LLM: o código confere e normaliza.
     nome = " ".join(r.categoria.strip().lower().split())[:40] or "geral"
     return {"categoria": nome, "nova": nome not in existentes, "motivo": r.motivo}
+
+
+FORMATOS_AUDIO = {"audio/webm", "audio/mp4", "audio/mpeg", "audio/wav", "audio/ogg", "audio/aac", "audio/x-m4a"}
+
+
+def transcrever_audio(repo, audio: bytes, mime: str, settings: Settings | None = None) -> str:
+    """Áudio -> texto. O áudio NÃO é guardado em lugar nenhum; só o texto volta para o app.
+    Respeita a escolha do usuário: com a IA desligada, o áudio também não sai do servidor."""
+    s = settings_do_usuario(repo, settings)
+    mime = mime.split(";")[0].strip().lower()  # "audio/webm;codecs=opus" -> "audio/webm"
+    if mime not in FORMATOS_AUDIO:
+        raise ValueError(f"Formato de áudio não suportado: {mime}")
+    llm = get_llm(s) if s.usar_ia else None
+    if llm is None or not hasattr(llm, "transcrever"):
+        raise ValueError("A transcrição de áudio usa a IA (Gemini). Ative \"Usar IA\" em Ajustes.")
+    return llm.transcrever(audio, mime)
