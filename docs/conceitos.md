@@ -340,6 +340,12 @@ diferentes (fato, paráfrase, conta, juntar duas memórias, detalhe em texto lon
 5. **Problema real encontrado:** "tenho médico marcado?" → o Lembra achou o dentista, mas abriu
    a resposta com "não encontrei menção a médicos" (literal demais). Candidato a ajuste de prompt.
 
+6. **Antes × depois do prompt "interpretar pelo sentido"** (3 repetições cada): empate em 100% em
+   todas as métricas. A falha do "médico" é rara demais para aparecer em 3 tentativas (efeito teto).
+   Decisão: adotar o v2, porque **não piorou nada** (inclusive admitir quando não sabe), trata uma
+   falha real e alinha com o modo agente. Registro honesto: a prova foi de "não piorou", não de
+   "melhorou". Para medir melhorias pequenas: conjunto mais difícil.
+
 **Como usar:** `python avaliacao/avaliar.py --rotulo nome [--chunk-size N --top-k K]`, depois
 `python avaliacao/comparar.py`. Mudança só vale se melhorar sem piorar outra métrica.
 
