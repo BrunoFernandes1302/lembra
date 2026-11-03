@@ -56,7 +56,7 @@ uvicorn lembra.api:app --reload
 - **http://localhost:8000/docs**: página para testar cada função da API.
 
 Pela página `/docs`:
-1. `POST /auth/cadastro` com e-mail, senha e **código de convite**
+1. `POST /auth/cadastro` com e-mail e senha
 2. Copie o `access_token` da resposta, clique em **Authorize** e cole
 3. `POST /memorias` para alimentar, `POST /buscar` para ver só a busca e `POST /perguntar` para o RAG completo
 
@@ -71,7 +71,7 @@ O app e a API ficam no mesmo projeto da Vercel: `index.py` é a porta de entrada
 
 ## No ar
 
-**https://lembra-nu.vercel.app**: cadastro só com código de convite.
+**https://lembra-nu.vercel.app**: cadastro livre (cada pessoa cria a própria conta).
 
 **Problema comum: "Não é possível acessar este site" no celular** (no PC abre). O endereço é novo e
 o celular guardou em cache uma resposta antiga de DNS ("esse nome não existe"). Solução: ligar e

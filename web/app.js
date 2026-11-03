@@ -89,7 +89,6 @@ document.querySelectorAll(".aba-auth").forEach((b) =>
     modoAuth = b.dataset.modo;
     document.querySelectorAll(".aba-auth").forEach((x) => x.classList.toggle("ativa", x === b));
     const cadastro = modoAuth === "cadastro";
-    document.querySelector(".so-cadastro").hidden = !cadastro;
     $("#form-auth").senha.autocomplete = cadastro ? "new-password" : "current-password";
     $("#botao-auth").textContent = cadastro ? "Criar conta" : "Entrar";
     $("#erro-auth").textContent = "";
@@ -104,17 +103,15 @@ $("#form-auth").addEventListener("submit", async (e) => {
   const email = f.email.value.trim();
   const senha = f.senha.value;
   if (!email || !senha) return (erro.textContent = "Preencha e-mail e senha.");
-  if (modoAuth === "cadastro") {
-    if (senha.length < 8) return (erro.textContent = "A senha precisa ter pelo menos 8 caracteres.");
-    if (!f.convite.value.trim()) return (erro.textContent = "Informe o código de convite.");
-  }
+  if (modoAuth === "cadastro" && senha.length < 8)
+    return (erro.textContent = "A senha precisa ter pelo menos 8 caracteres.");
 
   const botao = $("#botao-auth");
   botao.disabled = true;
   try {
     const s = modoAuth === "cadastro"
       ? await chamar("/auth/cadastro", { metodo: "POST", autenticado: false,
-          corpo: { email, senha, convite: f.convite.value.trim() } })
+          corpo: { email, senha } })
       : await chamar("/auth/login", { metodo: "POST", autenticado: false, corpo: { email, senha } });
     sessao.set(s);
     f.reset();

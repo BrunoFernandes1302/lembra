@@ -60,7 +60,7 @@ if _origens:
 class Cadastro(BaseModel):
     email: EmailStr
     senha: str = Field(min_length=8)
-    convite: str
+    convite: str | None = None  # opcional: só usado se a trava de convites for religada
 
 
 class Login(BaseModel):

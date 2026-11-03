@@ -197,7 +197,7 @@ administrativa (`service_role`), que ignora o RLS: ela sempre repassa o crachá 
 | Sem login, lê memórias | lista vazia |
 | Conta da Ana excluída | a memória dela foi apagada junto (*cascade*) |
 
-**Convites (cadastro fechado):**
+**Convites (cadastro fechado) — DESLIGADO:** a pedido do dono, o cadastro passou a ser livre (cada testador cria a própria conta). O trigger foi removido, mas tabelas e funções continuam no banco para religar se preciso. Os dados seguem isolados pelo RLS; o risco aberto é estranhos gastarem a cota grátis do Gemini. Como funcionava:
 - Tabela `convites`: código aleatório de uso único, validade (14 dias), e-mail opcional.
 - **Trigger** = regra que o banco executa sozinho a cada evento. Aqui ele roda a cada conta nova e **cancela o cadastro** se o código for inválido, vencido, já usado ou de outro e-mail. Como está no banco, vale para o app, para a API direta e até para o botão "Add user" do painel: o convite é a **única porta de entrada**.
 - `FOR UPDATE` trava o convite durante o cadastro, para que duas pessoas não usem o mesmo código ao mesmo tempo (*condição de corrida*).
