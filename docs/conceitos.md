@@ -171,6 +171,11 @@ espécie de crachá assinado que diz "eu sou o usuário X". Toda chamada ao banc
 crachá, e o RLS lê quem é o dono a partir dele. Por isso a API **nunca** deve usar a chave
 administrativa (`service_role`), que ignora o RLS: ela sempre repassa o crachá do usuário.
 
+**Login (Supabase Auth):**
+- A senha nunca é guardada como foi digitada, só um *hash* (bcrypt), uma "impressão digital" que não dá para reverter.
+- Ao entrar, a pessoa recebe um **access token (JWT)**, que dura ~1 hora e vai em toda chamada, e um **refresh token**, que renova o JWT sem pedir a senha de novo e mantém o app logado.
+- **Fase de testes:** o cadastro público fica **desligado**, e o dono cria as contas dos testadores no painel, já confirmadas. Motivo: o e-mail embutido do Supabase gratuito só envia para membros da organização, então testadores não receberiam o e-mail de confirmação. Para abrir ao público, será preciso um serviço de e-mail próprio (ex.: Resend).
+
 **Filtro por categoria:** a função `buscar_chunks` aceita uma categoria opcional. "Quanto gastei…"
 pode buscar só em `finanças`: menos candidatos, menos ruído.
 
