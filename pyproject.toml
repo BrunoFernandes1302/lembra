@@ -1,23 +1,21 @@
 [project]
 name = "lembra"
 version = "0.1.0"
-description = "Laboratório prático de IA: RAG sobre a vida pessoal, evoluindo para LLM local e fine-tuning."
+description = "Lembra: app de organização da vida pessoal com IA (RAG)."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "anthropic>=1.0",
-    "chromadb>=0.5",
     "sentence-transformers>=3.0",
     "python-dotenv>=1.0",
-    "streamlit>=1.40",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "email-validator>=2.0",
     "requests>=2.31",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "ruff>=0.6"]
-
-[project.scripts]
-lembra = "lembra.cli:main"
+dev = ["pytest>=8.0", "ruff>=0.6", "httpx>=0.27"]
 
 [build-system]
 requires = ["setuptools>=68"]

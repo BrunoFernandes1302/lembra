@@ -107,15 +107,16 @@ pergunta. Soluções futuras: re-ranking e filtro por categoria.
 faltar. Se forem muitos, entra ruído e o custo do prompt aumenta.
 
 **Decisão: fonte da verdade separada do índice**
-- `data/memorias.jsonl` é o texto original de tudo que você escreveu, legível e fácil de copiar para backup.
-- `data/chroma/` é o índice, **derivado** do arquivo acima.
+- Tabela `memorias`: o texto original de tudo que a pessoa escreveu.
+- Tabela `chunks`: os pedaços e vetores, **derivados** da tabela acima.
 
-Se você mudar o modelo de embeddings ou o tamanho do chunk, apaga o índice e reconstrói
-(`lembra reindexar`) sem perder nada. Na empresa é igual: o documento original é a verdade, e o
+Se mudarmos o modelo de embeddings ou o tamanho do chunk, basta apagar os chunks e recalculá-los
+a partir das memórias, sem perder nada. Na empresa é igual: o documento original é a verdade, e o
 índice é descartável.
 
-Usamos **ChromaDB** porque roda local, sem servidor. Em produção, a mesma ideia roda em
-**pgvector** (extensão do Postgres), Qdrant, Weaviate, Pinecone etc.
+**Histórico:** o protótipo usava **ChromaDB** (banco vetorial local, sem servidor). Com vários
+usuários, migramos para **pgvector** no Supabase: o mesmo Postgres guarda texto, vetores e login,
+e aplica o isolamento por usuário. Outras opções de mercado: Qdrant, Weaviate, Pinecone.
 
 ---
 
@@ -195,6 +196,19 @@ administrativa (`service_role`), que ignora o RLS: ela sempre repassa o crachá 
 - **`SECURITY DEFINER`**: a função roda com os poderes de quem a criou, passando por cima do RLS. O verificador do Supabase alerta sobre isso. Aqui é intencional: é a única porta para criar convites, e ela checa se quem chama é admin. Lição: **avisos de ferramentas apontam riscos, não erros**, e cada um precisa de análise.
 
 Testado pela internet: sem código, código inventado, vencido, de outro e-mail e reutilizado foram **barrados**; usuário comum não consegue gerar convite, inserir convite direto nem se promover a admin.
+
+**A API (FastAPI):** é o "garçom" entre o app e o banco. O app manda o pedido junto com o
+crachá; a API faz o trabalho de IA (chunking, embeddings, chamada ao LLM) e repassa o **mesmo
+crachá** ao Supabase. A API nunca decide sozinha o que a pessoa pode ver: quem decide é o banco.
+
+**Transação ("tudo ou nada"):** salvar uma memória são dois passos (memória + chunks). A função
+`salvar_memoria` faz os dois dentro de uma transação. Se o segundo falhar, o primeiro é desfeito,
+e nunca sobra uma memória "órfã" que não aparece na busca.
+
+**Teste real ponta a ponta** (API + modelo real + Supabase): "pet" encontrou a cachorra, "gasto
+de moradia" encontrou o aluguel e "médico agendado" encontrou o dentista. O Beto não viu nem
+apagou nada da Ana. Filtrar "médico agendado" só em `finanças` trouxe o aluguel: o filtro restringe
+os candidatos, mas não garante relevância. É o LLM que precisa dizer "não encontrei".
 
 **Filtro por categoria:** a função `buscar_chunks` aceita uma categoria opcional. "Quanto gastei…"
 pode buscar só em `finanças`: menos candidatos, menos ruído.

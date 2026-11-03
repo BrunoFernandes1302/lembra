@@ -25,37 +25,37 @@ flowchart LR
     D --> F
 ```
 
-## Stack
+## Arquitetura
+
+```
+Celular (PWA) ──(crachá JWT)──► API Python (FastAPI) ──(mesmo crachá)──► Supabase
+                                 ├─ chunking                              ├─ Login + convites
+                                 ├─ embeddings (modelo local)             ├─ Postgres + pgvector
+                                 └─ LLM (Claude ou Ollama)                └─ RLS: cada um vê só o seu
+```
 
 | Peça | Escolha | Por quê |
 |------|---------|---------|
+| Banco + login | Supabase (Postgres + pgvector) | Login pronto, busca vetorial e isolamento por usuário (RLS) |
+| API | FastAPI | Python, valida os dados e gera página de testes (`/docs`) |
 | Embeddings | `sentence-transformers` + `multilingual-e5-small` | Local, grátis, entende português |
-| Banco vetorial | ChromaDB | Local, sem servidor |
 | LLM | Claude (API) ou Ollama (local) | Troca pelo `.env` |
-| Interface | Streamlit | UI simples em Python |
+| App | PWA (próxima etapa) | Instala no celular sem loja de apps |
 
-## Como rodar
+## Como rodar a API
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate              # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 cp .env.example .env                   # coloque sua ANTHROPIC_API_KEY
+uvicorn lembra.api:app --reload
 ```
 
-**Interface (os dois chats):**
-```bash
-streamlit run app/streamlit_app.py
-```
-
-**Ou pelo terminal:**
-```bash
-lembra adicionar "Tenho uma cachorra chamada Mel, adotada em 2020." -c família -d 2020
-lembra buscar "qual o nome do meu pet?"       # mostra só o que a busca encontrou (sem LLM)
-lembra perguntar "qual o nome do meu pet?"    # RAG completo
-lembra status
-lembra reindexar                              # reconstrói o índice (ex.: após mudar o chunk)
-```
+Abra **http://localhost:8000/docs**: é uma página onde dá para testar cada função.
+1. `POST /auth/cadastro` com e-mail, senha e **código de convite**
+2. Copie o `access_token` da resposta, clique em **Authorize** e cole
+3. `POST /memorias` para alimentar, `POST /buscar` para ver só a busca e `POST /perguntar` para o RAG completo
 
 Na primeira execução, o modelo de embeddings (~470 MB) é baixado automaticamente.
 
@@ -63,21 +63,21 @@ Na primeira execução, o modelo de embeddings (~470 MB) é baixado automaticame
 
 ```
 src/lembra/
-├── chunking.py     # 1. quebra textos em pedaços
-├── embeddings.py   # 2. texto → vetor
-├── store.py        # 3. banco vetorial (guardar e buscar)
-├── memorias.py     # fluxo "Alimentar": salvar + indexar
-├── llm.py          # 4. Claude ou Ollama
-├── rag.py          # fluxo "Perguntar": buscar → montar prompt → gerar
-├── config.py       # configurações (.env)
-└── cli.py          # comandos de terminal
-app/streamlit_app.py   # interface com as duas abas
-data/                  # SEUS DADOS (ignorado pelo git)
+├── chunking.py     # quebra textos em pedaços
+├── embeddings.py   # texto → vetor
+├── llm.py          # Claude ou Ollama
+├── rag.py          # fluxos "alimentar" e "perguntar"
+├── supabase.py     # login e dados, sempre com o crachá do usuário
+├── api.py          # endpoints que o app chama
+└── config.py       # configurações (.env)
+supabase/migrations/   # SQL que cria o banco (tabelas, RLS, convites, funções)
+tests/                 # testes automáticos (rodam sem internet)
 ```
 
 ## Privacidade
 
-- `data/` e `.env` estão no `.gitignore`: memórias e chaves **nunca** vão para o GitHub.
-- Embeddings e banco vetorial rodam **localmente**.
+- `.env` está no `.gitignore`: chaves **nunca** vão para o GitHub.
+- Cada usuário só acessa os próprios dados, garantido pelo banco (Row Level Security).
+- Os embeddings são calculados na própria API, sem serviço externo.
 - Com `LLM_PROVIDER=anthropic`, os trechos recuperados em cada pergunta **são enviados** à API
   do Claude. Para manter tudo 100% local, use `LLM_PROVIDER=ollama`.
