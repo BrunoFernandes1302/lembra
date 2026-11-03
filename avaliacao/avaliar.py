@@ -163,6 +163,7 @@ def main():
     ap.add_argument("--pausa", type=float, default=2.0, help="segundos entre chamadas ao LLM")
     ap.add_argument("--repeticoes", type=int, default=1,
                     help="quantas vezes gerar+julgar cada pergunta (o LLM varia; mais repetições = menos ruído)")
+    ap.add_argument("--conjunto", default="conjunto.json", help="arquivo do conjunto (ex.: conjunto_dificil.json)")
     ap.add_argument("--prompt", help="arquivo .txt com um prompt de sistema CANDIDATO (testa sem mudar o app)")
     a = ap.parse_args()
 
@@ -176,7 +177,7 @@ def main():
                 chunk_overlap=a.chunk_overlap if a.chunk_overlap is not None else s.chunk_overlap,
                 top_k=a.top_k or s.top_k,
                 gemini_model=a.modelo_llm or s.gemini_model)
-    conjunto = json.loads((PASTA / "conjunto.json").read_text(encoding="utf-8"))
+    conjunto = json.loads((PASTA / a.conjunto).read_text(encoding="utf-8"))
     print(f"Rodada '{a.rotulo}': chunk={s.chunk_size} sobreposição={s.chunk_overlap} top_k={s.top_k} "
           f"embeddings={s.embedding_model} llm={s.gemini_model} juiz={a.modelo_juiz} "
           f"prompt={versao_prompt}{' (' + a.prompt + ')' if a.prompt else ''} repetições={a.repeticoes}\n")
@@ -269,7 +270,8 @@ def main():
         "config": {"chunk_size": s.chunk_size, "chunk_overlap": s.chunk_overlap, "top_k": s.top_k,
                    "embeddings": s.embedding_model, "llm": None if a.so_busca else s.gemini_model,
                    "juiz": None if a.so_busca else a.modelo_juiz, "chunks_indexados": len(todos),
-                   "prompt": versao_prompt, "prompt_arquivo": a.prompt, "repeticoes": a.repeticoes},
+                   "prompt": versao_prompt, "prompt_arquivo": a.prompt, "repeticoes": a.repeticoes,
+                   "conjunto": a.conjunto},
         "resumo": resumo, "resultados": resultados,
     }, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\nSalvo em {arquivo.relative_to(RAIZ)}")

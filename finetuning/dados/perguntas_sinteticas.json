@@ -1,0 +1,232 @@
+{
+  "aluguel_2025": [
+    "Qual o valor do meu aluguel e quando pago?",
+    "Quanto pago mensalmente de moradia no dia 5?",
+    "Quanto custa o aluguel?",
+    "aluguel valor",
+    "Preciso ajustar meu orçamento para a moradia.",
+    "Quanto eu pagava de aluguel no início de 2025?"
+  ],
+  "aluguel_2026": [
+    "Quanto ficou o aluguel em março de 2026?",
+    "Qual o novo preço do meu aluguel?",
+    "O valor da minha moradia aumentou.",
+    "subiu aluguel",
+    "Quanto passou a custar a casa?",
+    "Quanto eu pagava de aluguel após o reajuste de março de 2026?"
+  ],
+  "condominio": [
+    "Qual o valor do condomínio e a data de vencimento?",
+    "Quanto pago pelo prédio todos os meses?",
+    "Taxa condominial",
+    "condo vencimento",
+    "Quanto preciso separar para pagar a taxa do edifício?",
+    "Qual é o dia que vence a taxa do condomínio?"
+  ],
+  "internet": [
+    "Qual o plano e o valor da minha internet?",
+    "Quanto pago para a operadora Vivo pela conexão?",
+    "Plano de fibra da Vivo",
+    "internet preço",
+    "Qual operadora me fornece 500 mega?",
+    "Quanto custa minha banda larga mensalmente?"
+  ],
+  "mercado_out": [
+    "Quanto gastei no mercado em outubro de 2026?",
+    "Qual foi o valor das compras no Atacadão em outubro?",
+    "Gastos com alimentação no mês 10",
+    "mercado outubro",
+    "Onde fiz minhas compras grandes no mês passado?",
+    "Quanto gastei em mantimentos em outubro de 2026?"
+  ],
+  "mercado_set": [
+    "Quanto gastei com supermercado em setembro?",
+    "Qual foi o total das compras de setembro?",
+    "Gastos de mercado no mês 9",
+    "gasto mercado set",
+    "Quanto foi a fatura do supermercado no mês retrasado?",
+    "Qual o valor total gasto em mercado em setembro de 2026?"
+  ],
+  "dentista_paulo": [
+    "Quando tenho consulta com o Dr. Paulo?",
+    "Qual o dia da minha limpeza no dentista?",
+    "Consulta de profilaxia",
+    "dentista paulo",
+    "Preciso lembrar do meu horário no consultório odontológico.",
+    "Que dia e horas vou ao Dr. Paulo em novembro de 2026?"
+  ],
+  "dentista_renata": [
+    "Quem fez meu canal em março?",
+    "Qual a especialidade da Dra. Renata e onde ela atende?",
+    "Endodontista na Savassi",
+    "canal dentista",
+    "Em qual bairro fica a profissional que cuidou do meu dente?",
+    "Onde foi o atendimento de canal que fiz em março de 2026?"
+  ],
+  "alergia": [
+    "Quais são os medicamentos e alimentos que me dão alergia?",
+    "Eu posso tomar dipirona ou ibuprofeno?",
+    "Reação a frutos do mar e remédios",
+    "alergia remedio",
+    "O que minha saúde não tolera?",
+    "Quais restrições medicamentosas eu tenho listadas?"
+  ],
+  "remedio": [
+    "Qual remédio para pressão eu tomo de manhã?",
+    "Qual a dosagem da losartana que o Dr. Henrique passou?",
+    "Remédio de hipertensão",
+    "losartana dose",
+    "Quem é meu cardiologista e qual receita ele me deu?",
+    "Qual medicamento cardiovascular eu tomo pela manhã receitado pelo Dr. Henrique?"
+  ],
+  "academia": [
+    "Quais dias e horários eu vou para a musculação?",
+    "Qual a minha rotina de treino e o valor da mensalidade?",
+    "quanto pago na academia",
+    "Quanto gasto por mês com meus treinos físicos?",
+    "Em quais períodos da semana eu puxo ferro?"
+  ],
+  "ana_irma": [
+    "Onde minha irmã Ana mora e qual a profissão dela?",
+    "Quantos filhos tem a minha irmã e qual a cidade dela?",
+    "filhos da ana",
+    "O que você sabe sobre os meus familiares de Curitiba?",
+    "Quais os nomes dos meus sobrinhos e onde minha parente reside?"
+  ],
+  "ana_trabalho": [
+    "Qual o cargo da Ana Souza na empresa e o que ela me pede?",
+    "Quem é a minha chefe e quando ela quer os documentos?",
+    "chefe ana",
+    "Como minha superior prefere receber os arquivos semanais?",
+    "Qual a preferência da pessoa que lidera minha equipe sobre os relatórios?"
+  ],
+  "carla": [
+    "Qual a data de aniversário da minha prima Carla e o nome do bicho dela?",
+    "Quando minha parenta Carla faz anos e qual o pet dela?",
+    "gato da carla",
+    "O que o bichinho de estimação da minha prima tem de nome?",
+    "Qual dia do ano comemoramos o nascimento da Carla?"
+  ],
+  "aniversarios": [
+    "Quais são as datas de aniversário dos meus pais e da minha irmã?",
+    "Quando meus familiares comemoram mais um ano de vida?",
+    "aniversario mae pai irma",
+    "Pode me lembrar os dias em que meus parentes mais próximos nasceram?",
+    "Qual o dia exato do nascimento do meu pai e da minha mãe?"
+  ],
+  "mel": [
+    "Qual a raça da minha cachorra Mel e quando eu apeguei?",
+    "Em que ano adotei minha pet vira-lata caramelo que tem medo de tempestade?",
+    "mel medo de trovao",
+    "O que minha cachorra costuma temer quando o tempo fecha?",
+    "Qual foi o ano de adoção da minha cachorra caramelo em 2020?"
+  ],
+  "vet": [
+    "Quanto gastei na consulta veterinária da Mel em outubro de 2026?",
+    "Qual o valor da vacina V10 e atendimento médico da minha cachorra?",
+    "gasto vet mel",
+    "Quanto custou a última ida da minha pet ao médico?",
+    "O que foi feito na consulta da minha cachorra no mês 10 de 2026 e o preço?"
+  ],
+  "emprego_atual": [
+    "Em que empresa trabalho como engenheiro de dados desde 2024 e qual o modelo?",
+    "Como funciona meu trabalho atual na empresa Fluxo?",
+    "trampo atual",
+    "Em quais dias da semana preciso ir presencialmente ao escritório?",
+    "Desde que ano estou na Fluxo atuando com dados em regime híbrido?"
+  ],
+  "emprego_antigo": [
+    "Em qual banco trabalhei como analista de dados entre 2019 e 2023?",
+    "Qual era o meu cargo e empresa antes do emprego atual?",
+    "trabalho antigo banco",
+    "Onde eu atuava na área de dados antes de 2024?",
+    "Por quantos anos fui funcionário do Banco Horizonte?"
+  ],
+  "salario": [
+    "Quanto recebo de salário líquido atualmente em 2026?",
+    "Qual é o valor exato dos meus rendimentos mensais hoje?",
+    "salario liquido",
+    "Quanto cai na minha conta todo mês no meu emprego atual?",
+    "Qual a minha remuneração líquida atual?"
+  ],
+  "viagem_chile": [
+    "Quanto eu gastei na viagem para o Chile?",
+    "Qual foi o custo da minha viagem para a América do Sul?",
+    "gastei quanto chile",
+    "Quanto foi o mochilão que fiz pela cordilheira?",
+    "Quais cidades eu visitei em minha viagem ao Chile em 2019?",
+    "Em que ano fui conhecer Santiago e o Atacama?"
+  ],
+  "viagem_floripa": [
+    "Quanto custou a minha reserva de pousada em Florianópolis?",
+    "Qual o valor da hospedagem na praia com o João?",
+    "pousada floripa preço",
+    "Quanto vou gastar na viagem de fim de ano com meu amigo?",
+    "Em quais dias de dezembro de 2026 estarei hospedado em Floripa?",
+    "Quais as datas da minha viagem para Santa Catarina em 2026?"
+  ],
+  "joao": [
+    "Qual é a profissão do meu melhor amigo João?",
+    "O que o João faz para trabalhar?",
+    "profissão do joão",
+    "Ele cuida dos meus dentes?",
+    "Desde quando conheço meu grande amigo da época de graduação?",
+    "Em que período da vida conheci o João?"
+  ],
+  "carro": [
+    "Quanto paguei pelo meu Onix 2022 em 2025?",
+    "Qual foi o valor total do meu veículo novo?",
+    "preço onix 2025",
+    "Como ficou dividido o financiamento do meu automóvel?",
+    "Em que ano adquiri meu carro atual e qual o valor?",
+    "Qual o modelo e ano do carro que comprei em 2025?"
+  ],
+  "seguro": [
+    "Qual o valor anual do seguro do meu automóvel?",
+    "Quanto pago por ano para proteger meu carro?",
+    "seguro carro preço",
+    "Em que mês eu preciso renovar a apólice do veículo?",
+    "Quando vence o pagamento da proteção do meu carro?",
+    "Quanto custa a apólice anual do meu veículo e quando vence?"
+  ],
+  "ingles": [
+    "Quanto custa a minha mensalidade de inglês online?",
+    "Qual o valor que pago pelo curso de idioma?",
+    "valor curso de ingles",
+    "Quanto gasto por mês com as aulas de língua estrangeira?",
+    "Em quais dias da semana e horários eu estudo outro idioma?",
+    "Quando acontecem as minhas aulas de inglês durante a semana em 2026?"
+  ],
+  "violao": [
+    "Qual é o nome do meu professor de violão?",
+    "Quem me ensina a tocar instrumento musical?",
+    "professor de violao nome",
+    "Com quem aprendo a tocar cordas toda semana?",
+    "Em qual dia da semana e horário treino meu instrumento?",
+    "A que horas começam minhas aulas de violão às quartas em 2026?"
+  ],
+  "comida": [
+    "Qual é o meu prato favorito feito pela minha avó Lourdes?",
+    "Qual comida eu mais gosto de comer?",
+    "comida favorita vovo",
+    "Qual prato tradicional eu adoro e qual legume eu detesto?",
+    "Existe algum vegetal que eu não suporte comer de jeito nenhum?",
+    "Qual o prato predileto que minha avó preparava para mim?"
+  ],
+  "senha_wifi": [
+    "Qual é a senha do wi-fi da minha casa?",
+    "Qual a palavra para acessar a internet sem fio aqui?",
+    "senha wifi casa",
+    "Como entro na rede sem fio da minha residência?",
+    "Qual era mesmo a chave de acesso da nossa internet?",
+    "Qual a senha da minha rede que inclui o ano de 2026?"
+  ],
+  "meta_2027": [
+    "Quanto dinheiro pretendo juntar para a reserva de emergência em 2027?",
+    "Qual é a minha meta financeira para o ano de 2027?",
+    "meta guardar dinheiro 2027",
+    "Quanto quero ter guardado no fundo de segurança daqui a um tempo?",
+    "Qual o objetivo de economia que tracei para o ano que vem em 2026?",
+    "Quanto planejo acumular para imprevistos até o final de 2027?"
+  ]
+}

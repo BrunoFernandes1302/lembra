@@ -441,15 +441,32 @@ consultas ao banco de ~0,75 s cada. Causas e correções:
 
 O modo agente é naturalmente mais lento: são várias idas ao LLM por pergunta.
 
-## 13. Fine-tuning "só a ponta" (próximas fases)
+## 13. Fine-tuning
 
-Um modelo de linguagem é feito de camadas. As primeiras aprendem coisas gerais (gramática,
-significado das palavras) e as últimas, coisas específicas da tarefa.
+### 13.1 "Treinar só a ponta" da busca: adaptador de embeddings (`finetuning/`)
 
-- **Treinar tudo:** caro, exige muita GPU e pode fazer o modelo "esquecer" o que sabia.
-- **Congelar o corpo e treinar a ponta:** mantém o conhecimento geral e ajusta só o final. É rápido e barato.
-- **LoRA:** em vez de mexer nos pesos originais, acopla pequenas matrizes extras e treina só elas. Fica com menos de 1% dos parâmetros e resultado próximo ao do treino completo. O arquivo final é pequeno (MBs) e pode ser ligado ou desligado no modelo base.
-- **QLoRA:** LoRA com o modelo base comprimido em 4 bits, o que cabe numa GPU grátis.
+- **Base congelada:** embeddings do Gemini. **Ponta treinável:** uma matriz W (768 × 768) aplicada
+  ao vetor da pergunta (`q' = normaliza(q·W)`), começando como identidade.
+- **Perda contrastiva (InfoNCE):** a memória certa deve vencer todas as outras.
+- **Regularização:** um freio mantém W perto da identidade (poucos dados).
+- **Dados sintéticos:** o Gemini inventou 170 perguntas para as 30 memórias. Treinar com as
+  perguntas da prova seria "decorar a prova".
+- **Validação (20% das sintéticas) e early stopping.**
+
+**Lições do experimento:**
+1. **Efeito teto na validação:** acerto@1 já era 100% antes do treino, e o early stopping guardou a
+   matriz inicial. A correção foi usar a **perda de validação** (régua fina: com quanta folga a
+   memória certa vence). Ela caiu de 0,71 para 0,40.
+2. **O adaptador aprendeu, mas a prova não mudou** (acerto@1 88% → 88%). As falhas eram de
+   **tempo** (aluguel antigo × atual), não de significado, e os dados de treino não ensinavam isso.
+   **Fine-tuning só melhora o que os dados ensinam: diagnostique o tipo de erro antes de treinar.**
+3. **A métrica final já era 100%** (o LLM resolve o conflito lendo as datas). Decisão: **não**
+   colocar o adaptador em produção. Otimize onde a métrica final sofre.
+
+### 13.2 Conjunto de avaliação difícil (`avaliacao/conjunto_dificil.json`)
+
+30 memórias com armadilhas: informação desatualizada, memórias parecidas, mesmo nome, contas
+com 3 ou mais memórias, negação. Busca: acerto@1 de 88% (a régua mede alguma coisa). Respostas: 100%.
 
 ## 14. Glossário rápido
 

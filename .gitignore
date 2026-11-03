@@ -30,3 +30,8 @@ models/
 .vercel
 .env*
 !.env.example
+
+# fine-tuning: artefatos grandes e regeneráveis
+finetuning/dados/cache_embeddings.json
+finetuning/dados/*.npy
+finetuning/modelos/
