@@ -301,7 +301,9 @@ def test_config_invalida_e_recusada(cliente):
 
 def test_previa_chunking_nao_salva_nada(cliente):
     texto = "Primeiro parágrafo sobre a infância.\n\n" * 20
-    r = cliente.post("/lab/chunking", json={"texto": texto, "chunk_size": 200, "chunk_overlap": 0}).json()
+    corpo = {"texto": texto, "chunk_size": 200, "chunk_overlap": 0}
+    assert cliente.post("/lab/chunking", json=corpo).status_code in (401, 403), "exige login"
+    r = cliente.post("/lab/chunking", headers=ANA, json=corpo).json()
     assert r["total"] > 1 and max(r["tamanhos"]) <= 200
     assert BANCO["memorias"] == []
 

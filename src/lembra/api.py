@@ -308,8 +308,9 @@ def aprender_perfil(repo: RepositorioSupabase = Depends(repositorio)):
 
 
 @app.post("/lab/chunking", tags=["laboratório"])
-def previa_chunking(dados: PreviaChunking):
-    """Mostra como um texto SERIA quebrado, sem salvar nada (não precisa de login)."""
+def previa_chunking(dados: PreviaChunking, _cred: HTTPAuthorizationCredentials = Depends(_bearer)):
+    """Mostra como um texto SERIA quebrado, sem salvar nada. Exige login, como os demais
+    endpoints que fazem trabalho no servidor (evita uso anônimo da CPU)."""
     if dados.chunk_overlap * 2 >= dados.chunk_size:
         raise HTTPException(status_code=400, detail="A sobreposição precisa ser menor que metade do chunk.")
     chunks = rag.previa_chunking(dados.texto, dados.chunk_size, dados.chunk_overlap)

@@ -952,7 +952,7 @@ $("#lab-testar").addEventListener("click", async () => {
   const texto = $("#lab-texto").value;
   if (!texto.trim()) return avisar("Cole um texto primeiro.");
   try {
-    const r = await chamar("/lab/chunking", { metodo: "POST", autenticado: false,
+    const r = await chamar("/lab/chunking", { metodo: "POST",
       corpo: { texto, chunk_size: Number(f.chunk_size.value), chunk_overlap: Number(f.chunk_overlap.value) } });
     $("#lab-resumo").textContent =
       `${r.total} chunk(s) com tamanho ${f.chunk_size.value} e sobreposição ${f.chunk_overlap.value}`;
