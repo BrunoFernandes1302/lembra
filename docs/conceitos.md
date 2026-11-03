@@ -371,24 +371,50 @@ usuário tem o direito de guardar.
 
 ---
 
-## 12. Agentes (próximas fases)
+## 12. Agentes (modo agente, experimental)
 
-Um **agente** é um LLM que, em vez de seguir um roteiro fixo, recebe uma lista de
-**ferramentas** (funções que o seu código executa) e decide sozinho quais chamar.
+Um **agente** é um LLM que recebe **ferramentas** (funções do nosso código) e decide sozinho quais
+chamar, em que ordem, olhando os resultados antes de responder. O LLM só **pede**: quem executa e
+controla é o código (`src/lembra/agente.py`).
 
 ```
-Pergunta: "Quanto gastei com mercado em outubro?"
-
-Fluxo fixo (hoje):  buscar 5 trechos parecidos → responder
-                    (pode errar a conta: os gastos estão espalhados em vários trechos)
-
-Agente:             LLM pensa → chama somar_gastos(categoria="mercado", mes="2026-10")
-                    → recebe 842,30 → responde "R$ 842,30, em 12 compras"
+Pergunta: "Quanto gasto por mês somando moradia e academia?"
+  passo 1: buscar_memorias("moradia aluguel")   -> 3 trechos
+  passo 2: buscar_memorias("academia")          -> 3 trechos
+  passo 3: calcular("1800 + 450 + 120")         -> 2370
+  resposta: "R$ 2.370 por mês [1] [2]"
 ```
 
-O ciclo é: o LLM pede uma ferramenta, o código executa, o resultado volta para o LLM, e isso se
-repete até ele ter a resposta. **Custo:** mais chamadas ao LLM, o que significa mais lento e mais
-caro. Só vale a pena quando a pergunta realmente precisa de decisões ou de cálculos.
+**Ferramentas:** `buscar_memorias` (o RAG virou uma ferramenta, e o agente pode buscar várias vezes),
+`listar_memorias` (filtro exato), `listar_categorias`, `calcular`, `data_de_hoje`, `dias_ate`.
+
+**Decisões:**
+- **Ciclo manual** (sem o modo automático da biblioteca), para ficar visível e controlável.
+- **Limite de 5 passos:** sem limite, um agente pode entrar em ciclo e gastar cota.
+- **Calculadora segura:** nunca `eval()`, que executaria qualquer código. Só números e `+ - * / ( )`.
+  Testada contra tentativas de injetar código.
+- **Erro de ferramenta vira informação** para o LLM, e não derruba o app. Se o agente inteiro
+  falhar, o RAG normal assume (degradação graciosa).
+- **"Como cheguei aqui":** cada resposta mostra as ferramentas usadas.
+- Desligado por padrão: mais lento e gasta várias chamadas por pergunta.
+
+**Lição do teste real:** o agente errou "quantos dias faltam para 21/08" (disse 352; o certo é
+291) porque montou a conta somando meses de cabeça, e errou os meses. A calculadora somou certo
+uma conta montada errada. **Ferramenta não corrige raciocínio errado: dê a ferramenta certa para
+a tarefa.** Com `dias_ate` (datas calculadas em código), passou a acertar.
+
+## Desempenho: medir antes de otimizar
+
+Medição de uma pergunta comum: o Gemini respondia em ~1 s (sem "pensar"); o lento eram duas
+consultas ao banco de ~0,75 s cada. Causas e correções:
+1. **Uma conexão nova por consulta** refazia o "aperto de mão" de criptografia (TLS). Agora uma
+   **sessão HTTP reaproveitada** (*keep-alive*): 0,72 s para 0,23 s.
+2. **Distância:** a função da Vercel rodava nos EUA e o banco está em São Paulo. Agora a região
+   é **São Paulo (`gru1`)**, em `vercel.json`.
+3. **Paralelismo:** a configuração do usuário e o embedding da pergunta são buscados **ao mesmo
+   tempo**, porque um não depende do outro.
+
+O modo agente é naturalmente mais lento: são várias idas ao LLM por pergunta.
 
 ## 13. Fine-tuning "só a ponta" (próximas fases)
 

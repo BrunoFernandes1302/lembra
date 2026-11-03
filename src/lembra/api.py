@@ -99,6 +99,7 @@ class ConfigRag(BaseModel):
     top_k: int = Field(ge=1, le=20)
     margem_relevancia: float = Field(ge=0, le=0.5)
     usar_ia: bool
+    modo_agente: bool = False
     modelo_llm: str
     instrucoes: str = Field(default="", max_length=500)
 
@@ -135,10 +136,17 @@ class Fonte(BaseModel):
     similaridade: float
 
 
+class Passo(BaseModel):
+    ferramenta: str
+    argumentos: dict
+    resumo: str
+
+
 class RespostaRag(BaseModel):
     resposta: str
     gerada_por_ia: bool
     fontes: list[Fonte]
+    passos: list[Passo] = []
 
 
 # ---------- Dependências ----------
@@ -240,7 +248,7 @@ def ler_config(repo: RepositorioSupabase = Depends(repositorio)):
         _erro(e)
     return {
         "chunk_size": s.chunk_size, "chunk_overlap": s.chunk_overlap, "top_k": s.top_k,
-        "margem_relevancia": s.margem_relevancia, "usar_ia": s.usar_ia,
+        "margem_relevancia": s.margem_relevancia, "usar_ia": s.usar_ia, "modo_agente": s.modo_agente,
         "modelo_llm": s.gemini_model, "instrucoes": s.instrucoes,
         "modelos_llm": MODELOS_LLM,
         "somente_leitura": {"modelo_embedding": s.embedding_model, "dimensao_embedding": s.embedding_dim,
@@ -343,6 +351,7 @@ def perguntar(dados: Pergunta, repo: RepositorioSupabase = Depends(repositorio))
     return RespostaRag(
         resposta=r.texto,
         gerada_por_ia=r.gerada_por_ia,
+        passos=[Passo(**p) for p in r.passos],
         fontes=[
             Fonte(texto=t.texto, categoria=t.metadados.get("categoria"), data=t.metadados.get("data"),
                   similaridade=round(t.similaridade, 3))

@@ -173,10 +173,12 @@ document.addEventListener("click", (e) => {
 function trechoFormatado(texto) {
   const frag = document.createDocumentFragment();
   // **negrito** e citações [1], [2]
-  texto.split(/(\*\*[^*]+\*\*|\[\d+\])/g).forEach((parte) => {
+  texto = texto.replace(/\s*\[\s*\]/g, ""); // citação vazia "[]"
+  texto.split(/(\*\*[^*]+\*\*|\[\d+(?:\s*,\s*\d+)*\])/g).forEach((parte) => {
     if (!parte) return;
     if (/^\*\*[^*]+\*\*$/.test(parte)) frag.append(el("strong", null, parte.slice(2, -2)));
-    else if (/^\[\d+\]$/.test(parte)) frag.append(el("span", "cita", parte.slice(1, -1)));
+    else if (/^\[\d+(?:\s*,\s*\d+)*\]$/.test(parte))
+      parte.slice(1, -1).split(",").forEach((n) => frag.append(el("span", "cita", n.trim())));
     else frag.append(document.createTextNode(parte));
   });
   return frag;
@@ -542,6 +544,7 @@ $("#form-perguntar").addEventListener("submit", async (e) => {
     pensando.replaceChildren();
     renderizarResposta(pensando, r.resposta);
     if (!r.gerada_por_ia) pensando.classList.add("sem-ia");
+    if (r.passos?.length) pensando.append(blocoPassos(r.passos));
     if (r.fontes.length) {
       const det = el("details", "fontes");
       det.open = !r.gerada_por_ia; // sem IA, as memórias SÃO a resposta: já mostra abertas
@@ -565,6 +568,31 @@ $("#form-perguntar").addEventListener("submit", async (e) => {
   }
   pensando.scrollIntoView({ behavior: "smooth", block: "end" });
 });
+
+// "Como cheguei aqui": as ferramentas que o agente usou, em ordem
+const ICONE_FERRAMENTA = { buscar_memorias: "search", listar_memorias: "list", listar_categorias: "tag",
+                           calcular: "calc", data_de_hoje: "calendar", dias_ate: "calendar" };
+const NOME_FERRAMENTA = { buscar_memorias: "Buscou", listar_memorias: "Listou memórias", listar_categorias: "Viu as categorias",
+                          calcular: "Calculou", data_de_hoje: "Consultou a data", dias_ate: "Contou os dias" };
+
+function blocoPassos(passos) {
+  const det = el("details", "passos-agente");
+  const resumo = el("summary");
+  resumo.append(icone("bot"), document.createTextNode(`Como cheguei aqui · ${passos.length} passo${passos.length > 1 ? "s" : ""}`));
+  det.append(resumo);
+  const ol = el("ol");
+  passos.forEach((p) => {
+    const li = el("li");
+    const arg = p.argumentos.consulta || p.argumentos.expressao || p.argumentos.categoria || p.argumentos.texto_contem || "";
+    const texto = el("span");
+    texto.append(el("b", null, NOME_FERRAMENTA[p.ferramenta] || p.ferramenta));
+    if (arg) texto.append(document.createTextNode(` “${arg}”`));
+    li.append(icone(ICONE_FERRAMENTA[p.ferramenta] || "sparkles"), texto, el("span", "passo-resumo", p.resumo));
+    ol.append(li);
+  });
+  det.append(ol);
+  return det;
+}
 
 // ---------------- Memórias ----------------
 $("#filtro-memorias").addEventListener("change", carregarMemorias);
@@ -700,6 +728,7 @@ async function carregarConfig() {
     f.chunk_overlap.value = c.chunk_overlap;
     atualizarSaidas();
     f.usar_ia.checked = c.usar_ia;
+    f.modo_agente.checked = c.modo_agente;
     f.modelo_llm.value = c.modelo_llm;
     f.instrucoes.value = c.instrucoes;
     const ro = c.somente_leitura;
@@ -716,7 +745,7 @@ $("#form-config").addEventListener("submit", async (e) => {
   const corpo = {
     chunk_size: Number(f.chunk_size.value), chunk_overlap: Number(f.chunk_overlap.value),
     top_k: Number(f.top_k.value), margem_relevancia: Number(f.margem_relevancia.value),
-    usar_ia: f.usar_ia.checked, modelo_llm: f.modelo_llm.value, instrucoes: f.instrucoes.value,
+    usar_ia: f.usar_ia.checked, modo_agente: f.modo_agente.checked, modelo_llm: f.modelo_llm.value, instrucoes: f.instrucoes.value,
   };
   try {
     await chamar("/config", { metodo: "PUT", corpo });

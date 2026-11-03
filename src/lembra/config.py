@@ -21,6 +21,7 @@ class Settings:
     top_k: int
     margem_relevancia: float
     usar_ia: bool
+    modo_agente: bool
     instrucoes: str
     llm_provider: str
     anthropic_model: str
@@ -44,6 +45,7 @@ def get_settings() -> Settings:
         top_k=int(os.getenv("TOP_K", "5")),
         margem_relevancia=float(os.getenv("MARGEM_RELEVANCIA", "0.05")),
         usar_ia=True,
+        modo_agente=False,
         instrucoes="",
         llm_provider=os.getenv("LLM_PROVIDER", "nenhum").lower(),
         anthropic_model=os.getenv("ANTHROPIC_MODEL", "claude-opus-5-5"),
@@ -71,6 +73,7 @@ CAMPOS_DO_USUARIO = {
     "top_k": "top_k",
     "margem_relevancia": "margem_relevancia",
     "usar_ia": "usar_ia",
+    "modo_agente": "modo_agente",
     "modelo_llm": "gemini_model",
     "instrucoes": "instrucoes",
 }

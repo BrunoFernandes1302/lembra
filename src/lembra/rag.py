@@ -12,7 +12,8 @@ G = Generation  : o LLM responde usando SÓ esse material.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, field
 from typing import Protocol
 
 from .chunking import chunk_text
@@ -58,6 +59,7 @@ class Resposta:
     texto: str
     fontes: list[Trecho]
     gerada_por_ia: bool = False
+    passos: list[dict] = field(default_factory=list)  # modo agente: ferramentas usadas
 
 
 def alimentar(
@@ -95,12 +97,30 @@ def editar(
 
 
 def buscar(
-    repo: Repositorio, pergunta: str, categoria: str | None = None, settings: Settings | None = None
+    repo: Repositorio, pergunta: str, categoria: str | None = None, settings: Settings | None = None,
+    vetor: list[float] | None = None,
 ) -> list[Trecho]:
     """Retrieval: embedding da pergunta -> vizinhos mais próximos no banco."""
     s = settings_do_usuario(repo, settings) if settings is None else settings
-    vetor = embedder_de(s).embed_query(pergunta)
+    if vetor is None:
+        vetor = embedder_de(s).embed_query(pergunta)
     return repo.buscar(vetor, s.top_k, categoria, s.embedding_model)
+
+
+def _config_e_vetor(repo, pergunta: str, settings: Settings | None) -> tuple[Settings, list[float] | None]:
+    """Lê a config do usuário (banco) e gera o embedding da pergunta (Gemini) AO MESMO TEMPO:
+    um não depende do outro (o modelo de embeddings é do servidor, não do usuário).
+    Tempo total = o da mais lenta, e não a soma das duas."""
+    base = settings or get_settings()
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        f_cfg = ex.submit(settings_do_usuario, repo, settings)
+        f_vet = ex.submit(embedder_de(base).embed_query, pergunta)
+        s = f_cfg.result()
+        try:
+            vetor = f_vet.result()
+        except Exception:  # noqa: BLE001 — se falhar aqui, buscar() tenta de novo
+            vetor = None
+    return s, vetor
 
 
 def montar_prompt(pergunta: str, trechos: list[Trecho]) -> str:
@@ -132,8 +152,12 @@ def filtrar_proximos_do_melhor(trechos: list[Trecho], margem: float = MARGEM_REL
 def perguntar(
     repo: Repositorio, pergunta: str, categoria: str | None = None, settings: Settings | None = None
 ) -> Resposta:
-    s = settings_do_usuario(repo, settings)
-    trechos = buscar(repo, pergunta, categoria, s)
+    s, vetor = _config_e_vetor(repo, pergunta, settings)
+    if s.usar_ia and s.modo_agente and s.llm_provider == "gemini":
+        resposta = _perguntar_com_agente(repo, pergunta, categoria, s)
+        if resposta is not None:
+            return resposta
+    trechos = buscar(repo, pergunta, categoria, s, vetor)
     if not trechos:
         return Resposta("Ainda não encontrei memórias suas sobre isso. Registre algumas primeiro.", [])
     llm = get_llm(s) if s.usar_ia else None
@@ -150,6 +174,18 @@ def perguntar(
             trechos,
         )
     return Resposta(texto, trechos, gerada_por_ia=True)
+
+
+def _perguntar_com_agente(repo, pergunta: str, categoria: str | None, s: Settings) -> Resposta | None:
+    """Modo agente. Se o serviço de IA falhar, devolve None e o fluxo normal assume."""
+    from .agente import executar_agente
+
+    try:
+        texto, fontes, passos = executar_agente(repo, pergunta, categoria, s)
+    except Exception as e:  # noqa: BLE001 — degradação graciosa: cai para o RAG normal
+        logger.warning("agente falhou (%s): %s", type(e).__name__, e)
+        return None
+    return Resposta(texto or "Não consegui chegar a uma resposta.", fontes, gerada_por_ia=True, passos=passos)
 
 
 def previa_chunking(texto: str, chunk_size: int, chunk_overlap: int) -> list[str]:

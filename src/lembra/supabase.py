@@ -13,6 +13,11 @@ import requests
 
 TIMEOUT = 30
 
+# UMA sessão HTTP reaproveitada (keep-alive): a conexão segura (TLS) é aberta uma vez e reusada.
+# Sem isso, cada consulta refazia o "aperto de mão" de criptografia (várias idas e voltas pela rede).
+_http = requests.Session()
+_http.mount("https://", requests.adapters.HTTPAdapter(pool_connections=4, pool_maxsize=16))
+
 
 class ErroSupabase(Exception):
     def __init__(self, status: int, mensagem: str):
@@ -55,7 +60,7 @@ class SupabaseAuth:
 
     def cadastrar(self, email: str, senha: str, convite: str | None = None) -> dict:
         # Cadastro livre. Se a trava de convites for religada no banco, o código vai nos metadados.
-        r = requests.post(
+        r = _http.post(
             f"{self.url}/auth/v1/signup",
             headers=self.headers,
             json={"email": email, "password": senha, "data": {"convite": convite} if convite else {}},
@@ -64,7 +69,7 @@ class SupabaseAuth:
         return _sessao(_checar(r))
 
     def entrar(self, email: str, senha: str) -> dict:
-        r = requests.post(
+        r = _http.post(
             f"{self.url}/auth/v1/token?grant_type=password",
             headers=self.headers,
             json={"email": email, "password": senha},
@@ -74,7 +79,7 @@ class SupabaseAuth:
 
     def renovar(self, refresh_token: str) -> dict:
         """Troca o refresh token por um crachá novo, sem pedir a senha de novo."""
-        r = requests.post(
+        r = _http.post(
             f"{self.url}/auth/v1/token?grant_type=refresh_token",
             headers=self.headers,
             json={"refresh_token": refresh_token},
@@ -117,7 +122,7 @@ class RepositorioSupabase:
                 for i, (t, v) in enumerate(zip(chunks, vetores))
             ],
         }
-        r = requests.post(f"{self.url}/rpc/salvar_memoria", headers=self.headers, json=payload, timeout=TIMEOUT)
+        r = _http.post(f"{self.url}/rpc/salvar_memoria", headers=self.headers, json=payload, timeout=TIMEOUT)
         return _checar(r)
 
     def listar_memorias(self, categoria: str | None = None, limite: int = 200) -> list[dict]:
@@ -128,12 +133,12 @@ class RepositorioSupabase:
         }
         if categoria:
             params["categoria"] = f"eq.{categoria}"
-        r = requests.get(f"{self.url}/memorias", headers=self.headers, params=params, timeout=TIMEOUT)
+        r = _http.get(f"{self.url}/memorias", headers=self.headers, params=params, timeout=TIMEOUT)
         return _checar(r)
 
     def obter_memoria(self, memoria_id: str) -> dict | None:
         params = {"select": "id,texto,categoria,data_evento,criado_em", "id": f"eq.{memoria_id}"}
-        r = requests.get(f"{self.url}/memorias", headers=self.headers, params=params, timeout=TIMEOUT)
+        r = _http.get(f"{self.url}/memorias", headers=self.headers, params=params, timeout=TIMEOUT)
         linhas = _checar(r)
         return linhas[0] if linhas else None
 
@@ -149,52 +154,52 @@ class RepositorioSupabase:
                 for i, (t, v) in enumerate(zip(chunks, vetores))
             ]
             payload["p_modelo"] = modelo
-        r = requests.post(f"{self.url}/rpc/atualizar_memoria", headers=self.headers, json=payload, timeout=TIMEOUT)
+        r = _http.post(f"{self.url}/rpc/atualizar_memoria", headers=self.headers, json=payload, timeout=TIMEOUT)
         return bool(_checar(r))
 
     def listar_chunks(self, memoria_id: str) -> list[dict]:
         params = {"select": "indice,texto,modelo_embedding", "memoria_id": f"eq.{memoria_id}", "order": "indice"}
-        r = requests.get(f"{self.url}/chunks", headers=self.headers, params=params, timeout=TIMEOUT)
+        r = _http.get(f"{self.url}/chunks", headers=self.headers, params=params, timeout=TIMEOUT)
         return _checar(r)
 
     # ---------- Configuração do RAG ----------
 
     def obter_config(self) -> dict | None:
-        r = requests.get(f"{self.url}/config_rag", headers=self.headers, params={"select": "*"}, timeout=TIMEOUT)
+        r = _http.get(f"{self.url}/config_rag", headers=self.headers, params={"select": "*"}, timeout=TIMEOUT)
         linhas = _checar(r)
         return linhas[0] if linhas else None
 
     def salvar_config(self, cfg: dict) -> dict:
         # "upsert": cria a linha se não existir, atualiza se existir
         h = {**self.headers, "Prefer": "resolution=merge-duplicates,return=representation"}
-        r = requests.post(f"{self.url}/config_rag", headers=h, params={"on_conflict": "user_id"},
+        r = _http.post(f"{self.url}/config_rag", headers=h, params={"on_conflict": "user_id"},
                           json={**cfg, "atualizado_em": "now()"}, timeout=TIMEOUT)
         return _checar(r)[0]
 
     # ---------- Categorias ----------
 
     def listar_categorias(self) -> list[dict]:
-        r = requests.post(f"{self.url}/rpc/listar_categorias", headers=self.headers, json={}, timeout=TIMEOUT)
+        r = _http.post(f"{self.url}/rpc/listar_categorias", headers=self.headers, json={}, timeout=TIMEOUT)
         return _checar(r)
 
     def criar_categoria(self, nome: str) -> None:
         h = {**self.headers, "Prefer": "resolution=ignore-duplicates"}
-        r = requests.post(f"{self.url}/categorias", headers=h, json={"nome": nome.strip().lower()}, timeout=TIMEOUT)
+        r = _http.post(f"{self.url}/categorias", headers=h, json={"nome": nome.strip().lower()}, timeout=TIMEOUT)
         _checar(r)
 
     def renomear_categoria(self, antigo: str, novo: str) -> None:
-        r = requests.post(f"{self.url}/rpc/renomear_categoria", headers=self.headers,
+        r = _http.post(f"{self.url}/rpc/renomear_categoria", headers=self.headers,
                           json={"p_antigo": antigo, "p_novo": novo}, timeout=TIMEOUT)
         _checar(r)
 
     def apagar_categoria(self, nome: str, mover_para: str = "geral") -> int:
-        r = requests.post(f"{self.url}/rpc/apagar_categoria", headers=self.headers,
+        r = _http.post(f"{self.url}/rpc/apagar_categoria", headers=self.headers,
                           json={"p_nome": nome, "p_mover_para": mover_para}, timeout=TIMEOUT)
         return _checar(r) or 0
 
     def apagar_memoria(self, memoria_id: str) -> bool:
         h = {**self.headers, "Prefer": "return=representation"}
-        r = requests.delete(f"{self.url}/memorias", headers=h, params={"id": f"eq.{memoria_id}"}, timeout=TIMEOUT)
+        r = _http.delete(f"{self.url}/memorias", headers=h, params={"id": f"eq.{memoria_id}"}, timeout=TIMEOUT)
         return len(_checar(r) or []) > 0
 
     def buscar(
@@ -203,7 +208,7 @@ class RepositorioSupabase:
         payload = {"query_embedding": _vetor_para_texto(vetor), "k": k, "filtro_categoria": categoria}
         if modelo:
             payload["modelo"] = modelo
-        r = requests.post(f"{self.url}/rpc/buscar_chunks", headers=self.headers, json=payload, timeout=TIMEOUT)
+        r = _http.post(f"{self.url}/rpc/buscar_chunks", headers=self.headers, json=payload, timeout=TIMEOUT)
         return [
             Trecho(
                 texto=l["texto"],

@@ -500,6 +500,28 @@ label .menu-botao, .item.editando .menu-botao { border-radius: var(--raio-p); pa
 .fonte-meta .nota { margin-left: auto; }
 @keyframes revelar { from { opacity: 0; transform: translateY(4px); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
 
+/* ---------------------------------------------------------- Passos do agente */
+.passos-agente { margin-top: 12px; font-size: .84rem; white-space: normal; }
+.passos-agente summary {
+  cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 6px;
+  color: var(--ciano); font-weight: 600;
+}
+.passos-agente summary::-webkit-details-marker { display: none; }
+.passos-agente summary .ic { width: 16px; height: 16px; }
+.passos-agente ol { list-style: none; margin: 10px 0 0; padding: 0 0 0 10px; border-left: 2px solid var(--borda-forte); display: grid; gap: 8px; }
+.passos-agente li { display: flex; align-items: flex-start; gap: 8px; position: relative; animation: mensagem 300ms both; }
+.passos-agente li::before {
+  content: ""; position: absolute; left: -15px; top: 7px; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--gradiente); box-shadow: 0 0 0 3px var(--fundo);
+}
+.passos-agente li .ic { width: 15px; height: 15px; margin-top: 2px; color: var(--violeta); }
+.passos-agente li b { font-weight: 600; }
+.passo-resumo { margin-left: auto; color: var(--fraco); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.selo {
+  display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: .68rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .04em; background: var(--gradiente); color: #fff; vertical-align: 2px;
+}
+
 /* ---------------------------------------------------------- Estados vazios */
 .estado-vazio { list-style: none; text-align: center; padding: 48px 16px !important; }
 .orbe.pequeno { width: 56px; height: 56px; border-radius: 18px; margin-bottom: 14px; }
