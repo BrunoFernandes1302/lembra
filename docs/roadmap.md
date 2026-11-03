@@ -10,10 +10,10 @@ o sistema respondeu e o que era esperado.
 | 2 | **App de verdade** | PWA mobile, login/senha, multiusuário isolado, deploy, banco na nuvem | ✅ no ar em lembra-nu.vercel.app |
 | 3 | **Categorias e configuração do RAG** | Categorias por usuário, filtros, editar memória, ajustes do RAG no app, Laboratório, IA sugere categoria | ✅ |
 | 4 | **Avaliação (LLM-as-judge)** | Conjunto de perguntas de teste, recall@K, fidelidade; um LLM "juiz" avalia as respostas | ✅ v1 (próximo: conjunto maior e repetições) |
-| 5 | **Agentes** | LLM que decide quais ferramentas usar (buscar por categoria, registrar compromisso, somar gastos) | ⬜ |
+| 5 | **Agentes** | LLM que decide quais ferramentas usar (buscar, listar, calcular, contar dias) | ✅ experimental |
 | 6 | **RAG avançado** | Busca híbrida, re-ranking, chat com histórico | ⬜ |
-| 7 | **LLM local** | Ollama, quantização, privacidade | ⬜ |
-| 8 | **Fine-tuning** | Congelar o modelo e treinar só a "ponta" / LoRA | ⬜ |
+| 7 | **LLM local** | Ollama, quantização, privacidade | 🟡 LoRA em modelo pequeno treinado; falta servir no Ollama |
+| 8 | **Fine-tuning** | Congelar o modelo e treinar só a "ponta" / LoRA | ✅ experimentos (adaptador de embeddings e LoRA) |
 | 8b | **Visual e integrações** | Redesenho moderno "cara de IA" ✅ v1; importar conversas do WhatsApp ✅ | ✅ |
 | 8c | **Multimodal** | Áudio (falar em vez de digitar) ✅; imagens (fotos de recibos, documentos) ⬜ futuro | 🟡 |
 | 9 | **Empresa** | Documentos reais, permissões, LGPD, custos | ⬜ |
