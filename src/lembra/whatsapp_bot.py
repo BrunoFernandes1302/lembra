@@ -29,7 +29,7 @@ from lembra.supabase import TIMEOUT, ErroSupabase, RepositorioSupabase, _checar,
 
 logger = logging.getLogger(__name__)
 
-GRAPH = "https://graph.facebook.com/v23.0"
+GRAPH = "https://graph.facebook.com/v25.0"
 LIMITE_WHATSAPP = 4096  # caracteres por mensagem de texto
 
 AJUDA = (
