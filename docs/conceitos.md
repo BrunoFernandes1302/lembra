@@ -174,7 +174,18 @@ administrativa (`service_role`), que ignora o RLS: ela sempre repassa o crachá 
 **Login (Supabase Auth):**
 - A senha nunca é guardada como foi digitada, só um *hash* (bcrypt), uma "impressão digital" que não dá para reverter.
 - Ao entrar, a pessoa recebe um **access token (JWT)**, que dura ~1 hora e vai em toda chamada, e um **refresh token**, que renova o JWT sem pedir a senha de novo e mantém o app logado.
-- **Fase de testes:** o cadastro público fica **desligado**, e o dono cria as contas dos testadores no painel, já confirmadas. Motivo: o e-mail embutido do Supabase gratuito só envia para membros da organização, então testadores não receberiam o e-mail de confirmação. Para abrir ao público, será preciso um serviço de e-mail próprio (ex.: Resend).
+- **Confirmação de e-mail desligada** (igual ao projeto Finanças BM): o cadastro é instantâneo e nenhum e-mail é enviado. Motivo: o e-mail embutido do Supabase gratuito só chega a membros da organização. Preço: não se verifica se o e-mail é mesmo da pessoa. Por isso, o cadastro vai exigir **código de convite**, validado **no banco** (não só na tela, que pode ser contornada chamando a API direto).
+- "Esqueci minha senha" depende de e-mail, então fica para quando houver um serviço de e-mail próprio (ex.: Resend).
+
+**Teste real pela internet** (duas contas de verdade, mesmo caminho que o app usará):
+
+| Tentativa | Resultado |
+|-----------|-----------|
+| Beto lê memórias | lista vazia (a da Ana é invisível) |
+| Beto apaga a memória da Ana | 0 linhas apagadas |
+| Beto cria memória em nome da Ana | bloqueado: HTTP 403, *violates row-level security policy* |
+| Sem login, lê memórias | lista vazia |
+| Conta da Ana excluída | a memória dela foi apagada junto (*cascade*) |
 
 **Filtro por categoria:** a função `buscar_chunks` aceita uma categoria opcional. "Quanto gastei…"
 pode buscar só em `finanças`: menos candidatos, menos ruído.
