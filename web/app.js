@@ -71,9 +71,21 @@ function el(tag, classe, texto) {
   return e;
 }
 
-function botao(texto, classe, aoClicar) {
-  const b = el("button", classe, texto);
+function icone(nome) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("class", "ic");
+  svg.setAttribute("aria-hidden", "true");
+  const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+  use.setAttribute("href", `#i-${nome}`);
+  svg.append(use);
+  return svg;
+}
+
+function botao(texto, classe, aoClicar, nomeIcone) {
+  const b = el("button", classe);
   b.type = "button";
+  if (nomeIcone) b.append(icone(nomeIcone));
+  b.append(document.createTextNode(texto));
   b.addEventListener("click", aoClicar);
   return b;
 }
@@ -194,10 +206,10 @@ function desenharChips() {
     });
     box.append(chip);
   });
-  box.append(botao("+ nova", "chip chip-nova", () => {
+  box.append(botao("nova", "chip chip-nova", () => {
     $("#linha-nova-cat").hidden = false;
     $("#nova-cat-registrar").focus();
-  }));
+  }, "plus"));
 }
 
 async function criarCategoria(nome) {
@@ -245,8 +257,8 @@ function desenharCategorias() {
           await carregarCategorias();
           avisar("Categoria renomeada");
         } catch (err) { avisar(err.message); }
-      }),
-      botao("Apagar", "apagar", async () => {
+      }, "edit"),
+      botao("Apagar", "botao-texto apagar", async () => {
         const outras = categorias.filter((x) => x.nome !== c.nome).map((x) => x.nome);
         if (!outras.length) return avisar("Crie outra categoria antes de apagar esta.");
         let destino = outras.includes("geral") ? "geral" : outras[0];
@@ -260,7 +272,7 @@ function desenharCategorias() {
           await carregarCategorias();
           avisar(r.memorias_movidas ? `${r.memorias_movidas} memória(s) movida(s) para "${destino.toLowerCase()}"` : "Categoria apagada");
         } catch (err) { avisar(err.message); }
-      })
+      }, "trash")
     );
     li.append(info, acoes);
     lista.append(li);
@@ -276,7 +288,7 @@ $("#form-registrar").addEventListener("submit", async (e) => {
   if (!f.texto.value.trim()) return (erro.textContent = "Escreva a memória.");
   const b = f.querySelector("button[type=submit]");
   b.disabled = true;
-  b.textContent = "Salvando…";
+  b.querySelector("span").textContent = "Guardando e entendendo…";
   try {
     const r = await chamar("/memorias", { metodo: "POST",
       corpo: { texto: f.texto.value, categoria: categoriaEscolhida, data_evento: f.data_evento.value } });
@@ -287,7 +299,7 @@ $("#form-registrar").addEventListener("submit", async (e) => {
     erro.textContent = err.message;
   } finally {
     b.disabled = false;
-    b.textContent = "Salvar memória";
+    b.querySelector("span").textContent = "Salvar memória";
   }
 });
 
@@ -299,6 +311,15 @@ function balao(classe, texto) {
   return b;
 }
 
+// Sugestões da tela inicial (delegação: funcionam mesmo depois que a tela é recriada ao sair)
+$("#conversa").addEventListener("click", (e) => {
+  const s = e.target.closest(".sugestao");
+  if (!s) return;
+  const f = $("#form-perguntar");
+  f.pergunta.value = s.dataset.pergunta;
+  f.requestSubmit();
+});
+
 $("#form-perguntar").addEventListener("submit", async (e) => {
   e.preventDefault();
   const f = e.target;
@@ -307,7 +328,10 @@ $("#form-perguntar").addEventListener("submit", async (e) => {
   $("#dica-perguntar")?.remove();
   balao("usuario", pergunta);
   f.pergunta.value = "";
-  const pensando = balao("lembra pensando", "Procurando nas suas memórias…");
+  const pensando = balao("lembra pensando", null);
+  const pontinhos = el("span", "pontinhos");
+  pontinhos.append(el("i"), el("i"), el("i"));
+  pensando.append(el("span", "texto-pensando", "Procurando nas suas memórias"), pontinhos);
 
   try {
     const r = await chamar("/perguntar", { metodo: "POST",
@@ -374,9 +398,9 @@ function itemMemoria(m) {
         desenharChunks(caixaChunks, ch.map((c) => c.texto));
         caixaChunks.hidden = false;
       } catch (err) { avisar(err.message); }
-    }),
-    botao("Editar", "botao-texto", () => li.replaceWith(formEdicao(m))),
-    botao("Apagar", "apagar", async () => {
+    }, "layers"),
+    botao("Editar", "botao-texto", () => li.replaceWith(formEdicao(m)), "edit"),
+    botao("Apagar", "botao-texto apagar", async () => {
       if (!confirm("Apagar esta memória? Não dá para desfazer.")) return;
       try {
         await chamar(`/memorias/${m.id}`, { metodo: "DELETE" });
@@ -385,7 +409,7 @@ function itemMemoria(m) {
         carregarCategorias().catch(() => {});
         if (!$("#lista-memorias").children.length) carregarMemorias();
       } catch (err) { avisar(err.message); }
-    })
+    }, "trash")
   );
   const rodape = el("div", "item-rodape");
   rodape.append(info, acoes);

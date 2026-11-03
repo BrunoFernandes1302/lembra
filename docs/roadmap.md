@@ -14,7 +14,7 @@ o sistema respondeu e o que era esperado.
 | 6 | **RAG avançado** | Busca híbrida, re-ranking, chat com histórico | ⬜ |
 | 7 | **LLM local** | Ollama, quantização, privacidade | ⬜ |
 | 8 | **Fine-tuning** | Congelar o modelo e treinar só a "ponta" / LoRA | ⬜ |
-| 8b | **Visual e integrações** | Redesenho moderno "cara de IA"; integração com WhatsApp e ferramentas do dia a dia | ⬜ |
+| 8b | **Visual e integrações** | Redesenho moderno "cara de IA" ✅ v1; integração com WhatsApp (exportar conversas) | 🟡 |
 | 9 | **Empresa** | Documentos reais, permissões, LGPD, custos | ⬜ |
 
 ## Detalhes

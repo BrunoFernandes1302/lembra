@@ -247,6 +247,13 @@ como texto e não executou.
 **Sessão no celular:** o app guarda o crachá e, quando ele vence (~1 hora), usa o *refresh token*
 para pegar outro sem pedir senha. Ao sair, a tela é limpa: quem entrar depois não vê nada.
 
+**Design system (redesenho v1):** cores, raios, sombras e velocidades de animação são
+**variáveis** no topo do `styles.css` (*design tokens*): mudar o tema é trocar poucos valores.
+Técnicas usadas: vidro fosco (`backdrop-filter: blur`), fundo "aurora" animado só com CSS,
+ícones do Lucide embutidos (funcionam offline), efeitos de hover só em aparelhos com mouse
+(`@media (hover: hover)`) e respeito a quem pede "reduzir movimento" no sistema
+(`prefers-reduced-motion`).
+
 **CORS:** por segurança, o navegador só deixa um site chamar uma API de **outro endereço** se a API
 autorizar esse endereço. Quando o app for para a Vercel e a API ficar em outro lugar, o endereço do
 app entra em `ALLOWED_ORIGINS`.
