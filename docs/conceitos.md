@@ -187,6 +187,15 @@ administrativa (`service_role`), que ignora o RLS: ela sempre repassa o crachá 
 | Sem login, lê memórias | lista vazia |
 | Conta da Ana excluída | a memória dela foi apagada junto (*cascade*) |
 
+**Convites (cadastro fechado):**
+- Tabela `convites`: código aleatório de uso único, validade (14 dias), e-mail opcional.
+- **Trigger** = regra que o banco executa sozinho a cada evento. Aqui ele roda a cada conta nova e **cancela o cadastro** se o código for inválido, vencido, já usado ou de outro e-mail. Como está no banco, vale para o app, para a API direta e até para o botão "Add user" do painel: o convite é a **única porta de entrada**.
+- `FOR UPDATE` trava o convite durante o cadastro, para que duas pessoas não usem o mesmo código ao mesmo tempo (*condição de corrida*).
+- Só **admins** geram convites, pela função `criar_convite`. O primeiro admin nasce de um convite especial (`torna_admin`), resolvendo o "ovo e a galinha".
+- **`SECURITY DEFINER`**: a função roda com os poderes de quem a criou, passando por cima do RLS. O verificador do Supabase alerta sobre isso. Aqui é intencional: é a única porta para criar convites, e ela checa se quem chama é admin. Lição: **avisos de ferramentas apontam riscos, não erros**, e cada um precisa de análise.
+
+Testado pela internet: sem código, código inventado, vencido, de outro e-mail e reutilizado foram **barrados**; usuário comum não consegue gerar convite, inserir convite direto nem se promover a admin.
+
 **Filtro por categoria:** a função `buscar_chunks` aceita uma categoria opcional. "Quanto gastei…"
 pode buscar só em `finanças`: menos candidatos, menos ruído.
 
@@ -250,4 +259,7 @@ significado das palavras) e as últimas, coisas específicas da tarefa.
 | **RLS** | *Row Level Security*: o banco filtra as linhas por usuário em toda consulta |
 | **JWT** | "Crachá" digital assinado que prova quem é o usuário logado |
 | **Migration** | Arquivo com as mudanças de estrutura do banco, versionado no Git |
+| **Trigger** | Regra que o banco executa automaticamente quando algo acontece (ex.: nova conta) |
+| **SECURITY DEFINER** | Função que roda com os poderes de quem a criou, e não de quem a chama |
+| **Condição de corrida** | Bug em que duas operações simultâneas interferem uma na outra |
 | **PEFT** | *Parameter-Efficient Fine-Tuning*: família de técnicas (LoRA etc.) que treinam poucos parâmetros |
