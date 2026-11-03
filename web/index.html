@@ -191,6 +191,7 @@
           <button type="button" class="segmento ativo" data-sub="rag"><svg class="ic"><use href="#i-sliders"/></svg>RAG</button>
           <button type="button" class="segmento" data-sub="lab"><svg class="ic"><use href="#i-flask"/></svg>Laboratório</button>
           <button type="button" class="segmento" data-sub="cats"><svg class="ic"><use href="#i-tag"/></svg>Categorias</button>
+          <button type="button" class="segmento" data-sub="zap"><svg class="ic"><use href="#i-message-dots"/></svg>WhatsApp</button>
         </div>
 
         <!-- Configurar RAG -->
@@ -277,6 +278,34 @@
             <button type="submit" class="botao primario pequeno">Criar</button>
           </form>
           <ul id="lista-categorias" class="lista"></ul>
+        </div>
+
+        <!-- WhatsApp -->
+        <div id="sub-zap" class="sub" hidden>
+          <div class="cartao">
+            <h3><svg class="ic"><use href="#i-message-dots"/></svg> Lembra no WhatsApp</h3>
+            <p class="ajuda">Converse com o Lembra como um contato: escreva para <b>guardar</b> uma memória, termine com <b>?</b> para <b>perguntar</b>, ou mande <b>áudio</b>.</p>
+            <p class="info-fixa" id="zap-indisponivel" hidden>O bot ainda não foi configurado no servidor.</p>
+
+            <div id="zap-vinculado" hidden>
+              <p class="zap-status"><svg class="ic"><use href="#i-check"/></svg> <span>Ligado ao número <b id="zap-telefone"></b></span></p>
+              <button type="button" class="botao-texto perigo" id="zap-desvincular">Desvincular este número</button>
+            </div>
+
+            <div id="zap-desvinculado" hidden>
+              <ol class="dicas">
+                <li>Gere um código (vale 10 minutos e uma única vez).</li>
+                <li>Envie <b>VINCULAR</b> + o código para o Lembra no WhatsApp.</li>
+              </ol>
+              <button type="button" class="botao primario" id="zap-gerar">Gerar código</button>
+              <div id="zap-codigo-caixa" class="zap-codigo-caixa" hidden>
+                <p class="zap-codigo" id="zap-codigo" aria-live="polite"></p>
+                <a class="botao secundario" id="zap-abrir" target="_blank" rel="noopener">Abrir o WhatsApp com a mensagem pronta</a>
+                <button type="button" class="botao-texto" id="zap-conferir">Já enviei — conferir</button>
+              </div>
+            </div>
+            <p class="erro" id="erro-zap" role="alert"></p>
+          </div>
         </div>
       </section>
     </main>

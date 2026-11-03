@@ -394,6 +394,59 @@ os embeddings saem em lotes de 100.
 **LGPD:** a conversa tem mensagens de outras pessoas. O app avisa para importar só o que o
 usuário tem o direito de guardar.
 
+### 11.1 O Lembra como contato no WhatsApp (bot oficial)
+
+**Oficial × não oficial.** Há APIs "não oficiais" (Baileys, WAHA, Evolution) que conectam o
+*seu* número como aparelho vinculado e leem todas as conversas. Elas violam os termos do
+WhatsApp (banimento sem recurso), precisam de um servidor ligado 24 h e enxergam **tudo**. A
+escolha foi a **Cloud API oficial da Meta**: o Lembra vira um contato; você encaminha ou
+escreve o que quer guardar. O histórico continua entrando pela exportação (seção 11).
+
+**Webhook.** Em vez de o Lembra perguntar "chegou mensagem?" a cada segundo (*polling*), a
+Meta **chama** o nosso endereço `POST /whatsapp/webhook` quando algo acontece. Na hora de
+cadastrar, a Meta faz um `GET` com um token combinado (`hub.verify_token`) e devolvemos um
+"desafio": prova de que o endereço é nosso.
+
+**Assinatura HMAC (quem está chamando?).** O webhook é público: qualquer pessoa pode mandar um
+`POST` fingindo ser a Meta. A Meta calcula `HMAC-SHA256(segredo do app, corpo)` e envia no
+cabeçalho `X-Hub-Signature-256`. Recalculamos com o mesmo segredo e comparamos:
+- sobre os **bytes exatos** do corpo (antes de interpretar o JSON, que poderia mudar espaços);
+- em **tempo constante** (`hmac.compare_digest`), porque uma comparação comum para na 1ª letra
+  diferente, e medir esse tempo vazaria a assinatura aos poucos (*timing attack*).
+
+**Agir em nome do usuário sem o login dele.** O app sempre manda o crachá (JWT) de quem está
+logado, e o RLS faz o resto. No WhatsApp não há login. Duas saídas:
+
+| | Chave de serviço (`service_role`) | **Crachá emitido pelo servidor** (escolhida) |
+|---|---|---|
+| Como | Chave-mestra que **ignora** o RLS | Com o segredo do Supabase, o servidor assina um JWT de 5 min com `sub` = o usuário dono do número |
+| Se o código errar | Um `where` esquecido expõe **todos** os usuários | O banco continua aplicando o RLS: o pior caso fica no próprio usuário |
+| Reuso | Reescrever cada consulta com filtro manual | Todo o RAG funciona igual (mesmo `RepositorioSupabase`) |
+
+Um JWT é só `cabeçalho.conteúdo.assinatura` em base64; `emitir_jwt()` tem ~10 linhas. O
+servidor também emite um crachá `service_role` de 60 s, mas ele só serve para **3 funções**
+(dono do número, vincular, marcar processada): elas recusam qualquer outro papel.
+
+**Vincular número ↔ conta.** No app, *Ajustes → WhatsApp → Gerar código*; no WhatsApp,
+`VINCULAR K7PX2MQA`. Por que tanto cuidado: quem acertar o código de outra pessoa liga o
+**próprio** número à conta **dela** e passa a ler suas memórias. Defesas:
+- 8 caracteres de 32 símbolos sem ambíguos (sem 0/O, 1/I): 32⁸ ≈ 1 trilhão de combinações;
+- vale **10 minutos** e **uma vez** (é apagado ao ser usado);
+- no máximo **5 tentativas erradas por número por hora**;
+- o app mostra o número vinculado e permite desvincular.
+
+**Idempotência.** Se o servidor demora a responder, a Meta **reenvia** a mesma mensagem.
+Sem cuidado, a memória seria salva duas vezes. Cada mensagem tem um id; antes de processar,
+gravamos o id numa tabela com chave única. Se já existia, é reenvio e ignoramos.
+
+**Quem decide a ação: regra, não IA.** Termina com "?" → pergunta; `VINCULAR` → vínculo;
+`ajuda` → instruções; o resto → memória (aí sim a IA sugere a categoria). Regras são
+previsíveis, grátis e instantâneas; a IA fica onde ela agrega (categoria, resposta, transcrição).
+"Vincular" falado num áudio é recusado de propósito: transcrição pode errar letras.
+
+**Custo.** Responder a quem escreveu para o bot (janela de 24 h) é gratuito ou tem franquia
+mensal, conforme a regra vigente da Meta; o número de teste também é gratuito.
+
 ---
 
 ## 12. Agentes (modo agente, experimental)
@@ -518,3 +571,7 @@ com 3 ou mais memórias, negação. Busca: acerto@1 de 88% (a régua mede alguma
 | **Recall@K / MRR** | Métricas de busca: quantas certas vieram / em que posição veio a primeira certa |
 | **Efeito teto** | Teste fácil demais: tudo passa e nada se compara |
 | **PEFT** | *Parameter-Efficient Fine-Tuning*: família de técnicas (LoRA etc.) que treinam poucos parâmetros |
+| **Webhook** | Endereço seu que outro serviço chama quando algo acontece (o contrário de ficar perguntando) |
+| **HMAC** | Assinatura feita com um segredo compartilhado: prova que a mensagem veio de quem tem o segredo e não foi alterada |
+| **Timing attack** | Descobrir um segredo medindo quanto tempo uma comparação demora |
+| **Idempotência** | Processar a mesma coisa duas vezes dá o mesmo resultado que uma vez |

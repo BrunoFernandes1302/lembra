@@ -288,10 +288,68 @@ $$(".aba").forEach((a) => a.addEventListener("click", () => irPara(a.dataset.tel
 $$(".segmento[data-sub]").forEach((s) =>
   s.addEventListener("click", () => {
     $$(".segmento[data-sub]").forEach((x) => x.classList.toggle("ativo", x === s));
-    ["rag", "lab", "cats"].forEach((n) => ($(`#sub-${n}`).hidden = n !== s.dataset.sub));
+    ["rag", "lab", "cats", "zap"].forEach((n) => ($(`#sub-${n}`).hidden = n !== s.dataset.sub));
     if (s.dataset.sub === "cats") desenharCategorias();
+    if (s.dataset.sub === "zap") carregarWhatsApp();
   })
 );
+
+// ---------------- WhatsApp (vínculo número ↔ conta) ----------------
+let numeroLembra = "";
+
+function formatarTelefone(t) {
+  // 5511999990000 -> +55 11 99999-0000 (só para exibir)
+  const m = /^(\d{2})(\d{2})(\d{4,5})(\d{4})$/.exec(t || "");
+  return m ? `+${m[1]} ${m[2]} ${m[3]}-${m[4]}` : `+${t}`;
+}
+
+async function carregarWhatsApp() {
+  $("#erro-zap").textContent = "";
+  try {
+    const r = await chamar("/whatsapp/vinculo");
+    numeroLembra = r.numero_lembra || "";
+    $("#zap-indisponivel").hidden = Boolean(numeroLembra);
+    $("#zap-vinculado").hidden = !r.vinculo;
+    $("#zap-desvinculado").hidden = Boolean(r.vinculo);
+    if (r.vinculo) {
+      $("#zap-telefone").textContent = formatarTelefone(r.vinculo.telefone);
+      $("#zap-codigo-caixa").hidden = true;
+    }
+  } catch (e) {
+    $("#erro-zap").textContent = e.message;
+  }
+}
+
+$("#zap-gerar").addEventListener("click", async () => {
+  $("#erro-zap").textContent = "";
+  try {
+    const { codigo } = await chamar("/whatsapp/codigo", { metodo: "POST" });
+    $("#zap-codigo").textContent = codigo;
+    const abrir = $("#zap-abrir");
+    abrir.hidden = !numeroLembra;
+    if (numeroLembra) abrir.href = `https://wa.me/${numeroLembra}?text=${encodeURIComponent("VINCULAR " + codigo)}`;
+    $("#zap-codigo-caixa").hidden = false;
+  } catch (e) {
+    $("#erro-zap").textContent = e.message;
+  }
+});
+
+$("#zap-conferir").addEventListener("click", async () => {
+  await carregarWhatsApp();
+  if (!$("#zap-vinculado").hidden) avisar("WhatsApp ligado à sua conta ✅");
+  else avisar("Ainda não recebi o código. Confira se enviou para o número certo.");
+});
+
+$("#zap-desvincular").addEventListener("click", async () => {
+  if (!confirm("Desvincular este número? O Lembra deixa de responder a ele.")) return;
+  try {
+    await chamar("/whatsapp/vinculo", { metodo: "DELETE" });
+    avisar("Número desvinculado.");
+    carregarWhatsApp();
+  } catch (e) {
+    $("#erro-zap").textContent = e.message;
+  }
+});
 
 // ---------------- Categorias (do banco) ----------------
 let categoriaEscolhida = "geral";

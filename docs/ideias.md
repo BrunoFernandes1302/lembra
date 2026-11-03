@@ -12,8 +12,10 @@ Lista viva. Cada ideia tem o **conceito de IA/engenharia** que ela ensina.
 - **Problemas a resolver:**
   1. *Vincular número ↔ conta:* código de 6 dígitos gerado no app ("VINCULAR 482913").
   2. *Segurança do webhook:* conferir a assinatura HMAC (`X-Hub-Signature-256`) de cada chamada.
-  3. *Agir sem o login do usuário:* credencial de serviço no servidor, com consultas sempre
-     filtradas pelo dono vinculado (o RLS sozinho não protege quando se usa a chave de serviço).
+  3. *Agir sem o login do usuário:* ~~chave de serviço com filtro manual~~ → **decidido:** o
+     servidor emite um crachá (JWT) de 5 min para o dono do número, e o RLS continua valendo
+     (ver `docs/conceitos.md`, seção 11.1).
+- **Status:** 🟡 código, banco e tela prontos (`src/lembra/whatsapp_bot.py`); falta configurar a Meta.
 - **Precisa do dono:** conta de desenvolvedor Meta + app com WhatsApp (número de teste é grátis).
 - **Conceitos:** webhooks, assinaturas HMAC, autenticação entre serviços, idempotência (a Meta
   pode reenviar a mesma mensagem; não podemos salvar duas vezes).
