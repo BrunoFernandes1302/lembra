@@ -22,9 +22,11 @@ import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-# Cabeçalho de mensagem: Android "dd/mm/aaaa hh:mm - " ou iPhone "[dd/mm/aaaa, hh:mm:ss] "
+# Cabeçalho de mensagem: Android "dd/mm/aaaa hh:mm - " ou iPhone "[dd/mm/aaaa, hh:mm:ss] ".
+# Aparelhos em inglês usam mês/dia e relógio de 12 h ("3/11/26, 2:05 PM - ").
 _CABECALHO = re.compile(
-    r"^‎?\[?(?P<data>\d{1,2}/\d{1,2}/\d{2,4}),?\s+(?P<hora>\d{1,2}:\d{2})(?::\d{2})?\s*(?:[aApP]\.?\s?[mM]\.?)?\]?\s*(?:-\s*)?(?P<resto>.*)$"
+    r"^‎?\[?(?P<data>\d{1,2}/\d{1,2}/\d{2,4}),?\s+(?P<hora>\d{1,2}:\d{2})(?::\d{2})?"
+    r"\s*(?:(?P<ampm>[aApP])\.?\s?[mM]\.?)?\]?\s*(?:-\s*)?(?P<resto>.*)$"
 )
 # Mensagens que são ruído (sem informação útil para o Lembra)
 _RUIDO = re.compile(
@@ -57,11 +59,25 @@ class Bloco:
         return "\n".join(f"{m.autor}: {m.texto}" for m in self.mensagens)
 
 
-def _data(data: str, hora: str) -> datetime | None:
-    d, m, a = data.split("/")
+def _mes_primeiro(linhas: list[str]) -> bool:
+    """Detecta o formato do ARQUIVO inteiro: se alguma data tem o 2º número > 12, ele só pode
+    ser o dia, então o arquivo é mês/dia (aparelhos em inglês). Caso contrário, dia/mês."""
+    for linha in linhas:
+        c = _CABECALHO.match(linha)
+        if c and int(c["data"].split("/")[1]) > 12:
+            return True
+    return False
+
+
+def _data(data: str, hora: str, ampm: str | None = None, mes_primeiro: bool = False) -> datetime | None:
+    p1, p2, a = data.split("/")
+    d, m = (p2, p1) if mes_primeiro else (p1, p2)
     a = ("20" + a) if len(a) == 2 else a
+    h, minuto = map(int, hora.split(":"))
+    if ampm:  # relógio de 12 h: 12 AM = 0 h; 1-11 PM = 13-23 h
+        h = h % 12 + (12 if ampm.lower() == "p" else 0)
     try:
-        return datetime(int(a), int(m), int(d), *map(int, hora.split(":")))
+        return datetime(int(a), int(m), int(d), h, minuto)
     except ValueError:
         return None
 
@@ -70,10 +86,12 @@ def ler_exportacao(conteudo: str) -> list[Mensagem]:
     """Transforma o .txt exportado em mensagens (autor, quando, texto), descartando ruído."""
     mensagens: list[Mensagem] = []
     atual: Mensagem | None = None
-    for linha in conteudo.replace("\r\n", "\n").split("\n"):
-        linha = linha.replace("‎", "").replace(" ", " ").rstrip()
+    linhas = [ln.replace("‎", "").replace(" ", " ").rstrip()
+              for ln in conteudo.replace("\r\n", "\n").split("\n")]
+    mes_primeiro = _mes_primeiro(linhas)
+    for linha in linhas:
         c = _CABECALHO.match(linha)
-        quando = _data(c["data"], c["hora"]) if c else None
+        quando = _data(c["data"], c["hora"], c["ampm"], mes_primeiro) if c else None
         if c and quando:
             atual = None
             resto = c["resto"]

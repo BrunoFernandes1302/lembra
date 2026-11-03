@@ -45,3 +45,19 @@ def test_texto_da_memoria_tem_contexto():
     t = texto_da_memoria(b, "Viagem com João")
     assert t.startswith('Conversa de WhatsApp "Viagem com João" em 03/11/2026')
     assert "João Silva: Bora viajar" not in t and "João Silva: Bom dia! Bora viajar em dezembro?" in t
+
+
+def test_relogio_de_12_horas_e_formato_mes_dia():
+    # aparelho em inglês: mês/dia e AM/PM ("11/23" só pode ser mês 11, dia 23)
+    conversa = """11/23/26, 2:05 PM - Ann: See you at the dentist
+11/23/26, 12:10 AM - Bob: ok
+11/3/26, 9:00 AM - Ann: earlier"""
+    msgs = ler_exportacao(conversa)
+    assert (msgs[0].quando.month, msgs[0].quando.day, msgs[0].quando.hour) == (11, 23, 14), "2:05 PM = 14h"
+    assert msgs[1].quando.hour == 0, "12:10 AM = meia-noite"
+    assert (msgs[2].quando.month, msgs[2].quando.day) == (11, 3), "o formato vale para o arquivo inteiro"
+
+
+def test_padrao_brasileiro_continua_dia_mes():
+    msgs = ler_exportacao("03/11/2026 14:05 - Ana: oi\n04/11/2026 09:00 - Ana: bom dia")
+    assert (msgs[0].quando.day, msgs[0].quando.month, msgs[0].quando.hour) == (3, 11, 14)
