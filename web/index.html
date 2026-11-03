@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Lembra</title>
+  <meta name="description" content="Seu assistente de vida pessoal">
+  <meta name="theme-color" content="#0a0a12" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f5f6fb" media="(prefers-color-scheme: light)">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Ícones (traços do Lucide, licença ISC), embutidos para funcionar offline -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+    <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0L14.06 8.5a2 2 0 0 0 1.44 1.44l6.14 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+    <symbol id="i-pen" viewBox="0 0 24 24"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.38 2.63a1 1 0 0 1 3 3l-9.02 9.01a2 2 0 0 1-.85.51l-2.87.84a.5.5 0 0 1-.62-.62l.84-2.87a2 2 0 0 1 .5-.85z"/></symbol>
+    <symbol id="i-library" viewBox="0 0 24 24"><path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M21.17 6.81a1 1 0 0 0-3.98-3.98L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+    <symbol id="i-flask" viewBox="0 0 24 24"><path d="M10 2v7.53a2 2 0 0 1-.21.9L4.72 20.55A1 1 0 0 0 5.62 22h12.76a1 1 0 0 0 .9-1.45l-5.07-10.12a2 2 0 0 1-.21-.9V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></symbol>
+    <symbol id="i-message-dots" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+    <symbol id="i-calc" viewBox="0 0 24 24"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M8 6h8M16 14v4M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M8 18h.01M12 18h.01"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+    <symbol id="i-bot" viewBox="0 0 24 24"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2M20 14h2M15 13v2M9 13v2"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></symbol>
+  </svg>
+  <div class="aurora" aria-hidden="true"></div>
+  <!-- ============ LOGIN / CADASTRO ============ -->
+  <section id="tela-auth" class="tela auth" hidden>
+    <div class="auth-caixa">
+      <div class="logo-orbe"><img src="icons/icon.svg" alt="" class="auth-logo"></div>
+      <h1 class="titulo-gradiente">Lembra</h1>
+      <p class="sub">Sua memória pessoal, com inteligência artificial</p>
+
+      <div class="abas-auth" role="tablist">
+        <button type="button" class="aba-auth ativa" data-modo="entrar" role="tab">Entrar</button>
+        <button type="button" class="aba-auth" data-modo="cadastro" role="tab">Criar conta</button>
+      </div>
+
+      <form id="form-auth" novalidate>
+        <label>E-mail
+          <input type="email" name="email" autocomplete="email" required>
+        </label>
+        <label>Senha
+          <input type="password" name="senha" autocomplete="current-password" minlength="8" required>
+        </label>
+        <p class="erro" id="erro-auth" role="alert"></p>
+        <button type="submit" class="botao primario" id="botao-auth">Entrar</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ APP ============ -->
+  <div id="app" hidden>
+    <header class="topo">
+      <span class="marca"><img src="icons/icon.svg" alt=""><span class="titulo-gradiente">Lembra</span></span>
+      <button type="button" class="botao-icone" id="sair" aria-label="Sair" title="Sair"><svg class="ic"><use href="#i-logout"/></svg></button>
+    </header>
+
+    <main>
+      <!-- PERGUNTAR -->
+      <section id="tela-perguntar" class="tela">
+        <div id="conversa" class="conversa" aria-live="polite">
+          <div class="vazio boas-vindas" id="dica-perguntar">
+            <div class="orbe"><svg class="ic"><use href="#i-sparkles"/></svg></div>
+            <p class="vazio-titulo">Pergunte qualquer coisa sobre a sua vida</p>
+            <p>Eu procuro nas suas memórias e respondo citando de onde tirei.</p>
+            <div class="sugestoes">
+              <button type="button" class="sugestao" data-pergunta="Quanto eu gasto por mês com moradia?">Quanto gasto com moradia?</button>
+              <button type="button" class="sugestao" data-pergunta="Tenho algum compromisso marcado?">Tenho algum compromisso?</button>
+              <button type="button" class="sugestao" data-pergunta="O que eu registrei sobre a minha família?">O que sei da minha família?</button>
+            </div>
+          </div>
+        </div>
+        <form id="form-perguntar" class="barra-pergunta">
+          <div class="linha-pergunta">
+            <select name="categoria" aria-label="Procurar em" class="filtro-mini" data-icone="tag" data-compacto><option value="">Todas</option></select>
+            <input type="text" name="pergunta" placeholder="Pergunte algo…" autocomplete="off" required>
+            <button type="button" class="botao-mic" data-gravador="perguntar" aria-label="Perguntar falando"><svg class="ic"><use href="#i-mic"/></svg><span class="tempo"></span></button>
+            <button type="submit" class="botao primario redondo" aria-label="Enviar"><svg class="ic"><use href="#i-send"/></svg></button>
+          </div>
+        </form>
+      </section>
+
+      <!-- REGISTRAR -->
+      <section id="tela-registrar" class="tela" hidden>
+        <div class="segmentos" role="tablist">
+          <button type="button" class="segmento-reg segmento ativo" data-reg="escrever"><svg class="ic"><use href="#i-pen"/></svg>Escrever</button>
+          <button type="button" class="segmento-reg segmento" data-reg="importar"><svg class="ic"><use href="#i-message-dots"/></svg>Importar conversa</button>
+        </div>
+        <div id="reg-escrever">
+        <h2 class="titulo-tela">Nova memória</h2>
+        <p class="sub-tela">Escreva do seu jeito. Eu quebro em pedaços, entendo o significado e guardo para você.</p>
+        <form id="form-registrar">
+          <div class="rotulo-com-mic">
+            <span>O que você quer lembrar?</span>
+            <button type="button" class="botao-mic com-texto" data-gravador="registrar" aria-label="Falar a memória"><svg class="ic"><use href="#i-mic"/></svg><span class="tempo">Falar</span></button>
+          </div>
+          <label class="sem-rotulo" aria-label="O que você quer lembrar?">
+            <textarea name="texto" rows="4" required placeholder="Ex.: Pago 1.800 de aluguel todo dia 5."></textarea>
+          </label>
+          <fieldset>
+            <legend>Categoria</legend>
+            <div class="sugestao-cat" id="sugestao-cat" hidden aria-live="polite">
+              <svg class="ic"><use href="#i-sparkles"/></svg>
+              <span>Sugestão da IA:</span>
+              <button type="button" class="chip ativo-sugerido" id="aceitar-sugestao"></button>
+              <span class="motivo" id="motivo-sugestao"></span>
+            </div>
+            <div class="chips" id="chips-categoria"></div>
+            <p class="dica-cat" id="dica-cat" hidden>Sem categoria escolhida: a memória vai para "geral". Toque em <b>nova</b> para criar as suas.</p>
+            <div class="linha-nova-cat" id="linha-nova-cat" hidden>
+              <input type="text" id="nova-cat-registrar" maxlength="40" placeholder="Nome da nova categoria">
+              <button type="button" class="botao secundario pequeno" id="criar-cat-registrar">Criar</button>
+            </div>
+          </fieldset>
+          <label>Quando aconteceu? <span class="opcional">(opcional)</span>
+            <input type="text" name="data_evento" placeholder="Ex.: 2020, março de 2018, 12/11/2026">
+          </label>
+          <p class="erro" id="erro-registrar" role="alert"></p>
+          <button type="submit" class="botao primario"><svg class="ic"><use href="#i-sparkles"/></svg><span>Salvar memória</span></button>
+        </form>
+        </div>
+
+        <div id="reg-importar" hidden>
+          <h2 class="titulo-tela">Importar conversa</h2>
+          <p class="sub-tela">Traga uma conversa do WhatsApp para perguntar sobre ela depois.</p>
+          <div class="cartao passos">
+            <p><b>No WhatsApp:</b> abra a conversa → <b>⋮</b> → <b>Mais</b> → <b>Exportar conversa</b> → <b>Sem mídia</b>. Salve o arquivo <code>.txt</code>.</p>
+            <p class="ajuda">Importe só conversas que você tem o direito de guardar: elas têm mensagens de outras pessoas (LGPD). As mensagens passam pelo Gemini para gerar os vetores.</p>
+          </div>
+          <form id="form-importar">
+            <label class="arquivo">
+              <input type="file" name="arquivo" accept=".txt,text/plain">
+              <span class="arquivo-caixa"><svg class="ic"><use href="#i-upload"/></svg><span id="arquivo-nome">Escolher arquivo .txt</span></span>
+            </label>
+            <label>Nome da conversa
+              <input type="text" name="nome" maxlength="80" placeholder="Ex.: João, Família, Viagem Floripa">
+            </label>
+            <label>Guardar na categoria
+              <select name="categoria" id="cat-importar"><option value="conversas">Conversas</option></select>
+            </label>
+            <p class="erro" id="erro-importar" role="alert"></p>
+            <button type="submit" class="botao secundario" id="botao-previa"><span>Ver prévia</span></button>
+          </form>
+          <div class="cartao" id="previa-importar" hidden>
+            <h3>Prévia</h3>
+            <ul class="numeros" id="previa-numeros"></ul>
+            <pre class="exemplo" id="previa-exemplo"></pre>
+            <button type="button" class="botao primario" id="botao-importar"><svg class="ic"><use href="#i-upload"/></svg><span>Importar para o Lembra</span></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- MEMÓRIAS -->
+      <section id="tela-memorias" class="tela" hidden>
+        <div class="cabecalho-lista">
+          <h2 class="titulo-tela">Memórias</h2>
+          <select id="filtro-memorias" aria-label="Filtrar por categoria" class="filtro-mini" data-icone="tag"><option value="">Todas</option></select>
+        </div>
+        <ul id="lista-memorias" class="lista"></ul>
+      </section>
+      <!-- AJUSTES -->
+      <section id="tela-ajustes" class="tela" hidden>
+        <div class="segmentos" role="tablist">
+          <button type="button" class="segmento ativo" data-sub="rag"><svg class="ic"><use href="#i-sliders"/></svg>RAG</button>
+          <button type="button" class="segmento" data-sub="lab"><svg class="ic"><use href="#i-flask"/></svg>Laboratório</button>
+          <button type="button" class="segmento" data-sub="cats"><svg class="ic"><use href="#i-tag"/></svg>Categorias</button>
+        </div>
+
+        <!-- Configurar RAG -->
+        <div id="sub-rag" class="sub">
+          <form id="form-config" class="cartao">
+            <div class="campo-faixa">
+              <label for="cfg-chunk_size">Tamanho do chunk <output id="out-chunk_size"></output></label>
+              <input type="range" id="cfg-chunk_size" name="chunk_size" min="200" max="3000" step="50">
+              <p class="ajuda">Em quantos caracteres cada memória é quebrada. Menor = busca mais precisa, mas cada pedaço tem menos contexto. Maior = mais contexto, busca mais "genérica".</p>
+            </div>
+            <div class="campo-faixa">
+              <label for="cfg-chunk_overlap">Sobreposição <output id="out-chunk_overlap"></output></label>
+              <input type="range" id="cfg-chunk_overlap" name="chunk_overlap" min="0" max="1000" step="10">
+              <p class="ajuda">Quanto do fim de um pedaço se repete no começo do próximo, para não perder informação na "fronteira". Só funciona quando o texto quebra em partes menores que esse valor (frases curtas).</p>
+            </div>
+            <div class="campo-faixa">
+              <label for="cfg-top_k">Trechos por pergunta (top-K) <output id="out-top_k"></output></label>
+              <input type="range" id="cfg-top_k" name="top_k" min="1" max="20" step="1">
+              <p class="ajuda">Quantos pedaços a busca entrega para a IA. Poucos = pode faltar informação. Muitos = mais ruído e mais lento.</p>
+            </div>
+            <div class="campo-faixa">
+              <label for="cfg-margem_relevancia">Margem de relevância (sem IA) <output id="out-margem_relevancia"></output></label>
+              <input type="range" id="cfg-margem_relevancia" name="margem_relevancia" min="0" max="0.5" step="0.01">
+              <p class="ajuda">Sem IA, mostra só trechos com nota até essa distância da melhor. 0 = só o melhor; maior = mostra mais.</p>
+            </div>
+            <label class="interruptor">
+              <input type="checkbox" name="usar_ia"> <span>Usar IA para escrever a resposta</span>
+            </label>
+            <p class="ajuda">Desligado: o Lembra só mostra as memórias encontradas (grátis, nada vai para a IA).</p>
+            <label class="interruptor">
+              <input type="checkbox" name="modo_agente"> <span>Modo agente <span class="selo">experimental</span></span>
+            </label>
+            <p class="ajuda">A IA ganha <b>ferramentas</b> (buscar várias vezes, listar por categoria, calcular, saber a data de hoje) e decide sozinha quais usar. Responde melhor perguntas com contas, datas e várias memórias — mas é mais lenta e gasta mais cota. Cada resposta mostra "como cheguei aqui".</p>
+            <label>Modelo de IA
+              <select name="modelo_llm" id="cfg-modelo_llm"></select>
+            </label>
+            <label>Instruções para a IA <span class="opcional">(opcional, até 500 caracteres)</span>
+              <textarea name="instrucoes" rows="3" maxlength="500" placeholder='Ex.: "Responda em tópicos curtos" ou "Seja bem direto"'></textarea>
+            </label>
+            <p class="info-fixa" id="info-embedding"></p>
+            <p class="erro" id="erro-config" role="alert"></p>
+            <button type="submit" class="botao primario">Salvar configurações</button>
+          </form>
+          <div class="cartao">
+            <h3><svg class="ic"><use href="#i-user"/></svg> Como o Lembra te conhece</h3>
+            <p class="ajuda">Personalização <b>sem treino</b>: a cada 5 avaliações (👍/👎) nas respostas, a IA relê suas memórias e avaliações e atualiza este perfil, que entra nas instruções dela. Você pode editar ou apagar quando quiser.</p>
+            <textarea id="perfil-estilo" rows="4" maxlength="800" placeholder="Ainda vazio. Avalie algumas respostas ou toque em Aprender agora."></textarea>
+            <div class="acoes-perfil">
+              <button type="button" class="botao secundario pequeno" id="aprender-perfil"><svg class="ic"><use href="#i-sparkles"/></svg><span>Aprender agora</span></button>
+              <button type="button" class="botao-texto" id="salvar-perfil">Salvar edição</button>
+            </div>
+          </div>
+          <div class="cartao">
+            <h3>Reprocessar memórias</h3>
+            <p class="ajuda">Mudou o tamanho do chunk ou a sobreposição? As memórias antigas continuam quebradas do jeito antigo até você reprocessar. O texto original nunca muda; só os pedaços e vetores são refeitos.</p>
+            <button type="button" class="botao secundario" id="reprocessar">Reprocessar todas as memórias</button>
+          </div>
+        </div>
+
+        <!-- Laboratório -->
+        <div id="sub-lab" class="sub" hidden>
+          <div class="cartao">
+            <h3>Testar chunking</h3>
+            <p class="ajuda">Cole um texto e veja como ele seria quebrado com as configurações da aba anterior. Nada é salvo.</p>
+            <textarea id="lab-texto" rows="6" placeholder="Cole aqui um texto longo, com parágrafos…"></textarea>
+            <button type="button" class="botao secundario" id="lab-testar">Ver como fica</button>
+            <p class="resumo-lab" id="lab-resumo"></p>
+            <ol class="lista-chunks" id="lab-chunks"></ol>
+          </div>
+          <div class="cartao">
+            <h3>Dicas para explorar</h3>
+            <ul class="dicas">
+              <li>Em <b>Memórias</b>, toque em <b>Chunks</b> para ver como cada memória foi quebrada.</li>
+              <li>Em <b>Perguntar</b>, abra as fontes para ver a <b>nota de similaridade</b> de cada trecho (1 = idêntico).</li>
+              <li>Teste o mesmo texto com chunk 200 e 1500 e compare.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Categorias -->
+        <div id="sub-cats" class="sub" hidden>
+          <form id="form-nova-cat" class="cartao linha-nova-cat">
+            <input type="text" name="nome" maxlength="40" placeholder="Nova categoria" required>
+            <button type="submit" class="botao primario pequeno">Criar</button>
+          </form>
+          <ul id="lista-categorias" class="lista"></ul>
+        </div>
+      </section>
+    </main>
+
+    <nav class="abas" aria-label="Navegação">
+      <button type="button" class="aba ativa" data-tela="perguntar"><svg class="ic" aria-hidden="true"><use href="#i-sparkles"/></svg>Perguntar</button>
+      <button type="button" class="aba" data-tela="registrar"><svg class="ic" aria-hidden="true"><use href="#i-pen"/></svg>Registrar</button>
+      <button type="button" class="aba" data-tela="memorias"><svg class="ic" aria-hidden="true"><use href="#i-library"/></svg>Memórias</button>
+      <button type="button" class="aba" data-tela="ajustes"><svg class="ic" aria-hidden="true"><use href="#i-sliders"/></svg>Ajustes</button>
+    </nav>
+  </div>
+
+  <div id="aviso" class="aviso" role="status" hidden></div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

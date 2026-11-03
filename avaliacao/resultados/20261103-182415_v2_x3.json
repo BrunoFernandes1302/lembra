@@ -1,0 +1,645 @@
+{
+  "rotulo": "v2_x3",
+  "quando": "2026-11-03T18:24:15",
+  "config": {
+    "chunk_size": 800,
+    "chunk_overlap": 150,
+    "top_k": 5,
+    "embeddings": "gemini-embedding-001",
+    "llm": "gemini-flash-lite-latest",
+    "juiz": "gemini-flash-lite-latest",
+    "chunks_indexados": 10,
+    "prompt": "3da61cf2",
+    "prompt_arquivo": "avaliacao/prompts/v2_interpretar_sentido.txt",
+    "repeticoes": 3
+  },
+  "resumo": {
+    "recall@K": 1.0,
+    "acerto@1": 1.0,
+    "MRR": 1.0,
+    "correta": 1.0,
+    "fiel": 1.0,
+    "abstencao_correta": 1.0,
+    "correta_por_tipo": {
+      "calculo": 1.0,
+      "detalhe_em_texto_longo": 1.0,
+      "fato": 1.0,
+      "multi_hop": 1.0,
+      "parafrase": 1.0,
+      "sem_resposta": 1.0
+    }
+  },
+  "resultados": [
+    {
+      "id": "p01",
+      "tipo": "fato",
+      "pergunta": "Qual o nome da minha cachorra?",
+      "esperada": "Mel.",
+      "relevantes": [
+        "mel"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7380105198406967
+      },
+      "fontes": [
+        "mel",
+        "thor",
+        "aniversarios",
+        "aluguel",
+        "comida"
+      ],
+      "tentativas": [
+        {
+          "resposta": "O nome da sua cachorra é Mel [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com o nome da cachorra encontrado nas memórias e a informação é totalmente verdadeira e fiel ao contexto."
+        },
+        {
+          "resposta": "O nome da sua cachorra é Mel [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com o nome da cachorra presente na memória e baseou-se exclusivamente nos fatos fornecidos."
+        },
+        {
+          "resposta": "A sua cachorra se chama Mel [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com o nome Mel, que estava presente nas memórias."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "p02",
+      "tipo": "parafrase",
+      "pergunta": "Como se chama o meu pet?",
+      "esperada": "Mel, uma vira-lata caramelo.",
+      "relevantes": [
+        "mel"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.6976498206545583
+      },
+      "fontes": [
+        "mel",
+        "thor",
+        "aluguel",
+        "comida",
+        "curso"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Você tem uma cachorra chamada Mel [1]. Além disso, sua irmã Carla tem um gato chamado Thor [2].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente o nome do pet utilizando as memórias entregues e sem inventar informações."
+        },
+        {
+          "resposta": "Você tem uma cachorra chamada Mel [1]. Além disso, sua irmã Carla tem um gato chamado Thor [2].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente o nome do pet utilizando as memórias entregues e sem inventar informações."
+        },
+        {
+          "resposta": "Você tem uma cachorra chamada Mel [1]. Além disso, sua irmã Carla tem um gato chamado Thor [2].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente o nome do pet utilizando as informações presentes nas memórias e sem inventar dados."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "p03",
+      "tipo": "calculo",
+      "pergunta": "Quanto eu gasto por mês com moradia, somando tudo?",
+      "esperada": "2.250 reais (1.800 de aluguel + 450 de condomínio).",
+      "relevantes": [
+        "aluguel"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7102000104184796
+      },
+      "fontes": [
+        "aluguel",
+        "academia",
+        "mel",
+        "viagem_chile",
+        "curso"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Para saber o gasto mensal com moradia, somamos o valor do aluguel (1.800 reais) com o valor do condomínio (450 reais) [1]. No total, você gasta 2.250 reais por mês [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente somando o aluguel e o condomínio, e todas as informações estão apoiadas pelas memórias."
+        },
+        {
+          "resposta": "Somando o aluguel e o condomínio, você gasta R$ 2.250 por mês com moradia (sendo R$ 1.800 de aluguel e R$ 450 de condomínio) [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com o valor total dos gastos com moradia e detalhou os valores com base nas memórias fornecidas."
+        },
+        {
+          "resposta": "Somando os gastos com moradia, você paga 1.800 reais de aluguel e 450 reais de condomínio, totalizando 2.250 reais por mês [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com o valor total dos gastos com moradia e calculou a soma exata com base nas memórias."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "p04",
+      "tipo": "parafrase",
+      "pergunta": "Tenho algum médico marcado?",
+      "esperada": "Sim, dentista dia 12 de novembro às 14h com o Dr. Paulo.",
+      "relevantes": [
+        "dentista"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.6997992645062894
+      },
+      "fontes": [
+        "dentista",
+        "aniversarios",
+        "curso",
+        "academia",
+        "aluguel"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Você tem uma consulta no dentista marcada para o dia 12 de novembro às 14h com o Dr. Paulo, para limpeza e avaliação de um dente sensível [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente à pergunta com base nas memórias fornecidas e não incluiu informações inventadas."
+        },
+        {
+          "resposta": "Sim, você tem uma consulta no dentista marcada para o dia 12 de novembro às 14h com o Dr. Paulo, para limpeza e avaliação de um dente que está sensível [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente trazendo a informação essencial da memória e manteve total fidelidade aos dados fornecidos."
+        },
+        {
+          "resposta": "Sim, você tem uma consulta no dentista marcada para o dia 12 de novembro às 14h com o Dr. Paulo, para limpeza e avaliação de um dente que está sensível [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com os dados da consulta que estavam presentes nas memórias e não inventou nenhuma informação nova."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "p05",
+      "tipo": "multi_hop",
+      "pergunta": "Qual animal briga com a minha cachorra e de quem ele é?",
+      "esperada": "O Thor, gato da sua irmã Carla.",
+      "relevantes": [
+        "thor"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.708366146735344
+      },
+      "fontes": [
+        "thor",
+        "mel",
+        "aluguel",
+        "comida",
+        "viagem_chile"
+      ],
+      "tentativas": [
+        {
+          "resposta": "O Thor é o gato que briga com a sua cachorra, e ele é da sua irmã Carla [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "A resposta forneceu exatamente a informação solicitada e baseou-se corretamente nas memórias entregues."
+        },
+        {
+          "resposta": "O Thor é o gato que briga com a sua cachorra, e ele é da sua irmã Carla [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com base nas memórias fornecidas, identificando o gato Thor e sua dona Carla."
+        },
+        {
+          "resposta": "O Thor é o gato que briga com a sua cachorra, e ele é da sua irmã Carla [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "A resposta forneceu corretamente a informação essencial de que o animal é o Thor, gato da irmã Carla, e todas as afirmações estão apoiadas pelas memórias."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "p06",
+      "tipo": "detalhe_em_texto_longo",
+      "pergunta": "Quanto gastei na viagem ao Chile?",
+      "esperada": "Cerca de 6 mil reais no total.",
+      "relevantes": [
+        "viagem_chile"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7640223175181731
+      },
+      "fontes": [
+        "viagem_chile",
+        "aluguel",
+        "academia",
+        "curso",
+        "mel"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Você gastou cerca de 6 mil reais no total na sua viagem ao Chile [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com o valor total gasto na viagem, que estava presente nas memórias."
+        },
+        {
+          "resposta": "Você gastou cerca de 6 mil reais no total na sua viagem ao Chile [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com base na memória fornecida e não inventou informações."
+        },
+        {
+          "resposta": "Você gastou cerca de 6 mil reais no total na sua viagem ao Chile [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com base na memória sobre a viagem ao Chile e não incluiu informações falsas."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "p07",
+      "tipo": "detalhe_em_texto_longo",
+      "pergunta": "Como se chamam os amigos argentinos que conheci?",
+      "esperada": "Lucía e Martín.",
+      "relevantes": [
+        "viagem_chile"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.6218311862124358
+      },
+      "fontes": [
+        "viagem_chile",
+        "aniversarios",
+        "thor",
+        "mel",
+        "aluguel"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Os amigos argentinos que você conheceu se chamam Lucía e Martín [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com os nomes dos amigos argentinos presentes na memória e não inventou nenhuma informação."
+        },
+        {
+          "resposta": "Os amigos argentinos que você conheceu se chamam Lucía e Martín [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com os nomes dos amigos argentinos informados nas memórias."
+        },
+        {
+          "resposta": "Os amigos argentinos que você conheceu se chamam Lucía e Martín [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "A resposta fornecida está correta e é totalmente fiel às memórias entregues, mencionando corretamente os nomes Lucía e Martín."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "p08",
+      "tipo": "fato",
+      "pergunta": "Em que ano comecei a trabalhar com tecnologia e em qual função?",
+      "esperada": "Em 2016, como estagiário de suporte.",
+      "relevantes": [
+        "emprego"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7843319571425541
+      },
+      "fontes": [
+        "emprego",
+        "mel",
+        "curso",
+        "aluguel",
+        "viagem_chile"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Você começou a trabalhar com tecnologia em 2016 como estagiário de suporte [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "A resposta forneceu exatamente a informação essencial pedida e está totalmente apoiada pelas memórias."
+        },
+        {
+          "resposta": "Você começou a trabalhar com tecnologia em 2016 como estagiário de suporte [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "A resposta forneceu exatamente a informação essencial pedida e está totalmente baseada nas memórias entregues."
+        },
+        {
+          "resposta": "Você começou a trabalhar com tecnologia em 2016 como estagiário de suporte [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "A resposta fornecida traz corretamente a informação essencial presente nas memórias e é totalmente fiel a elas."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "p09",
+      "tipo": "parafrase",
+      "pergunta": "Posso comer moqueca de camarão?",
+      "esperada": "Não, você tem alergia a camarão.",
+      "relevantes": [
+        "comida"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.6850801216038723
+      },
+      "fontes": [
+        "comida",
+        "curso",
+        "dentista",
+        "academia",
+        "mel"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Você não deve comer moqueca de camarão, pois você não come frutos do mar devido à sua alergia a camarão [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente informando que o usuário não pode comer moqueca de camarão devido à alergia, e a informação é totalmente fiel à memória entregue."
+        },
+        {
+          "resposta": "Não, você não pode comer moqueca de camarão porque você não come frutos do mar devido à sua alergia a camarão [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente informando que o usuário não pode comer o prato devido à alergia a camarão, apoiando-se diretamente na memória entregue."
+        },
+        {
+          "resposta": "Não, você não pode comer moqueca de camarão porque você não come frutos do mar devido à sua alergia a camarão [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com base na memória sobre a alergia a camarão e não incluiu informações falsas."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "p10",
+      "tipo": "calculo",
+      "pergunta": "Quantas vezes por semana eu treino e quanto pago por isso?",
+      "esperada": "Três vezes por semana (segunda, quarta e sexta); a academia custa 120 reais por mês.",
+      "relevantes": [
+        "academia"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7499930769047082
+      },
+      "fontes": [
+        "academia",
+        "aluguel",
+        "curso",
+        "viagem_chile",
+        "dentista"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Você faz musculação três vezes por semana (segunda, quarta e sexta, às 7h) e a mensalidade da academia é 120 reais [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "A resposta do assistente trouxe exatamente a frequência dos treinos e o valor pago, baseando-se corretamente nas memórias fornecidas."
+        },
+        {
+          "resposta": "Você faz musculação três vezes por semana (segunda, quarta e sexta, às 7h) e a mensalidade da academia é 120 reais [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com base nas memórias fornecidas e não incluiu informações falsas."
+        },
+        {
+          "resposta": "Você faz musculação três vezes por semana: às segundas, quartas e sextas, às 7h [1]. A mensalidade da academia é 120 reais [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com a frequência dos treinos e o valor pago, baseando-se integralmente nas memórias fornecidas."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "p11",
+      "tipo": "multi_hop",
+      "pergunta": "Quando é o aniversário da dona do gato Thor?",
+      "esperada": "21 de agosto (Carla, sua irmã).",
+      "relevantes": [
+        "thor",
+        "aniversarios"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7298877631966597
+      },
+      "fontes": [
+        "thor",
+        "aniversarios",
+        "mel",
+        "comida",
+        "aluguel"
+      ],
+      "tentativas": [
+        {
+          "resposta": "O gato Thor pertence à sua irmã Carla [1]. O aniversário da sua irmã Carla é em 21 de agosto [2].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com a data de aniversário da dona do gato Thor baseando-se nas memórias."
+        },
+        {
+          "resposta": "O gato Thor é da sua irmã Carla [1], e o aniversário dela é em 21 de agosto [2].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com a data de aniversário da Carla (dona do gato Thor) e todas as informações estão apoiadas nas memórias."
+        },
+        {
+          "resposta": "O gato Thor é da sua irmã Carla [1]. O aniversário da sua irmã Carla é em 21 de agosto [2].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com a data de aniversário da dona do gato Thor (Carla), apoiando-se estritamente nas memórias fornecidas."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "p12",
+      "tipo": "sem_resposta",
+      "pergunta": "Qual é o meu tipo sanguíneo?",
+      "esperada": "NAO_SABE",
+      "relevantes": [],
+      "busca": {
+        "recall": null,
+        "acerto1": null,
+        "rr": null,
+        "nota_top1": 0.5707315692081982
+      },
+      "fontes": [
+        "comida",
+        "mel",
+        "aniversarios",
+        "curso",
+        "aluguel"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Não encontrei isso nas memórias.",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente reconheceu corretamente que a informação sobre o tipo sanguíneo não estava presente nas memórias."
+        },
+        {
+          "resposta": "Não encontrei isso nas memórias.",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente reconheceu corretamente que a informação sobre o tipo sanguíneo não estava presente nas memórias."
+        },
+        {
+          "resposta": "Não encontrei isso nas memórias.",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente corretamente indicou que não há informações sobre o tipo sanguíneo nas memórias, sem inventar dados."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "p13",
+      "tipo": "sem_resposta",
+      "pergunta": "Qual o nome do meu chefe atual?",
+      "esperada": "NAO_SABE",
+      "relevantes": [],
+      "busca": {
+        "recall": null,
+        "acerto1": null,
+        "rr": null,
+        "nota_top1": 0.5931963643732101
+      },
+      "fontes": [
+        "aluguel",
+        "emprego",
+        "thor",
+        "mel",
+        "curso"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Não encontrei isso nas memórias.",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente identificou corretamente que a informação não estava nas memórias, o que é esperado para perguntas do tipo 'SEM RESPOSTA'."
+        },
+        {
+          "resposta": "Não encontrei o nome do seu chefe atual nas suas memórias.",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente corretamente identificou que a informação não estava presente nas memórias e informou que não a encontrou."
+        },
+        {
+          "resposta": "Não encontrei o nome do seu chefe atual nas suas memórias.",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente que não possui essa informação nas memórias, mantendo total fidelidade aos dados fornecidos."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "p14",
+      "tipo": "sem_resposta",
+      "pergunta": "Quanto custou meu carro?",
+      "esperada": "NAO_SABE",
+      "relevantes": [],
+      "busca": {
+        "recall": null,
+        "acerto1": null,
+        "rr": null,
+        "nota_top1": 0.6131188121016828
+      },
+      "fontes": [
+        "aluguel",
+        "mel",
+        "viagem_chile",
+        "academia",
+        "emprego"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Não encontrei isso nas memórias.",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente que não encontrou a informação sobre o carro, mantendo-se fiel às memórias."
+        },
+        {
+          "resposta": "Não encontrei isso nas memórias.",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente corretamente indicou que não há informações sobre o custo do carro nas memórias."
+        },
+        {
+          "resposta": "Não encontrei isso nas memórias.",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "Como a pergunta era do tipo SEM RESPOSTA e o assistente informou corretamente que não encontrou a informação nas memórias, ambos os critérios foram atendidos."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    }
+  ]
+}

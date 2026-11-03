@@ -1,0 +1,41 @@
+{
+  "descricao": "Conjunto de avaliação do Lembra: memórias fictícias + perguntas com resposta esperada. Não altere as perguntas entre comparações, senão os números deixam de ser comparáveis.",
+  "memorias": [
+    {"id": "aluguel", "categoria": "finanças", "data_evento": "",
+     "texto": "Pago 1.800 reais de aluguel todo dia 5. O condomínio é 450 reais e vence no dia 10. O apartamento fica no bairro Funcionários."},
+    {"id": "dentista", "categoria": "compromissos", "data_evento": "12/11/2026",
+     "texto": "Consulta no dentista dia 12 de novembro às 14h com o Dr. Paulo, para limpeza e avaliação de um dente que está sensível."},
+    {"id": "mel", "categoria": "família", "data_evento": "2020",
+     "texto": "Tenho uma cachorra chamada Mel, vira-lata caramelo que adotei num abrigo em 2020. Ela tem medo de trovão e adora passear no parque aos domingos."},
+    {"id": "thor", "categoria": "família", "data_evento": "",
+     "texto": "O Thor é o gato da minha irmã Carla. Ele vive brigando com a Mel quando visitamos a casa dela."},
+    {"id": "viagem_chile", "categoria": "viagens", "data_evento": "2019",
+     "texto": "Em 2019 viajei para o Chile. Subi o vulcão Villarrica com um guia local, saindo às 4h da manhã. A subida levou seis horas e o frio era intenso perto da cratera.\n\nDepois fui para o Atacama, onde vi o céu mais estrelado da minha vida. Fiquei numa pousada simples em San Pedro e conheci um casal de argentinos, Lucía e Martín, que viraram amigos.\n\nNa volta, passei três dias em Santiago visitando museus e comendo empanadas. Gastei uns 6 mil reais no total."},
+    {"id": "emprego", "categoria": "trabalho", "data_evento": "2016",
+     "texto": "Comecei a trabalhar com tecnologia em 2016 como estagiário de suporte numa empresa pequena. Em 2019 virei analista de dados e hoje trabalho com engenharia de dados."},
+    {"id": "comida", "categoria": "gostos", "data_evento": "",
+     "texto": "Minha comida favorita é o feijão tropeiro da minha avó Dona Lourdes. Odeio jiló e não como frutos do mar porque tenho alergia a camarão."},
+    {"id": "academia", "categoria": "saúde", "data_evento": "",
+     "texto": "Faço musculação três vezes por semana: segunda, quarta e sexta, às 7h. A mensalidade da academia é 120 reais."},
+    {"id": "curso", "categoria": "estudos", "data_evento": "2026",
+     "texto": "Estou fazendo um curso de inglês online às terças e quintas à noite. Meu objetivo é chegar no nível avançado até o fim de 2027."},
+    {"id": "aniversarios", "categoria": "família", "data_evento": "",
+     "texto": "Aniversários importantes: minha mãe faz aniversário em 3 de março, minha irmã Carla em 21 de agosto e meu pai em 15 de dezembro."}
+  ],
+  "perguntas": [
+    {"id": "p01", "tipo": "fato", "pergunta": "Qual o nome da minha cachorra?", "esperada": "Mel.", "relevantes": ["mel"]},
+    {"id": "p02", "tipo": "parafrase", "pergunta": "Como se chama o meu pet?", "esperada": "Mel, uma vira-lata caramelo.", "relevantes": ["mel"]},
+    {"id": "p03", "tipo": "calculo", "pergunta": "Quanto eu gasto por mês com moradia, somando tudo?", "esperada": "2.250 reais (1.800 de aluguel + 450 de condomínio).", "relevantes": ["aluguel"]},
+    {"id": "p04", "tipo": "parafrase", "pergunta": "Tenho algum médico marcado?", "esperada": "Sim, dentista dia 12 de novembro às 14h com o Dr. Paulo.", "relevantes": ["dentista"]},
+    {"id": "p05", "tipo": "multi_hop", "pergunta": "Qual animal briga com a minha cachorra e de quem ele é?", "esperada": "O Thor, gato da sua irmã Carla.", "relevantes": ["thor"]},
+    {"id": "p06", "tipo": "detalhe_em_texto_longo", "pergunta": "Quanto gastei na viagem ao Chile?", "esperada": "Cerca de 6 mil reais no total.", "relevantes": ["viagem_chile"]},
+    {"id": "p07", "tipo": "detalhe_em_texto_longo", "pergunta": "Como se chamam os amigos argentinos que conheci?", "esperada": "Lucía e Martín.", "relevantes": ["viagem_chile"]},
+    {"id": "p08", "tipo": "fato", "pergunta": "Em que ano comecei a trabalhar com tecnologia e em qual função?", "esperada": "Em 2016, como estagiário de suporte.", "relevantes": ["emprego"]},
+    {"id": "p09", "tipo": "parafrase", "pergunta": "Posso comer moqueca de camarão?", "esperada": "Não, você tem alergia a camarão.", "relevantes": ["comida"]},
+    {"id": "p10", "tipo": "calculo", "pergunta": "Quantas vezes por semana eu treino e quanto pago por isso?", "esperada": "Três vezes por semana (segunda, quarta e sexta); a academia custa 120 reais por mês.", "relevantes": ["academia"]},
+    {"id": "p11", "tipo": "multi_hop", "pergunta": "Quando é o aniversário da dona do gato Thor?", "esperada": "21 de agosto (Carla, sua irmã).", "relevantes": ["thor", "aniversarios"]},
+    {"id": "p12", "tipo": "sem_resposta", "pergunta": "Qual é o meu tipo sanguíneo?", "esperada": "NAO_SABE", "relevantes": []},
+    {"id": "p13", "tipo": "sem_resposta", "pergunta": "Qual o nome do meu chefe atual?", "esperada": "NAO_SABE", "relevantes": []},
+    {"id": "p14", "tipo": "sem_resposta", "pergunta": "Quanto custou meu carro?", "esperada": "NAO_SABE", "relevantes": []}
+  ]
+}

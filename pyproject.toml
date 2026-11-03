@@ -1,23 +1,25 @@
 [project]
-name = "segundo-cerebro"
+name = "lembra"
 version = "0.1.0"
-description = "Laboratório prático de IA: RAG sobre a vida pessoal, evoluindo para LLM local e fine-tuning."
+description = "Lembra: app de organização da vida pessoal com IA (RAG)."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "anthropic>=1.0",
-    "chromadb>=0.5",
-    "sentence-transformers>=3.0",
+    "google-genai>=1.0",
     "python-dotenv>=1.0",
-    "streamlit>=1.40",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "email-validator>=2.0",
     "requests>=2.31",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "ruff>=0.6"]
-
-[project.scripts]
-cerebro = "segundo_cerebro.cli:main"
+# Embeddings locais (privados, mas exigem ~1 GB de RAM): pip install -e ".[local]"
+local = ["sentence-transformers>=3.0"]
+# Experimentos de fine-tuning (finetuning/README.md). Separado do app: a Vercel nunca instala o PyTorch.
+finetuning = ["numpy>=1.26", "torch>=2.2", "transformers>=4.45", "peft>=0.13", "accelerate>=1.0"]
+dev = ["pytest>=8.0", "ruff>=0.6", "httpx>=0.27"]
 
 [build-system]
 requires = ["setuptools>=68"]
@@ -32,3 +34,7 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI declara dependências como valor padrão (Depends): é o padrão oficial, não um bug.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.params.Depends"]

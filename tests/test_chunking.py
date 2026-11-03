@@ -1,8 +1,10 @@
-"""Gabarito da Aula 1. Não altere os testes — altere o código até eles passarem."""
+"""Testes do chunking."""
+
+import itertools
 
 import pytest
 
-from segundo_cerebro.chunking import chunk_text
+from lembra.chunking import chunk_text
 
 PARAGRAFOS = (
     "Nasci em Belo Horizonte em 1995. Minha infância foi no bairro Santa Tereza.\n\n"
@@ -49,7 +51,7 @@ def test_chunks_vizinhos_tem_sobreposicao():
     texto = " ".join(f"frase{i}." for i in range(60))
     chunks = chunk_text(texto, chunk_size=60, overlap=20)
     assert len(chunks) > 2
-    for anterior, proximo in zip(chunks, chunks[1:]):
+    for anterior, proximo in itertools.pairwise(chunks):
         ultima_palavra = anterior.split()[-1]
         assert ultima_palavra in proximo, "o final de um chunk deveria reaparecer no próximo"
 

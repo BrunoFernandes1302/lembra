@@ -1,0 +1,19 @@
+{
+  "sem_adaptador": {
+    "recall@3": 0.9479166666666666,
+    "recall@5": 1.0,
+    "acerto@1": 0.875,
+    "MRR": 0.9375
+  },
+  "com_adaptador": {
+    "recall@3": 0.9479166666666666,
+    "recall@5": 1.0,
+    "acerto@1": 0.875,
+    "MRR": 0.9375
+  },
+  "treino": 136,
+  "validacao": 34,
+  "epocas": 150,
+  "tau": 0.05,
+  "lambda_reg": 0.5
+}

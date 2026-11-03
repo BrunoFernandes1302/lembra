@@ -1,13 +1,19 @@
 # Instruções para o Claude neste repositório
 
-Este é um projeto de **aprendizado**. O dono quer aprender RAG, embeddings, LLM local e
-fine-tuning escrevendo o código ele mesmo.
+**Leia primeiro: [`docs/visao-do-produto.md`](docs/visao-do-produto.md)**, onde está o que o dono deseja.
 
-- **Não entregue implementações prontas** dos exercícios em `src/`. Explique o conceito, dê dicas
-  graduais, revise o código que ele escrever e aponte bugs com perguntas antes de dar a resposta.
-- Só escreva a solução completa se ele pedir explicitamente.
-- Infraestrutura (estrutura de pastas, configs, testes-gabarito, docs) pode ser criada por você.
-- Cada nova fase: crie `docs/aulas/NN-tema.md` (teoria curta + exercício) e testes em `tests/`
-  que falhem com o esqueleto. Valide os testes contra uma solução de referência **fora** do repo.
+Resumo: app de organização da vida pessoal com IA (RAG), **mobile, PWA, com login e senha**,
+multiusuário com isolamento total de dados, testado por um grupo de pessoas num ciclo
+"usar → relatar problema → corrigir explicando".
+
+## Como trabalhar com o dono
+- **O Claude escreve o código.** O dono quer dominar os **conceitos**, não programar.
+- **Explique cada passo enquanto faz**: o que, por quê, quais alternativas existiam e quais trade-offs. Não faça várias coisas em silêncio e explique só no fim.
+- Ao corrigir um problema relatado, explique a causa raiz e o conceito de IA/engenharia envolvido.
+- Mantenha atualizados `docs/conceitos.md` (cada novo conceito) e `docs/roadmap.md` (status).
+- Não crie aulas nem exercícios.
 - Responda em português do Brasil.
-- Nunca versione nada de `data/` nem `.env` — são dados pessoais.
+
+## Regras
+- Nunca versione nada de `data/` nem `.env` (dados pessoais e segredos).
+- Toda mudança passa por `pytest` e `ruff check src tests avaliacao finetuning index.py` antes do push.

@@ -1,0 +1,462 @@
+{
+  "rotulo": "dificil_busca_k5",
+  "quando": "2026-11-03T18:44:54",
+  "config": {
+    "chunk_size": 800,
+    "chunk_overlap": 150,
+    "top_k": 5,
+    "embeddings": "gemini-embedding-001",
+    "llm": null,
+    "juiz": null,
+    "chunks_indexados": 30,
+    "prompt": "3da61cf2",
+    "prompt_arquivo": null,
+    "repeticoes": 1,
+    "conjunto": "conjunto_dificil.json"
+  },
+  "resumo": {
+    "recall@K": 1.0,
+    "acerto@1": 0.875,
+    "MRR": 0.9375
+  },
+  "resultados": [
+    {
+      "id": "d01",
+      "tipo": "desatualizada",
+      "pergunta": "Quanto eu pago de aluguel hoje?",
+      "esperada": "2.000 reais por mês (subiu em março de 2026; antes era 1.800).",
+      "relevantes": [
+        "aluguel_2026"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": false,
+        "rr": 0.5,
+        "nota_top1": 0.7306807322098787
+      },
+      "fontes": [
+        "aluguel_2025",
+        "aluguel_2026",
+        "condominio",
+        "salario",
+        "mercado_set"
+      ]
+    },
+    {
+      "id": "d02",
+      "tipo": "calculo_3_mais",
+      "pergunta": "Quanto gasto por mês com moradia, somando aluguel atual, condomínio e internet?",
+      "esperada": "2.570 reais (2.000 + 450 + 120).",
+      "relevantes": [
+        "aluguel_2026",
+        "condominio",
+        "internet"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": false,
+        "rr": 0.5,
+        "nota_top1": 0.7266944006362016
+      },
+      "fontes": [
+        "aluguel_2025",
+        "condominio",
+        "internet",
+        "aluguel_2026",
+        "salario"
+      ]
+    },
+    {
+      "id": "d03",
+      "tipo": "confusao_parecidas",
+      "pergunta": "Qual dentista fez meu tratamento de canal?",
+      "esperada": "A Dra. Renata, endodontista na Savassi.",
+      "relevantes": [
+        "dentista_renata"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7422423958335093
+      },
+      "fontes": [
+        "dentista_renata",
+        "dentista_paulo",
+        "joao",
+        "emprego_antigo",
+        "viagem_floripa"
+      ]
+    },
+    {
+      "id": "d04",
+      "tipo": "confusao_parecidas",
+      "pergunta": "Quando é minha próxima consulta no dentista?",
+      "esperada": "12 de novembro às 14h, com o Dr. Paulo.",
+      "relevantes": [
+        "dentista_paulo"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7392167957052432
+      },
+      "fontes": [
+        "dentista_paulo",
+        "joao",
+        "dentista_renata",
+        "aniversarios",
+        "viagem_floripa"
+      ]
+    },
+    {
+      "id": "d05",
+      "tipo": "negacao",
+      "pergunta": "Que remédio para dor eu não posso tomar?",
+      "esperada": "Dipirona (você tem alergia); ibuprofeno pode.",
+      "relevantes": [
+        "alergia"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.6700095166247231
+      },
+      "fontes": [
+        "alergia",
+        "remedio",
+        "joao",
+        "comida",
+        "dentista_paulo"
+      ]
+    },
+    {
+      "id": "d06",
+      "tipo": "mesmo_nome",
+      "pergunta": "Onde mora a Ana?",
+      "esperada": "Sua irmã Ana mora em Curitiba (há também a Ana Souza, sua gestora, sem informação de onde mora).",
+      "relevantes": [
+        "ana_irma"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7254847706628392
+      },
+      "fontes": [
+        "ana_irma",
+        "aniversarios",
+        "ana_trabalho",
+        "mel",
+        "emprego_antigo"
+      ]
+    },
+    {
+      "id": "d07",
+      "tipo": "mesmo_nome",
+      "pergunta": "Em que dia minha gestora prefere receber relatórios?",
+      "esperada": "Às sextas (Ana Souza).",
+      "relevantes": [
+        "ana_trabalho"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7600533765477339
+      },
+      "fontes": [
+        "ana_trabalho",
+        "aluguel_2025",
+        "condominio",
+        "aniversarios",
+        "ingles"
+      ]
+    },
+    {
+      "id": "d08",
+      "tipo": "multi_hop",
+      "pergunta": "Quando é o aniversário da dona do gato Thor?",
+      "esperada": "21 de agosto (sua prima Carla).",
+      "relevantes": [
+        "carla"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7724860559430514
+      },
+      "fontes": [
+        "carla",
+        "aniversarios",
+        "mel",
+        "ana_trabalho",
+        "vet"
+      ]
+    },
+    {
+      "id": "d09",
+      "tipo": "desatualizada",
+      "pergunta": "Onde eu trabalho?",
+      "esperada": "Na empresa Fluxo, como engenheiro de dados, desde 2024 (antes, no Banco Horizonte).",
+      "relevantes": [
+        "emprego_atual"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7345670435064686
+      },
+      "fontes": [
+        "emprego_atual",
+        "emprego_antigo",
+        "salario",
+        "ana_trabalho",
+        "ingles"
+      ]
+    },
+    {
+      "id": "d10",
+      "tipo": "confusao_parecidas",
+      "pergunta": "Quanto gastei de mercado em outubro?",
+      "esperada": "1.150 reais.",
+      "relevantes": [
+        "mercado_out"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.8404773646633359
+      },
+      "fontes": [
+        "mercado_out",
+        "vet",
+        "mercado_set",
+        "aluguel_2025",
+        "salario"
+      ]
+    },
+    {
+      "id": "d11",
+      "tipo": "calculo_3_mais",
+      "pergunta": "Quanto custa meu carro por ano, somando as parcelas e o seguro?",
+      "esperada": "17.400 reais por ano (12 × 1.250 + 2.400).",
+      "relevantes": [
+        "carro",
+        "seguro"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7436238048768132
+      },
+      "fontes": [
+        "seguro",
+        "carro",
+        "aluguel_2025",
+        "mercado_out",
+        "salario"
+      ]
+    },
+    {
+      "id": "d12",
+      "tipo": "multi_hop",
+      "pergunta": "Quem vai comigo para Floripa e qual a profissão dele?",
+      "esperada": "O João, seu melhor amigo, que é dentista.",
+      "relevantes": [
+        "viagem_floripa",
+        "joao"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7007872193056957
+      },
+      "fontes": [
+        "viagem_floripa",
+        "joao",
+        "ana_irma",
+        "emprego_atual",
+        "carla"
+      ]
+    },
+    {
+      "id": "d13",
+      "tipo": "parafrase",
+      "pergunta": "Quanto gastei com a minha pet no veterinário?",
+      "esperada": "280 reais em outubro (vacina V10 e consulta da Mel).",
+      "relevantes": [
+        "vet"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.759050362737125
+      },
+      "fontes": [
+        "vet",
+        "mercado_out",
+        "viagem_chile",
+        "viagem_floripa",
+        "salario"
+      ]
+    },
+    {
+      "id": "d14",
+      "tipo": "calculo_3_mais",
+      "pergunta": "Quanto pago por mês somando academia e inglês?",
+      "esperada": "410 reais (120 + 290).",
+      "relevantes": [
+        "academia",
+        "ingles"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7529725481643411
+      },
+      "fontes": [
+        "ingles",
+        "academia",
+        "aluguel_2025",
+        "mercado_out",
+        "seguro"
+      ]
+    },
+    {
+      "id": "d15",
+      "tipo": "parafrase",
+      "pergunta": "Que remédio de uso contínuo eu tomo e para quê?",
+      "esperada": "Losartana 50 mg todo dia de manhã, para pressão.",
+      "relevantes": [
+        "remedio"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7348010405017591
+      },
+      "fontes": [
+        "remedio",
+        "academia",
+        "aluguel_2025",
+        "ingles",
+        "mel"
+      ]
+    },
+    {
+      "id": "d16",
+      "tipo": "multi_hop",
+      "pergunta": "Em quais dias da semana eu vou ao escritório e tenho aula à noite ao mesmo tempo?",
+      "esperada": "Terça e quinta (escritório na Fluxo e inglês à noite).",
+      "relevantes": [
+        "emprego_atual",
+        "ingles"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.6835850993332963
+      },
+      "fontes": [
+        "ingles",
+        "violao",
+        "academia",
+        "emprego_atual",
+        "dentista_paulo"
+      ]
+    },
+    {
+      "id": "d17",
+      "tipo": "sem_resposta",
+      "pergunta": "Qual o meu tipo sanguíneo?",
+      "esperada": "NAO_SABE",
+      "relevantes": [],
+      "busca": {
+        "recall": null,
+        "acerto1": null,
+        "rr": null,
+        "nota_top1": 0.5878197084207573
+      },
+      "fontes": [
+        "aniversarios",
+        "salario",
+        "comida",
+        "emprego_atual",
+        "remedio"
+      ]
+    },
+    {
+      "id": "d18",
+      "tipo": "sem_resposta",
+      "pergunta": "Qual é a placa do meu carro?",
+      "esperada": "NAO_SABE",
+      "relevantes": [],
+      "busca": {
+        "recall": null,
+        "acerto1": null,
+        "rr": null,
+        "nota_top1": 0.6189547336126197
+      },
+      "fontes": [
+        "carro",
+        "seguro",
+        "mel",
+        "senha_wifi",
+        "salario"
+      ]
+    },
+    {
+      "id": "d19",
+      "tipo": "sem_resposta",
+      "pergunta": "Quanto o João pagou pela pousada?",
+      "esperada": "NAO_SABE",
+      "relevantes": [],
+      "busca": {
+        "recall": null,
+        "acerto1": null,
+        "rr": null,
+        "nota_top1": 0.7393443187600616
+      },
+      "fontes": [
+        "viagem_floripa",
+        "condominio",
+        "carro",
+        "viagem_chile",
+        "aluguel_2025"
+      ]
+    },
+    {
+      "id": "d20",
+      "tipo": "sem_resposta",
+      "pergunta": "Onde mora a Ana Souza?",
+      "esperada": "NAO_SABE",
+      "relevantes": [],
+      "busca": {
+        "recall": null,
+        "acerto1": null,
+        "rr": null,
+        "nota_top1": 0.7078174717013318
+      },
+      "fontes": [
+        "ana_trabalho",
+        "ana_irma",
+        "aniversarios",
+        "emprego_antigo",
+        "comida"
+      ]
+    }
+  ]
+}
