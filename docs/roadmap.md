@@ -7,7 +7,7 @@ o sistema respondeu e o que era esperado.
 | Fase | Tema | O que se aprende | Status |
 |------|------|------------------|--------|
 | 1 | **RAG básico** | Chunking, embeddings, banco vetorial, prompt com contexto | ✅ |
-| 2 | **App de verdade** | PWA mobile, login/senha, multiusuário isolado, deploy, banco na nuvem | 🟡 banco, login, convites, API e PWA prontos; falta hospedar |
+| 2 | **App de verdade** | PWA mobile, login/senha, multiusuário isolado, deploy, banco na nuvem | ✅ no ar em lembra-nu.vercel.app |
 | 3 | **Categorias** | Metadados, filtros na busca, classificação automática por LLM | ⬜ |
 | 4 | **Avaliação** | Perguntas de teste, recall@K, fidelidade: medir antes de "melhorar" | ⬜ |
 | 5 | **Agentes** | LLM que decide quais ferramentas usar (buscar por categoria, registrar compromisso, somar gastos) | ⬜ |

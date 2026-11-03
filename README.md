@@ -69,6 +69,15 @@ O app e a API ficam no mesmo projeto da Vercel: `index.py` é a porta de entrada
 `SUPABASE_PUBLISHABLE_KEY`, `GEMINI_API_KEY` (marcar como **sensitive**), `LLM_PROVIDER=gemini`,
 `EMBEDDING_PROVIDER=gemini`.
 
+## No ar
+
+**https://lembra-nu.vercel.app**: cadastro só com código de convite.
+
+**Problema comum: "Não é possível acessar este site" no celular** (no PC abre). O endereço é novo e
+o celular guardou em cache uma resposta antiga de DNS ("esse nome não existe"). Solução: ligar e
+desligar o modo avião (ou reiniciar), tentar em aba anônima e, no Android, conferir se o **DNS
+privado** está em "Automático".
+
 ## Estrutura
 
 ```
