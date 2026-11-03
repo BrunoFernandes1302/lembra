@@ -7,7 +7,7 @@ o sistema respondeu e o que era esperado.
 | Fase | Tema | O que se aprende | Status |
 |------|------|------------------|--------|
 | 1 | **RAG básico** | Chunking, embeddings, banco vetorial, prompt com contexto | ✅ |
-| 2 | **Hospedagem** | Deploy, banco persistente, login, segredos | ⬜ próximo |
+| 2 | **App de verdade** | PWA mobile, login/senha, multiusuário isolado, deploy, banco na nuvem | ⬜ próximo |
 | 3 | **Categorias** | Metadados, filtros na busca, classificação automática por LLM | ⬜ |
 | 4 | **Avaliação** | Perguntas de teste, recall@K, fidelidade: medir antes de "melhorar" | ⬜ |
 | 5 | **Agentes** | LLM que decide quais ferramentas usar (buscar por categoria, registrar compromisso, somar gastos) | ⬜ |
@@ -17,6 +17,10 @@ o sistema respondeu e o que era esperado.
 | 9 | **Empresa** | Documentos reais, permissões, LGPD, custos | ⬜ |
 
 ## Detalhes
+
+### 2. App de verdade (ver docs/visao-do-produto.md)
+- O Streamlit serve para protótipo, mas não vira um bom PWA mobile nem tem login multiusuário de verdade.
+- Proposta: **frontend PWA** (celular) + **API em Python** (o RAG atual) + **Supabase** (login, Postgres com pgvector e isolamento por usuário via *Row Level Security*).
 
 ### 3. Categorias (finanças, compromissos, família…)
 - Hoje a categoria já é salva como **metadado** de cada chunk, mas ainda não é usada na busca.
@@ -38,7 +42,7 @@ o sistema respondeu e o que era esperado.
 ## Perguntas que você deve saber responder ao fim de cada fase
 
 1. **RAG básico:** por que quebrar em chunks? Por que a busca acha "pet" quando a memória diz "cachorra"?
-2. **Hospedagem:** por que o banco não pode ficar no disco do servidor do app?
+2. **App de verdade:** como garantir que o usuário A nunca veja dados do usuário B, mesmo se houver um bug no código?
 3. **Categorias:** filtrar por metadado antes da busca vetorial melhora o quê, e piora o quê?
 4. **Avaliação:** como provar que uma mudança melhorou o sistema?
 5. **Agentes:** qual a diferença entre um fluxo fixo e um agente? Quando o agente *não* vale a pena?
