@@ -17,7 +17,9 @@ base no que ela mesma registrou.
 - **PWA** (*Progressive Web App*): instalável na tela inicial, abre em tela cheia como um app nativo, sem passar pela App Store/Play Store.
 - **Login e senha:** cada pessoa tem sua conta.
 - **Isolamento total entre usuários:** um usuário nunca pode ver memórias de outro. É requisito de segurança e de LGPD.
-- **Categorias:** finanças, compromissos, família etc.
+- **Categorias:** finanças, compromissos, família etc. O usuário pode **criar, renomear e organizar** as próprias categorias e **mover memórias** entre elas.
+- **Editar memórias**, não só criar e apagar.
+- **Configurar o RAG dentro do app** (área avançada/"laboratório"): tamanho do chunk, sobreposição, quantos trechos buscar, modelo de IA, ver como cada memória foi quebrada em chunks e as notas de similaridade. No futuro, ligar e desligar **agentes**. Objetivo duplo: o dono aprende vendo os efeitos, e testadores comuns não precisam mexer (bons valores padrão).
 
 ## Forma de trabalho (ciclo de melhoria)
 1. Usuários usam no dia a dia.
