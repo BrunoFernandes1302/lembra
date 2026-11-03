@@ -30,7 +30,7 @@ flowchart LR
 ```
 Celular (PWA) ──(crachá JWT)──► API Python (FastAPI) ──(mesmo crachá)──► Supabase
                                  ├─ chunking                              ├─ Login + convites
-                                 ├─ embeddings (modelo local)             ├─ Postgres + pgvector
+                                 ├─ embeddings (Gemini)                   ├─ Postgres + pgvector
                                  └─ LLM (Claude ou Ollama)                └─ RLS: cada um vê só o seu
 ```
 
@@ -38,7 +38,7 @@ Celular (PWA) ──(crachá JWT)──► API Python (FastAPI) ──(mesmo cra
 |------|---------|---------|
 | Banco + login | Supabase (Postgres + pgvector) | Login pronto, busca vetorial e isolamento por usuário (RLS) |
 | API | FastAPI | Python, valida os dados e gera página de testes (`/docs`) |
-| Embeddings | `sentence-transformers` + `multilingual-e5-small` | Local, grátis, entende português |
+| Embeddings | Gemini `gemini-embedding-001` (ou local, opcional) | Leve para a Vercel e separou melhor o relevante nos testes |
 | LLM | Gemini (grátis), Claude, Ollama ou nenhum | Troca pelo `.env` |
 | App | PWA em HTML/CSS/JS puro (`web/`) | Instala no celular sem loja de apps; sem etapa de build |
 
@@ -62,15 +62,12 @@ Pela página `/docs`:
 
 Na primeira execução, o modelo de embeddings (~470 MB) é baixado automaticamente.
 
-## Publicar (Hugging Face Spaces)
+## Publicar (Vercel)
 
-```bash
-HF_TOKEN=hf_...  GEMINI_API_KEY=...  python scripts/publicar_hf.py SEU_USUARIO/lembra
-```
-
-O script cria o Space, cadastra as configurações (a chave do Gemini como **segredo**) e envia o
-código. O Hugging Face monta o servidor a partir do `Dockerfile`. O app fica em
-`https://SEU_USUARIO-lembra.hf.space`.
+O app e a API ficam no mesmo projeto da Vercel: `index.py` é a porta de entrada da API e a pasta
+`web/` é servida pela CDN. Variáveis de ambiente no painel da Vercel: `SUPABASE_URL`,
+`SUPABASE_PUBLISHABLE_KEY`, `GEMINI_API_KEY` (marcar como **sensitive**), `LLM_PROVIDER=gemini`,
+`EMBEDDING_PROVIDER=gemini`.
 
 ## Estrutura
 
@@ -92,9 +89,8 @@ tests/                 # testes automáticos (rodam sem internet)
 
 - `.env` está no `.gitignore`: chaves **nunca** vão para o GitHub.
 - Cada usuário só acessa os próprios dados, garantido pelo banco (Row Level Security).
-- Os embeddings são calculados na própria API, sem serviço externo.
-- Com `LLM_PROVIDER=gemini` no **nível gratuito**, os trechos encontrados e a pergunta vão para o
-  Google, que pode usá-los para melhorar produtos. Avise os testadores. Com `nenhum` ou `ollama`,
-  nada sai do servidor.
+- Com o Gemini no **nível gratuito**, o texto das memórias (para gerar embeddings), os trechos
+  encontrados e as perguntas passam pelo Google, que pode usá-los para melhorar produtos.
+  **Avise os testadores.** Para tudo privado: embeddings `local` + LLM `ollama` ou `nenhum`.
 - Com `LLM_PROVIDER=anthropic`, os trechos recuperados em cada pergunta **são enviados** à API
   do Claude. Para manter tudo 100% local, use `LLM_PROVIDER=ollama`.

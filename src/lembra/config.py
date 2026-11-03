@@ -13,7 +13,9 @@ load_dotenv()
 
 @dataclass(frozen=True)
 class Settings:
+    embedding_provider: str
     embedding_model: str
+    embedding_dim: int
     chunk_size: int
     chunk_overlap: int
     top_k: int
@@ -31,7 +33,9 @@ class Settings:
 @lru_cache
 def get_settings() -> Settings:
     return Settings(
-        embedding_model=os.getenv("EMBEDDING_MODEL", "intfloat/multilingual-e5-small"),
+        embedding_provider=os.getenv("EMBEDDING_PROVIDER", "gemini").lower(),
+        embedding_model=os.getenv("EMBEDDING_MODEL", "gemini-embedding-001"),
+        embedding_dim=int(os.getenv("EMBEDDING_DIM", "768")),
         chunk_size=int(os.getenv("CHUNK_SIZE", "800")),
         chunk_overlap=int(os.getenv("CHUNK_OVERLAP", "150")),
         top_k=int(os.getenv("TOP_K", "5")),
@@ -45,3 +49,10 @@ def get_settings() -> Settings:
         supabase_url=os.getenv("SUPABASE_URL", ""),
         supabase_key=os.getenv("SUPABASE_PUBLISHABLE_KEY", ""),
     )
+
+
+def embedder_de(s: Settings):
+    """Atalho: o embedder configurado."""
+    from .embeddings import get_embedder
+
+    return get_embedder(s.embedding_provider, s.embedding_model, s.gemini_api_key, s.embedding_dim)

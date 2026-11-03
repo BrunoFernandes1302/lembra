@@ -18,6 +18,7 @@ def test_vetor_vira_texto_no_formato_do_pgvector():
 
 
 def test_filtro_mantem_so_trechos_proximos_do_melhor():
-    t = [Trecho("aluguel", {}, 0.863), Trecho("dentista", {}, 0.82), Trecho("quase", {}, 0.845)]
+    # números reais do teste com o Gemini: certo 0,72; irrelevante 0,59
+    t = [Trecho("aluguel", {}, 0.72), Trecho("dentista", {}, 0.59), Trecho("quase", {}, 0.70)]
     assert [x.texto for x in filtrar_proximos_do_melhor(t)] == ["aluguel", "quase"]
     assert filtrar_proximos_do_melhor([]) == []

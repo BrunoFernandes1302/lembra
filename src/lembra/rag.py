@@ -16,8 +16,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from .chunking import chunk_text
-from .config import Settings, get_settings
-from .embeddings import get_embedder
+from .config import Settings, embedder_de, get_settings
 from .llm import get_llm
 from .supabase import Trecho
 
@@ -35,8 +34,8 @@ Regras:
 
 
 class Repositorio(Protocol):
-    def salvar_memoria(self, texto, categoria, data_evento, chunks, vetores) -> str: ...
-    def buscar(self, vetor, k, categoria=None) -> list[Trecho]: ...
+    def salvar_memoria(self, texto, categoria, data_evento, chunks, vetores, modelo) -> str: ...
+    def buscar(self, vetor, k, categoria=None, modelo=None) -> list[Trecho]: ...
 
 
 @dataclass
@@ -55,8 +54,8 @@ def alimentar(
     chunks = chunk_text(texto, s.chunk_size, s.chunk_overlap)
     if not chunks:
         raise ValueError("A memória está vazia")
-    vetores = get_embedder(s.embedding_model).embed_documents(chunks)
-    return repo.salvar_memoria(texto, categoria, data_evento, chunks, vetores), len(chunks)
+    vetores = embedder_de(s).embed_documents(chunks)
+    return repo.salvar_memoria(texto, categoria, data_evento, chunks, vetores, s.embedding_model), len(chunks)
 
 
 def buscar(
@@ -64,8 +63,8 @@ def buscar(
 ) -> list[Trecho]:
     """Retrieval: embedding da pergunta -> vizinhos mais próximos no banco."""
     s = settings or get_settings()
-    vetor = get_embedder(s.embedding_model).embed_query(pergunta)
-    return repo.buscar(vetor, s.top_k, categoria)
+    vetor = embedder_de(s).embed_query(pergunta)
+    return repo.buscar(vetor, s.top_k, categoria, s.embedding_model)
 
 
 def montar_prompt(pergunta: str, trechos: list[Trecho]) -> str:
@@ -79,11 +78,11 @@ def montar_prompt(pergunta: str, trechos: list[Trecho]) -> str:
     return f"<memorias>\n{contexto}\n</memorias>\n\nPergunta: {pergunta}"
 
 
-# Heurística (regra prática, não garantia): o modelo E5 dá notas parecidas para tudo (~0,80-0,90),
-# então um corte fixo não funciona. Nos testes, o trecho certo ficou ~0,04 acima dos demais;
-# guardamos só os que estão a até MARGEM do melhor. Com IA, isso não é preciso: o LLM ignora o
+# Heurística (regra prática, não garantia): as notas absolutas variam por modelo, então um corte
+# fixo não funciona. Guardamos só os trechos a até MARGEM do melhor. Nos testes com o Gemini, o
+# trecho certo ficou 0,07-0,15 acima do 2º colocado. Com IA, isso não é preciso: o LLM ignora o
 # que não tem relação. Sem IA, o usuário veria ruído.
-MARGEM_RELEVANCIA = 0.03
+MARGEM_RELEVANCIA = 0.05
 
 
 def filtrar_proximos_do_melhor(trechos: list[Trecho], margem: float = MARGEM_RELEVANCIA) -> list[Trecho]:

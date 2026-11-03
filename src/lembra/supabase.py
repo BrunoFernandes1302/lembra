@@ -104,9 +104,11 @@ class RepositorioSupabase:
         }
 
     def salvar_memoria(
-        self, texto: str, categoria: str, data_evento: str, chunks: list[str], vetores: list[list[float]]
+        self, texto: str, categoria: str, data_evento: str, chunks: list[str],
+        vetores: list[list[float]], modelo: str,
     ) -> str:
         payload = {
+            "p_modelo": modelo,
             "p_texto": texto,
             "p_categoria": categoria,
             "p_data_evento": data_evento,
@@ -134,8 +136,12 @@ class RepositorioSupabase:
         r = requests.delete(f"{self.url}/memorias", headers=h, params={"id": f"eq.{memoria_id}"}, timeout=TIMEOUT)
         return len(_checar(r) or []) > 0
 
-    def buscar(self, vetor: list[float], k: int, categoria: str | None = None) -> list[Trecho]:
+    def buscar(
+        self, vetor: list[float], k: int, categoria: str | None = None, modelo: str | None = None
+    ) -> list[Trecho]:
         payload = {"query_embedding": _vetor_para_texto(vetor), "k": k, "filtro_categoria": categoria}
+        if modelo:
+            payload["modelo"] = modelo
         r = requests.post(f"{self.url}/rpc/buscar_chunks", headers=self.headers, json=payload, timeout=TIMEOUT)
         return [
             Trecho(

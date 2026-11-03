@@ -46,7 +46,7 @@ class RepoFalso:
     def __init__(self, token):
         self.dono = token  # no banco falso, o próprio token identifica o dono
 
-    def salvar_memoria(self, texto, categoria, data_evento, chunks, vetores):
+    def salvar_memoria(self, texto, categoria, data_evento, chunks, vetores, modelo):
         mid = str(uuid.uuid4())
         BANCO["memorias"].append({"id": mid, "dono": self.dono, "texto": texto,
                                   "categoria": categoria, "data_evento": data_evento})
@@ -65,7 +65,7 @@ class RepoFalso:
         BANCO["chunks"] = [c for c in BANCO["chunks"] if not (c["memoria_id"] == mid and c["dono"] == self.dono)]
         return len(BANCO["memorias"]) < antes
 
-    def buscar(self, vetor, k, categoria=None):
+    def buscar(self, vetor, k, categoria=None, modelo=None):
         meus = [c for c in BANCO["chunks"] if c["dono"] == self.dono
                 and (categoria is None or c["categoria"] == categoria)]
         ordenados = sorted(meus, key=lambda c: -sum(a * b for a, b in zip(c["v"], vetor)))[:k]
@@ -78,7 +78,7 @@ class RepoFalso:
 def cliente(monkeypatch):
     BANCO["memorias"].clear()
     BANCO["chunks"].clear()
-    monkeypatch.setattr(rag, "get_embedder", lambda _: EmbedderFalso())
+    monkeypatch.setattr(rag, "embedder_de", lambda _: EmbedderFalso())
     monkeypatch.setattr(rag, "get_llm", lambda _: LLMFalso())
     api.app.dependency_overrides[api.repositorio] = lambda cred=api.Depends(api._bearer): RepoFalso(cred.credentials)
     yield TestClient(api.app)

@@ -32,10 +32,12 @@ async def _ciclo_de_vida(_app):
     # pessoa a usar o app não espere esse carregamento (alguns segundos).
     if os.getenv("LEMBRA_AQUECER", "1") == "1":
         try:
-            from .embeddings import get_embedder
+            from .config import embedder_de
 
-            get_embedder(get_settings().embedding_model).embed_query("aquecimento")
-            logger.info("Modelo de embeddings carregado")
+            s = get_settings()
+            if s.embedding_provider == "local":  # só o modelo local precisa ser carregado
+                embedder_de(s).embed_query("aquecimento")
+                logger.info("Modelo de embeddings carregado")
         except Exception as e:  # sem o modelo o app ainda abre; o erro aparece no primeiro uso
             logger.warning("Não consegui pré-carregar o modelo: %s", e)
     yield
