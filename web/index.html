@@ -32,6 +32,8 @@
     <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></symbol>
     <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
     <symbol id="i-flask" viewBox="0 0 24 24"><path d="M10 2v7.53a2 2 0 0 1-.21.9L4.72 20.55A1 1 0 0 0 5.62 22h12.76a1 1 0 0 0 .9-1.45l-5.07-10.12a2 2 0 0 1-.21-.9V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></symbol>
+    <symbol id="i-message-dots" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></symbol>
     <symbol id="i-tag" viewBox="0 0 24 24"><path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></symbol>
   </svg>
   <div class="aurora" aria-hidden="true"></div>
@@ -93,6 +95,11 @@
 
       <!-- REGISTRAR -->
       <section id="tela-registrar" class="tela" hidden>
+        <div class="segmentos" role="tablist">
+          <button type="button" class="segmento-reg segmento ativo" data-reg="escrever"><svg class="ic"><use href="#i-pen"/></svg>Escrever</button>
+          <button type="button" class="segmento-reg segmento" data-reg="importar"><svg class="ic"><use href="#i-message-dots"/></svg>Importar conversa</button>
+        </div>
+        <div id="reg-escrever">
         <h2 class="titulo-tela">Nova memória</h2>
         <p class="sub-tela">Escreva do seu jeito. Eu quebro em pedaços, entendo o significado e guardo para você.</p>
         <form id="form-registrar">
@@ -113,6 +120,36 @@
           <p class="erro" id="erro-registrar" role="alert"></p>
           <button type="submit" class="botao primario"><svg class="ic"><use href="#i-sparkles"/></svg><span>Salvar memória</span></button>
         </form>
+        </div>
+
+        <div id="reg-importar" hidden>
+          <h2 class="titulo-tela">Importar conversa</h2>
+          <p class="sub-tela">Traga uma conversa do WhatsApp para perguntar sobre ela depois.</p>
+          <div class="cartao passos">
+            <p><b>No WhatsApp:</b> abra a conversa → <b>⋮</b> → <b>Mais</b> → <b>Exportar conversa</b> → <b>Sem mídia</b>. Salve o arquivo <code>.txt</code>.</p>
+            <p class="ajuda">Importe só conversas que você tem o direito de guardar: elas têm mensagens de outras pessoas (LGPD). As mensagens passam pelo Gemini para gerar os vetores.</p>
+          </div>
+          <form id="form-importar">
+            <label class="arquivo">
+              <input type="file" name="arquivo" accept=".txt,text/plain">
+              <span class="arquivo-caixa"><svg class="ic"><use href="#i-upload"/></svg><span id="arquivo-nome">Escolher arquivo .txt</span></span>
+            </label>
+            <label>Nome da conversa
+              <input type="text" name="nome" maxlength="80" placeholder="Ex.: João, Família, Viagem Floripa">
+            </label>
+            <label>Guardar na categoria
+              <select name="categoria" id="cat-importar"><option value="conversas">Conversas</option></select>
+            </label>
+            <p class="erro" id="erro-importar" role="alert"></p>
+            <button type="submit" class="botao secundario" id="botao-previa"><span>Ver prévia</span></button>
+          </form>
+          <div class="cartao" id="previa-importar" hidden>
+            <h3>Prévia</h3>
+            <ul class="numeros" id="previa-numeros"></ul>
+            <pre class="exemplo" id="previa-exemplo"></pre>
+            <button type="button" class="botao primario" id="botao-importar"><svg class="ic"><use href="#i-upload"/></svg><span>Importar para o Lembra</span></button>
+          </div>
+        </div>
       </section>
 
       <!-- MEMÓRIAS -->

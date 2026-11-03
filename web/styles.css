@@ -409,6 +409,30 @@ form.linha-nova-cat { margin-top: 0; padding: 10px; }
 .dicas b { color: var(--texto); }
 #lab-texto { margin-top: 10px; }
 
+/* ---------------------------------------------------------- Importar conversa */
+.passos p { margin: 0 0 8px; }
+.passos code { background: var(--vidro-forte); border-radius: 6px; padding: 1px 6px; }
+.arquivo { position: relative; }
+.arquivo input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.arquivo-caixa {
+  display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 2px;
+  padding: 22px; border: 1.5px dashed var(--borda-forte); border-radius: var(--raio);
+  background: var(--vidro); color: var(--texto); font-weight: 600; cursor: pointer;
+  transition: border-color var(--rapido), background var(--rapido), transform var(--rapido);
+}
+.arquivo input:focus-visible + .arquivo-caixa { border-color: var(--violeta); box-shadow: 0 0 0 4px rgba(139, 92, 246, .18); }
+.arquivo.escolhido .arquivo-caixa { border-style: solid; border-color: rgba(139, 92, 246, .6); background: var(--gradiente-suave); }
+@media (hover: hover) { .arquivo-caixa:hover { border-color: var(--violeta); transform: translateY(-1px); } }
+.numeros { list-style: none; padding: 0; margin: 8px 0 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.numeros li { background: var(--vidro); border: 1px solid var(--borda); border-radius: 12px; padding: 10px 12px; font-size: .8rem; color: var(--suave); }
+.numeros b { display: block; font-size: 1.1rem; color: var(--texto); }
+.numeros li.largo { grid-column: 1 / -1; }
+.exemplo {
+  white-space: pre-wrap; word-wrap: break-word; font: inherit; font-size: .84rem; color: var(--suave);
+  background: var(--vidro); border: 1px solid var(--borda); border-radius: 12px; padding: 12px; margin: 0 0 14px;
+  max-height: 220px; overflow-y: auto;
+}
+
 /* ---------------------------------------------------------- Aviso (toast) */
 .aviso {
   position: fixed; left: 50%; top: calc(16px + env(safe-area-inset-top, 0px)); transform: translateX(-50%);

@@ -175,3 +175,43 @@ def reprocessar(repo, settings: Settings | None = None) -> dict:
                                pedacos[m["id"]], vetores[i : i + n], s.embedding_model)
         i += n
     return {"memorias": len(memorias), "chunks": len(todos)}
+
+
+MAX_BLOCOS_IMPORTACAO = 200  # protege a cota do Gemini e o tempo máximo de uma requisição
+
+
+def importar_conversa(
+    repo, conteudo: str, nome_conversa: str, categoria: str = "conversas",
+    pausa_horas: float = 6, confirmar: bool = False, settings: Settings | None = None,
+) -> dict:
+    """Importa uma conversa exportada do WhatsApp. Com confirmar=False só mostra a PRÉVIA
+    (nada é salvo e nenhuma IA é chamada)."""
+    from . import whatsapp
+
+    msgs = whatsapp.ler_exportacao(conteudo)
+    if not msgs:
+        raise ValueError("Não reconheci mensagens nesse arquivo. Exporte pelo WhatsApp: "
+                         "conversa → ⋮ → Mais → Exportar conversa → Sem mídia.")
+    blocos = whatsapp.agrupar(msgs, pausa_horas=pausa_horas)
+    resumo = {
+        "mensagens": len(msgs), "blocos": len(blocos),
+        "participantes": sorted({m.autor for m in msgs}),
+        "de": msgs[0].quando.strftime("%d/%m/%Y"), "ate": msgs[-1].quando.strftime("%d/%m/%Y"),
+        "exemplo": whatsapp.texto_da_memoria(blocos[0], nome_conversa)[:600],
+    }
+    if len(blocos) > MAX_BLOCOS_IMPORTACAO:
+        raise ValueError(f"A conversa gerou {len(blocos)} blocos (máximo {MAX_BLOCOS_IMPORTACAO}). "
+                         "Exporte um período menor ou divida o arquivo.")
+    if not confirmar:
+        return {**resumo, "salvo": False}
+
+    s = settings_do_usuario(repo, settings)
+    textos = [whatsapp.texto_da_memoria(b, nome_conversa) for b in blocos]
+    pedacos = [chunk_text(t, s.chunk_size, s.chunk_overlap) for t in textos]
+    vetores = embedder_de(s).embed_documents([c for cs in pedacos for c in cs])  # em lotes
+    i = 0
+    for b, t, cs in zip(blocos, textos, pedacos):
+        repo.salvar_memoria(t, categoria, b.inicio.strftime("%d/%m/%Y"), cs, vetores[i : i + len(cs)],
+                            s.embedding_model)
+        i += len(cs)
+    return {**resumo, "salvo": True, "memorias_criadas": len(blocos), "chunks": i}

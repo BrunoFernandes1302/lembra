@@ -332,7 +332,33 @@ diferentes (fato, paráfrase, conta, juntar duas memórias, detalhe em texto lon
 
 ---
 
-## 11. Agentes (próximas fases)
+## 11. Importar conversas do WhatsApp
+
+**Por que exportar:** a API oficial do WhatsApp não lê conversas pessoais. Exportar (conversa →
+⋮ → Mais → Exportar conversa → Sem mídia) é o caminho oficial, e o usuário escolhe quais conversas entram.
+
+**Leitura do arquivo (`src/lembra/whatsapp.py`):** Android e iPhone exportam em formatos
+diferentes (`03/11/2026 14:05 - João: oi` × `[03/11/2026, 14:05:22] João: oi`). Mensagens com
+várias linhas continuam sem cabeçalho e são juntadas. Ruído (aviso de criptografia, "mídia
+oculta", mensagem apagada) é descartado.
+
+**Chunking de conversa ≠ chunking de texto:** conversa não tem parágrafos; tem mensagens
+curtas, autores e horários. A estratégia:
+- quebrar por **sessão**: mais de 6 horas sem mensagem começa um bloco novo (assuntos mudam com o tempo);
+- blocos grandes são divididos **entre mensagens**, nunca no meio de uma;
+- cada bloco vira uma **memória**, com a data como metadado e um cabeçalho de contexto
+  ("Conversa de WhatsApp "João" em 04/11/2026, entre Bruno, João Silva") que ajuda a busca.
+
+**Prévia antes de salvar:** mostra mensagens, blocos, período e participantes **sem chamar
+nenhuma IA**. Limite de 200 blocos por importação (protege a cota e o tempo da requisição);
+os embeddings saem em lotes de 100.
+
+**LGPD:** a conversa tem mensagens de outras pessoas. O app avisa para importar só o que o
+usuário tem o direito de guardar.
+
+---
+
+## 12. Agentes (próximas fases)
 
 Um **agente** é um LLM que, em vez de seguir um roteiro fixo, recebe uma lista de
 **ferramentas** (funções que o seu código executa) e decide sozinho quais chamar.
@@ -351,7 +377,7 @@ O ciclo é: o LLM pede uma ferramenta, o código executa, o resultado volta para
 repete até ele ter a resposta. **Custo:** mais chamadas ao LLM, o que significa mais lento e mais
 caro. Só vale a pena quando a pergunta realmente precisa de decisões ou de cálculos.
 
-## 12. Fine-tuning "só a ponta" (próximas fases)
+## 13. Fine-tuning "só a ponta" (próximas fases)
 
 Um modelo de linguagem é feito de camadas. As primeiras aprendem coisas gerais (gramática,
 significado das palavras) e as últimas, coisas específicas da tarefa.
@@ -361,7 +387,7 @@ significado das palavras) e as últimas, coisas específicas da tarefa.
 - **LoRA:** em vez de mexer nos pesos originais, acopla pequenas matrizes extras e treina só elas. Fica com menos de 1% dos parâmetros e resultado próximo ao do treino completo. O arquivo final é pequeno (MBs) e pode ser ligado ou desligado no modelo base.
 - **QLoRA:** LoRA com o modelo base comprimido em 4 bits, o que cabe numa GPU grátis.
 
-## 13. Glossário rápido
+## 14. Glossário rápido
 
 | Termo | Significado |
 |-------|-------------|

@@ -115,6 +115,14 @@ MODELOS_LLM = {
 }
 
 
+class ImportacaoWhatsApp(BaseModel):
+    conteudo: str = Field(min_length=1, max_length=3_000_000)  # ~3 MB de texto
+    nome_conversa: str = Field(min_length=1, max_length=80)
+    categoria: str = Field(default="conversas", max_length=40)
+    pausa_horas: float = Field(default=6, ge=0.5, le=72)
+    confirmar: bool = False
+
+
 class Pergunta(BaseModel):
     pergunta: str = Field(min_length=1, max_length=2_000)
     categoria: str | None = None
@@ -266,6 +274,18 @@ def reprocessar(repo: RepositorioSupabase = Depends(repositorio)):
     """Refaz chunks e vetores de todas as memórias com a configuração atual."""
     try:
         return rag.reprocessar(repo)
+    except ErroSupabase as e:
+        _erro(e)
+
+
+@app.post("/importar/whatsapp", tags=["importar"])
+def importar_whatsapp(dados: ImportacaoWhatsApp, repo: RepositorioSupabase = Depends(repositorio)):
+    """Importa uma conversa exportada do WhatsApp (.txt). Sem `confirmar`, devolve só a prévia."""
+    try:
+        return rag.importar_conversa(repo, dados.conteudo, dados.nome_conversa.strip(), dados.categoria,
+                                     dados.pausa_horas, dados.confirmar)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except ErroSupabase as e:
         _erro(e)
 

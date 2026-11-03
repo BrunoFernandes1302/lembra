@@ -298,3 +298,28 @@ def test_reprocessar_refaz_chunks_com_nova_config(cliente):
     depois = len(cliente.get(f"/memorias/{mid}/chunks", headers=ANA).json())
     assert r["memorias"] == 1 and depois > antes
     assert cliente.get(f"/memorias/{mid}/chunks", headers=BETO).json() == []
+
+
+CONVERSA = """03/11/2026 09:01 - João: Bora viajar em dezembro?
+03/11/2026 09:02 - Bruno: Bora! Pensei em Floripa
+04/11/2026 20:15 - Bruno: Reservei a pousada: 650 reais por 3 noites"""
+
+
+def test_importar_whatsapp_previa_nao_salva(cliente):
+    r = cliente.post("/importar/whatsapp", headers=ANA, json={"conteudo": CONVERSA, "nome_conversa": "João"}).json()
+    assert r["salvo"] is False and r["mensagens"] == 3 and r["blocos"] == 2
+    assert r["participantes"] == ["Bruno", "João"] and BANCO["memorias"] == []
+
+
+def test_importar_whatsapp_salva_e_busca(cliente):
+    r = cliente.post("/importar/whatsapp", headers=ANA, json={
+        "conteudo": CONVERSA, "nome_conversa": "João", "categoria": "viagens", "confirmar": True}).json()
+    assert r["salvo"] is True and r["memorias_criadas"] == 2
+    f = cliente.post("/buscar", headers=ANA, json={"pergunta": "pousada reais noites"}).json()
+    assert "650 reais" in f[0]["texto"] and f[0]["categoria"] == "viagens" and f[0]["data"] == "04/11/2026"
+    assert cliente.get("/memorias", headers=BETO).json() == []
+
+
+def test_importar_arquivo_invalido(cliente):
+    r = cliente.post("/importar/whatsapp", headers=ANA, json={"conteudo": "isto não é uma conversa", "nome_conversa": "x"})
+    assert r.status_code == 400 and "Exportar conversa" in r.json()["detail"]

@@ -169,9 +169,9 @@ function irPara(tela) {
 }
 $$(".aba").forEach((a) => a.addEventListener("click", () => irPara(a.dataset.tela)));
 
-$$(".segmento").forEach((s) =>
+$$(".segmento[data-sub]").forEach((s) =>
   s.addEventListener("click", () => {
-    $$(".segmento").forEach((x) => x.classList.toggle("ativo", x === s));
+    $$(".segmento[data-sub]").forEach((x) => x.classList.toggle("ativo", x === s));
     ["rag", "lab", "cats"].forEach((n) => ($(`#sub-${n}`).hidden = n !== s.dataset.sub));
     if (s.dataset.sub === "cats") desenharCategorias();
   })
@@ -186,6 +186,11 @@ async function carregarCategorias() {
   desenharChips();
   preencherSelect($("#form-perguntar").categoria, "Procurar em: todas");
   preencherSelect($("#filtro-memorias"), "Todas");
+  const ci = $("#cat-importar");
+  const atualCi = ci.value || "conversas";
+  ci.replaceChildren(new Option("Conversas", "conversas"));
+  categorias.filter((c) => c.nome !== "conversas").forEach((c) => ci.append(new Option(rotulo(c.nome), c.nome)));
+  ci.value = [...ci.options].some((o) => o.value === atualCi) ? atualCi : "conversas";
   if (!$("#sub-cats").hidden) desenharCategorias();
 }
 
@@ -300,6 +305,88 @@ $("#form-registrar").addEventListener("submit", async (e) => {
   } finally {
     b.disabled = false;
     b.querySelector("span").textContent = "Salvar memória";
+  }
+});
+
+// ---------------- Registrar: escrever × importar ----------------
+$$("[data-reg]").forEach((b) =>
+  b.addEventListener("click", () => {
+    $$("[data-reg]").forEach((x) => x.classList.toggle("ativo", x === b));
+    $("#reg-escrever").hidden = b.dataset.reg !== "escrever";
+    $("#reg-importar").hidden = b.dataset.reg !== "importar";
+  })
+);
+
+// ---------------- Importar conversa do WhatsApp ----------------
+let conteudoImportar = null;
+
+$("#form-importar").arquivo.addEventListener("change", async (e) => {
+  const arq = e.target.files[0];
+  $("#previa-importar").hidden = true;
+  $("#erro-importar").textContent = "";
+  if (!arq) return;
+  if (arq.size > 3000000) return ($("#erro-importar").textContent = "Arquivo grande demais (máx. 3 MB). Exporte um período menor.");
+  conteudoImportar = await arq.text(); // lido no próprio aparelho; só o texto vai para a API
+  $("#arquivo-nome").textContent = arq.name;
+  e.target.closest(".arquivo").classList.add("escolhido");
+  const f = $("#form-importar");
+  if (!f.nome.value) f.nome.value = arq.name.replace(/^(Conversa do WhatsApp com|WhatsApp Chat with)\s*/i, "").replace(/\.txt$/i, "");
+});
+
+function corpoImportar(confirmar) {
+  const f = $("#form-importar");
+  return { conteudo: conteudoImportar, nome_conversa: f.nome.value.trim() || "Conversa",
+           categoria: f.categoria.value, confirmar };
+}
+
+$("#form-importar").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const erro = $("#erro-importar");
+  erro.textContent = "";
+  if (!conteudoImportar) return (erro.textContent = "Escolha o arquivo .txt exportado do WhatsApp.");
+  const b = $("#botao-previa");
+  b.disabled = true;
+  try {
+    const r = await chamar("/importar/whatsapp", { metodo: "POST", corpo: corpoImportar(false) });
+    const ul = $("#previa-numeros");
+    ul.replaceChildren();
+    const item = (rot, val, largo) => {
+      const li = el("li", largo ? "largo" : null);
+      li.append(el("b", null, String(val)), document.createTextNode(rot));
+      ul.append(li);
+    };
+    item("mensagens", r.mensagens);
+    item("blocos (viram memórias)", r.blocos);
+    item("período", `${r.de} → ${r.ate}`, true);
+    item("participantes", r.participantes.join(", "), true);
+    $("#previa-exemplo").textContent = r.exemplo + (r.exemplo.length >= 600 ? "…" : "");
+    $("#previa-importar").hidden = false;
+    $("#previa-importar").scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (err) {
+    erro.textContent = err.message;
+  } finally {
+    b.disabled = false;
+  }
+});
+
+$("#botao-importar").addEventListener("click", async (e) => {
+  const b = e.currentTarget;
+  b.disabled = true;
+  b.querySelector("span").textContent = "Importando e entendendo…";
+  try {
+    const r = await chamar("/importar/whatsapp", { metodo: "POST", corpo: corpoImportar(true) });
+    avisar(`Conversa importada: ${r.memorias_criadas} memória(s), ${r.chunks} chunk(s)`);
+    $("#previa-importar").hidden = true;
+    $("#form-importar").reset();
+    $("#arquivo-nome").textContent = "Escolher arquivo .txt";
+    $(".arquivo").classList.remove("escolhido");
+    conteudoImportar = null;
+    carregarCategorias().catch(() => {});
+  } catch (err) {
+    $("#erro-importar").textContent = err.message;
+  } finally {
+    b.disabled = false;
+    b.querySelector("span").textContent = "Importar para o Lembra";
   }
 });
 
