@@ -9,7 +9,9 @@ A API repassa esse crachá ao Supabase; quem decide o que a pessoa pode ver é o
 
 from __future__ import annotations
 
+import logging
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -21,7 +23,26 @@ from . import rag
 from .config import get_settings
 from .supabase import ErroSupabase, RepositorioSupabase, SupabaseAuth
 
-app = FastAPI(title="Lembra API", version="0.2.0", description="Assistente de vida pessoal com RAG.")
+logger = logging.getLogger("lembra")
+
+
+@asynccontextmanager
+async def _ciclo_de_vida(_app):
+    # "Aquecimento": carrega o modelo de embeddings ao ligar o servidor, para que a primeira
+    # pessoa a usar o app não espere esse carregamento (alguns segundos).
+    if os.getenv("LEMBRA_AQUECER", "1") == "1":
+        try:
+            from .embeddings import get_embedder
+
+            get_embedder(get_settings().embedding_model).embed_query("aquecimento")
+            logger.info("Modelo de embeddings carregado")
+        except Exception as e:  # sem o modelo o app ainda abre; o erro aparece no primeiro uso
+            logger.warning("Não consegui pré-carregar o modelo: %s", e)
+    yield
+
+
+app = FastAPI(title="Lembra API", version="0.2.0", description="Assistente de vida pessoal com RAG.",
+              lifespan=_ciclo_de_vida)
 _bearer = HTTPBearer(description="access_token recebido no login")
 
 # CORS: quando o app for hospedado em outro endereço (ex.: Vercel), o navegador só deixa ele
@@ -183,7 +204,8 @@ def buscar(dados: Pergunta, repo: RepositorioSupabase = Depends(repositorio)):
 
 # O app (PWA) é servido pela própria API, no endereço raiz. Fica por último para não
 # "engolir" as rotas acima.
-_WEB = Path(__file__).resolve().parents[2] / "web"
+# Pasta do app: configurável (no Docker o pacote fica instalado longe do código-fonte).
+_WEB = Path(os.getenv("LEMBRA_WEB_DIR") or Path(__file__).resolve().parents[2] / "web")
 if _WEB.is_dir():
     from fastapi.staticfiles import StaticFiles
 

@@ -62,6 +62,16 @@ Pela página `/docs`:
 
 Na primeira execução, o modelo de embeddings (~470 MB) é baixado automaticamente.
 
+## Publicar (Hugging Face Spaces)
+
+```bash
+HF_TOKEN=hf_...  GEMINI_API_KEY=...  python scripts/publicar_hf.py SEU_USUARIO/lembra
+```
+
+O script cria o Space, cadastra as configurações (a chave do Gemini como **segredo**) e envia o
+código. O Hugging Face monta o servidor a partir do `Dockerfile`. O app fica em
+`https://SEU_USUARIO-lembra.hf.space`.
+
 ## Estrutura
 
 ```
