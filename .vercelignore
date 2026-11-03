@@ -1,0 +1,11 @@
+tests
+docs
+supabase
+data
+Dockerfile
+.dockerignore
+CLAUDE.md
+**/__pycache__
+*.egg-info
+.env
+.env.local
