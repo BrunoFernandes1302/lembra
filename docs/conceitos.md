@@ -143,7 +143,46 @@ rápido e gasta menos; `high` raciocina mais.
 
 ---
 
-## 7. Agentes (próximas fases)
+## 7. Multiusuário e segurança (Supabase)
+
+Quando várias pessoas usam o mesmo app, o maior risco é **um usuário ver os dados de outro**.
+
+**Onde os dados ficam:** no Supabase, que é um Postgres na nuvem com login pronto. A extensão
+**pgvector** ensina o Postgres a guardar vetores e buscar os mais próximos, substituindo o
+ChromaDB. As tabelas são `memorias` (texto original, a fonte da verdade) e `chunks` (pedaços e
+vetores, o índice).
+
+**Row Level Security (RLS):** cada linha tem um dono (`user_id`). O banco aplica, **em toda
+consulta**, a regra "só devolva linhas onde o dono é quem está logado". Por que no banco e não
+só no código? Porque código tem bug. Se um dia o app pedir "todas as memórias" por engano, o
+banco devolve só as do usuário logado. É a última linha de defesa.
+
+Testado com dois usuários simulados (Ana e Beto):
+
+| Teste | Resultado |
+|-------|-----------|
+| Beto lista memórias | vê só a dele |
+| Beto faz busca vetorial | não encontra nada da Ana |
+| Beto tenta apagar a memória da Ana | 0 linhas apagadas |
+| Ana busca filtrando por "família" | nada (a memória dela é de "finanças") |
+
+**Como o login conversa com o banco:** ao entrar, o usuário recebe um **token** (JWT), uma
+espécie de crachá assinado que diz "eu sou o usuário X". Toda chamada ao banco leva esse
+crachá, e o RLS lê quem é o dono a partir dele. Por isso a API **nunca** deve usar a chave
+administrativa (`service_role`), que ignora o RLS: ela sempre repassa o crachá do usuário.
+
+**Filtro por categoria:** a função `buscar_chunks` aceita uma categoria opcional. "Quanto gastei…"
+pode buscar só em `finanças`: menos candidatos, menos ruído.
+
+**LGPD:** apagar uma memória apaga os chunks dela; excluir a conta apaga tudo da pessoa
+(*on delete cascade*).
+
+**Migrations:** o SQL que criou tudo isso fica salvo em `supabase/migrations/`. É a "receita"
+versionada para recriar o banco em qualquer lugar.
+
+---
+
+## 8. Agentes (próximas fases)
 
 Um **agente** é um LLM que, em vez de seguir um roteiro fixo, recebe uma lista de
 **ferramentas** (funções que o seu código executa) e decide sozinho quais chamar.
@@ -162,7 +201,7 @@ O ciclo é: o LLM pede uma ferramenta, o código executa, o resultado volta para
 repete até ele ter a resposta. **Custo:** mais chamadas ao LLM, o que significa mais lento e mais
 caro. Só vale a pena quando a pergunta realmente precisa de decisões ou de cálculos.
 
-## 8. Fine-tuning "só a ponta" (próximas fases)
+## 9. Fine-tuning "só a ponta" (próximas fases)
 
 Um modelo de linguagem é feito de camadas. As primeiras aprendem coisas gerais (gramática,
 significado das palavras) e as últimas, coisas específicas da tarefa.
@@ -172,7 +211,7 @@ significado das palavras) e as últimas, coisas específicas da tarefa.
 - **LoRA:** em vez de mexer nos pesos originais, acopla pequenas matrizes extras e treina só elas. Fica com menos de 1% dos parâmetros e resultado próximo ao do treino completo. O arquivo final é pequeno (MBs) e pode ser ligado ou desligado no modelo base.
 - **QLoRA:** LoRA com o modelo base comprimido em 4 bits, o que cabe numa GPU grátis.
 
-## 9. Glossário rápido
+## 10. Glossário rápido
 
 | Termo | Significado |
 |-------|-------------|
@@ -192,4 +231,7 @@ significado das palavras) e as últimas, coisas específicas da tarefa.
 | **Agente** | LLM que escolhe e chama ferramentas em ciclo até resolver a tarefa |
 | **Tool / ferramenta** | Função do seu código que o LLM pode pedir para executar |
 | **Congelar camadas** | Impedir que parte do modelo mude durante o treino |
+| **RLS** | *Row Level Security*: o banco filtra as linhas por usuário em toda consulta |
+| **JWT** | "Crachá" digital assinado que prova quem é o usuário logado |
+| **Migration** | Arquivo com as mudanças de estrutura do banco, versionado no Git |
 | **PEFT** | *Parameter-Efficient Fine-Tuning*: família de técnicas (LoRA etc.) que treinam poucos parâmetros |
