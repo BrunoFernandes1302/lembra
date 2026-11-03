@@ -1,0 +1,29 @@
+# Dados pessoais — NUNCA versionar
+data/*
+!data/.gitkeep
+
+# Segredos
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+build/
+dist/
+
+# Notebooks / modelos
+.ipynb_checkpoints/
+models/
+*.gguf
+*.safetensors
+
+# Editor / SO
+.vscode/
+.idea/
+.DS_Store
