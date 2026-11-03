@@ -44,12 +44,21 @@ def settings_do_usuario(repo, settings: Settings | None = None) -> Settings:
     return com_config_do_usuario(s, obter() if obter else None)
 
 
+def extras_do_usuario(s: Settings) -> str:
+    """Personalização SEM treino: instruções manuais + perfil de estilo aprendido.
+    Entram DEPOIS das regras e não podem anulá-las."""
+    partes = []
+    if s.instrucoes.strip():
+        partes.append("Preferências do usuário sobre o formato da resposta (siga, desde que não contrariem "
+                      "as regras acima):\n" + s.instrucoes.strip())
+    if s.perfil_estilo.strip():
+        partes.append("Sobre o usuário e como ele se comunica (aprendido das conversas; use para adaptar o tom "
+                      "e entender termos dele, sem contrariar as regras):\n" + s.perfil_estilo.strip())
+    return ("\n\n" + "\n\n".join(partes)) if partes else ""
+
+
 def prompt_do_sistema(s: Settings) -> str:
-    if not s.instrucoes.strip():
-        return SYSTEM_PROMPT
-    # As preferências do usuário entram DEPOIS das regras e não podem anulá-las.
-    return (SYSTEM_PROMPT + "\n\nPreferências do usuário sobre o formato da resposta (siga, desde que não "
-            "contrariem as regras acima):\n" + s.instrucoes.strip())
+    return SYSTEM_PROMPT + extras_do_usuario(s)
 
 
 class Repositorio(Protocol):
@@ -305,3 +314,51 @@ def transcrever_audio(repo, audio: bytes, mime: str, settings: Settings | None =
     if llm is None or not hasattr(llm, "transcrever"):
         raise ValueError("A transcrição de áudio usa a IA (Gemini). Ative \"Usar IA\" em Ajustes.")
     return llm.transcrever(audio, mime)
+
+
+# ---------------------------------------------------------------- perfil de estilo (aprendizado sem treino)
+AVALIACOES_PARA_REAPRENDER = 5
+
+PROMPT_PERFIL = """Você mantém um PERFIL curto de um usuário de um assistente de memórias pessoais, para que
+o assistente se adapte a ele. Com base no perfil atual, em memórias que ele escreveu e nas avaliações
+que ele deu às respostas (👍 útil / 👎 não útil, com comentários), escreva o perfil ATUALIZADO:
+- no máximo 6 tópicos curtos, começando com "- ";
+- como ele escreve (gírias, apelidos, termos próprios: "grana" = dinheiro, "dona Rita" = mãe...);
+- como prefere as respostas (curtas/detalhadas, tom, formato), inferido das avaliações;
+- NÃO inclua fatos da vida dele (valores, datas, nomes de lugares): isso já está nas memórias;
+- se não houver evidência suficiente para algo, não invente; mantenha o que já estava no perfil."""
+
+
+def aprender_perfil(repo, settings: Settings | None = None) -> str | None:
+    """Relê memórias recentes e avaliações e reescreve o perfil. Devolve o novo perfil (ou None)."""
+    s = settings_do_usuario(repo, settings)
+    llm = get_llm(s) if s.usar_ia else None
+    if llm is None:
+        return None
+    memorias = repo.listar_memorias(limite=15)
+    avaliacoes = repo.listar_feedback(limite=20)
+    if not memorias and not avaliacoes:
+        return None
+    blocos = [f"PERFIL ATUAL:\n{s.perfil_estilo or '(vazio)'}",
+              "MEMÓRIAS ESCRITAS PELO USUÁRIO (amostra):\n" + "\n".join(f"- {m['texto'][:300]}" for m in memorias),
+              "AVALIAÇÕES DO USUÁRIO:\n" + ("\n".join(
+                  f"- {'👍' if a['util'] else '👎'} pergunta: {a['pergunta'][:200]} | resposta: {a['resposta'][:250]}"
+                  + (f" | comentário: {a['comentario']}" if a.get("comentario") else "") for a in avaliacoes) or "(nenhuma)")]
+    perfil = llm.gerar(PROMPT_PERFIL, "\n\n".join(blocos)).strip()[:800]
+    repo.salvar_perfil(perfil)
+    return perfil
+
+
+def registrar_feedback(repo, pergunta: str, resposta: str, util: bool, comentario: str | None = None,
+                       settings: Settings | None = None) -> dict:
+    """Guarda o 👍/👎. A cada AVALIACOES_PARA_REAPRENDER avaliações novas, reaprende o perfil."""
+    repo.registrar_feedback(pergunta, resposta, util, comentario)
+    cfg = repo.obter_config() or {}
+    novas = repo.listar_feedback(limite=AVALIACOES_PARA_REAPRENDER, desde=cfg.get("perfil_atualizado_em"))
+    perfil = None
+    if len(novas) >= AVALIACOES_PARA_REAPRENDER:
+        try:
+            perfil = aprender_perfil(repo, settings)
+        except Exception as e:  # noqa: BLE001 — aprender é extra; o feedback já foi salvo
+            logger.warning("aprender perfil falhou: %s", e)
+    return {"salvo": True, "perfil_atualizado": perfil is not None}

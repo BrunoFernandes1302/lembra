@@ -463,6 +463,20 @@ O modo agente é naturalmente mais lento: são várias idas ao LLM por pergunta.
 3. **A métrica final já era 100%** (o LLM resolve o conflito lendo as datas). Decisão: **não**
    colocar o adaptador em produção. Otimize onde a métrica final sofre.
 
+### 13.3 Personalização: por que NÃO treinar a cada pergunta
+
+Treinar a cada mensagem seria caro (GPU), instável (o modelo "esquece" o que sabia e pende para a
+última conversa), impossível de avaliar antes de usar e fácil de "envenenar". Um checkbox de
+"treinar" também não serve ao usuário comum. O que os produtos fazem, em duas camadas:
+
+1. **Personalização sem treino (por usuário, instantânea):** um **perfil de estilo** nas
+   instruções da IA. A cada 5 avaliações (👍/👎), a IA relê memórias recentes e avaliações e
+   reescreve o perfil (no máximo 6 tópicos, sem fatos da vida). Visível e editável em Ajustes.
+   Teste real: das memórias com "grana", "torrei", "rolê" e de dois 👎 em respostas longas, o perfil
+   virou "linguagem informal… prefere respostas extremamente diretas e concisas".
+2. **Fine-tuning periódico (para o app todo, nos bastidores):** os 👍/👎 viram dados; de tempos em
+   tempos treina-se (ex.: LoRA) e **só publica se passar na avaliação**.
+
 ### 13.2 Conjunto de avaliação difícil (`avaliacao/conjunto_dificil.json`)
 
 30 memórias com armadilhas: informação desatualizada, memórias parecidas, mesmo nome, contas

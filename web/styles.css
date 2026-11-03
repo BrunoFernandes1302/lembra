@@ -557,6 +557,22 @@ label.sem-rotulo textarea { margin-top: 0; }
   text-transform: uppercase; letter-spacing: .04em; background: var(--gradiente); color: #fff; vertical-align: 2px;
 }
 
+/* ---------------------------------------------------------- Avaliação 👍/👎 e perfil */
+.avaliacao { display: flex; align-items: center; gap: 6px; margin-top: 12px; font-size: .8rem; color: var(--fraco); white-space: normal; }
+.avaliacao input { margin: 0; padding: 8px 10px; font-size: 14px; }
+.pergunta-voto { margin-right: 2px; }
+.botao-voto {
+  display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; cursor: pointer;
+  background: none; border: 1px solid var(--borda); color: var(--fraco); transition: all var(--rapido);
+}
+.botao-voto .ic { width: 15px; height: 15px; }
+@media (hover: hover) { .botao-voto:hover { color: var(--texto); border-color: var(--borda-forte); transform: translateY(-1px); } }
+.obrigado { color: var(--suave); animation: revelar 300ms both; }
+.cartao h3 { display: flex; align-items: center; gap: 8px; }
+.cartao h3 .ic { width: 18px; height: 18px; color: var(--violeta); }
+#perfil-estilo { margin: 10px 0; }
+.acoes-perfil { display: flex; align-items: center; gap: 8px; }
+
 /* ---------------------------------------------------------- Estados vazios */
 .estado-vazio { list-style: none; text-align: center; padding: 48px 16px !important; }
 .orbe.pequeno { width: 56px; height: 56px; border-radius: 18px; margin-bottom: 14px; }

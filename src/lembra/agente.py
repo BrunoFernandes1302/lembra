@@ -252,10 +252,9 @@ def _resumo(nome: str, args: dict, res: dict) -> str:
 def executar_agente(repo, pergunta: str, categoria: str | None, s: Settings, motor: Motor | None = None):
     """Roda o agente e devolve (texto, fontes, passos)."""
     ferramentas = Ferramentas(repo, s, categoria_padrao=categoria)
-    sistema = PROMPT_AGENTE
-    if s.instrucoes.strip():
-        sistema += ("\n\nPreferências do usuário sobre o formato da resposta (siga, desde que não "
-                    "contrariem as regras acima):\n" + s.instrucoes.strip())
+    from .rag import extras_do_usuario
+
+    sistema = PROMPT_AGENTE + extras_do_usuario(s)
     if categoria:
         sistema += f'\n\nO usuário restringiu a pergunta à categoria "{categoria}".'
     motor = motor or MotorGemini(s, sistema, pergunta)

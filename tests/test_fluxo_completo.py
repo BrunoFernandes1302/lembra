@@ -43,7 +43,7 @@ class LLMFalso:
         return "resposta falsa [1]"
 
 
-BANCO = {"memorias": [], "chunks": [], "categorias": [], "config": []}
+BANCO = {"memorias": [], "chunks": [], "categorias": [], "config": [], "feedback": []}
 PADRAO = ["geral", "família", "finanças", "compromissos"]
 
 
@@ -86,6 +86,19 @@ class RepoFalso:
     def salvar_config(self, cfg):
         BANCO["config"] = [c for c in BANCO["config"] if c["dono"] != self.dono] + [{"dono": self.dono, "cfg": cfg}]
         return cfg
+
+    def registrar_feedback(self, pergunta, resposta, util, comentario):
+        BANCO["feedback"].append({"dono": self.dono, "pergunta": pergunta, "resposta": resposta, "util": util,
+                                  "comentario": comentario, "criado_em": str(len(BANCO["feedback"])).zfill(6)})
+
+    def listar_feedback(self, limite=20, desde=None):
+        meus = [f for f in BANCO["feedback"] if f["dono"] == self.dono and (desde is None or f["criado_em"] > desde)]
+        return list(reversed(meus))[:limite]
+
+    def salvar_perfil(self, perfil):
+        cfg = dict(self.obter_config() or {})
+        cfg.update(perfil_estilo=perfil, perfil_atualizado_em=str(len(BANCO["feedback"])).zfill(6))
+        self.salvar_config(cfg)
 
     def listar_chunks(self, mid):
         return [{"indice": i, "texto": c["texto"]} for i, c in
@@ -248,7 +261,7 @@ def test_categorias_criar_renomear_apagar_move_memorias(cliente):
 
 
 CFG = {"chunk_size": 800, "chunk_overlap": 150, "top_k": 5, "margem_relevancia": 0.05,
-       "usar_ia": True, "modelo_llm": "gemini-flash-lite-latest", "instrucoes": ""}
+       "usar_ia": True, "modelo_llm": "gemini-flash-lite-latest", "instrucoes": "", "perfil_estilo": ""}
 
 
 def test_config_padrao_e_salvar(cliente):
@@ -383,3 +396,41 @@ def test_transcrever_respeita_ia_desligada(cliente, monkeypatch):
     cliente.put("/config", headers=ANA, json={**CFG, "usar_ia": False})
     r = cliente.post("/audio/transcrever", headers=ANA, json={"audio_b64": base64.b64encode(b"x" * 20).decode(), "mime": "audio/webm"})
     assert r.status_code == 400 and "Usar IA" in r.json()["detail"]
+
+
+
+class LLMPerfil(LLMFalso):
+    chamadas = 0
+
+    def gerar(self, system, prompt):
+        if "PERFIL" in system:
+            LLMPerfil.chamadas += 1
+            LLMPerfil.entrada = prompt
+            return "- chama dinheiro de grana\n- prefere respostas curtas"
+        return super().gerar(system, prompt)
+
+
+def test_feedback_reaprende_perfil_a_cada_5(cliente, monkeypatch):
+    LLMPerfil.chamadas = 0
+    monkeypatch.setattr(rag, "get_llm", lambda _: LLMPerfil())
+    cliente.post("/memorias", headers=ANA, json={"texto": "Gastei muita grana no mercado."})
+    for i in range(4):
+        r = cliente.post("/feedback", headers=ANA, json={"pergunta": f"p{i}", "resposta": "r", "util": i % 2 == 0})
+        assert r.json() == {"salvo": True, "perfil_atualizado": False}
+    r = cliente.post("/feedback", headers=ANA, json={"pergunta": "p4", "resposta": "longa demais", "util": False,
+                                                    "comentario": "seja mais curto"}).json()
+    assert r["perfil_atualizado"] is True and LLMPerfil.chamadas == 1
+    assert "seja mais curto" in LLMPerfil.entrada and "grana" in LLMPerfil.entrada
+    assert "grana" in cliente.get("/config", headers=ANA).json()["perfil_estilo"]
+    # o perfil entra nas instruções DEPOIS das regras
+    cliente.post("/perguntar", headers=ANA, json={"pergunta": "mercado"})
+    assert LLMFalso.ultimo_system.index("Regras") < LLMFalso.ultimo_system.index("chama dinheiro de grana")
+    # e conta de novo a partir daí
+    r = cliente.post("/feedback", headers=ANA, json={"pergunta": "p5", "resposta": "r", "util": True}).json()
+    assert r["perfil_atualizado"] is False
+
+
+def test_perfil_editavel_e_isolado(cliente):
+    cliente.put("/config", headers=ANA, json={**CFG, "perfil_estilo": "- me chama de chefe"})
+    assert cliente.get("/config", headers=ANA).json()["perfil_estilo"] == "- me chama de chefe"
+    assert cliente.get("/config", headers=BETO).json()["perfil_estilo"] == ""

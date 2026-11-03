@@ -102,6 +102,14 @@ class ConfigRag(BaseModel):
     modo_agente: bool = False
     modelo_llm: str
     instrucoes: str = Field(default="", max_length=500)
+    perfil_estilo: str = Field(default="", max_length=800)
+
+
+class Feedback(BaseModel):
+    pergunta: str = Field(min_length=1, max_length=2000)
+    resposta: str = Field(min_length=1, max_length=6000)
+    util: bool
+    comentario: str | None = Field(default=None, max_length=500)
 
 
 class PreviaChunking(BaseModel):
@@ -259,7 +267,7 @@ def ler_config(repo: RepositorioSupabase = Depends(repositorio)):
     return {
         "chunk_size": s.chunk_size, "chunk_overlap": s.chunk_overlap, "top_k": s.top_k,
         "margem_relevancia": s.margem_relevancia, "usar_ia": s.usar_ia, "modo_agente": s.modo_agente,
-        "modelo_llm": s.gemini_model, "instrucoes": s.instrucoes,
+        "modelo_llm": s.gemini_model, "instrucoes": s.instrucoes, "perfil_estilo": s.perfil_estilo,
         "modelos_llm": MODELOS_LLM,
         "somente_leitura": {"modelo_embedding": s.embedding_model, "dimensao_embedding": s.embedding_dim,
                             "provedor_llm": s.llm_provider},
@@ -276,6 +284,27 @@ def salvar_config(dados: ConfigRag, repo: RepositorioSupabase = Depends(reposito
         return repo.salvar_config(dados.model_dump())
     except ErroSupabase as e:
         _erro(e)
+
+
+@app.post("/feedback", tags=["personalização"])
+def enviar_feedback(dados: Feedback, repo: RepositorioSupabase = Depends(repositorio)):
+    """👍/👎 numa resposta. A cada 5 avaliações novas, o perfil de estilo é reaprendido."""
+    try:
+        return rag.registrar_feedback(repo, dados.pergunta, dados.resposta, dados.util, dados.comentario)
+    except ErroSupabase as e:
+        _erro(e)
+
+
+@app.post("/perfil/aprender", tags=["personalização"])
+def aprender_perfil(repo: RepositorioSupabase = Depends(repositorio)):
+    """Reescreve agora o perfil de estilo a partir das memórias e avaliações."""
+    try:
+        perfil = rag.aprender_perfil(repo)
+    except ErroSupabase as e:
+        _erro(e)
+    if perfil is None:
+        raise HTTPException(status_code=400, detail="Ainda não há dados suficientes (ou a IA está desligada).")
+    return {"perfil_estilo": perfil}
 
 
 @app.post("/lab/chunking", tags=["laboratório"])

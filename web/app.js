@@ -676,6 +676,7 @@ $("#form-perguntar").addEventListener("submit", async (e) => {
     renderizarResposta(pensando, r.resposta);
     if (!r.gerada_por_ia) pensando.classList.add("sem-ia");
     if (r.passos?.length) pensando.append(blocoPassos(r.passos));
+    if (r.gerada_por_ia) pensando.append(blocoAvaliacao(pergunta, r.resposta));
     if (r.fontes.length) {
       const det = el("details", "fontes");
       det.open = !r.gerada_por_ia; // sem IA, as memórias SÃO a resposta: já mostra abertas
@@ -699,6 +700,33 @@ $("#form-perguntar").addEventListener("submit", async (e) => {
   }
   pensando.scrollIntoView({ behavior: "smooth", block: "end" });
 });
+
+// 👍/👎: dados para personalizar agora (perfil) e para fine-tuning no futuro
+function blocoAvaliacao(pergunta, resposta) {
+  const caixa = el("div", "avaliacao");
+  const enviar = async (util, comentario) => {
+    caixa.replaceChildren(el("span", "obrigado", "Obrigado! Isso me ajuda a te entender melhor."));
+    try {
+      const r = await chamar("/feedback", { metodo: "POST", corpo: { pergunta, resposta, util, comentario } });
+      if (r.perfil_atualizado) avisar("Aprendi um pouco mais sobre você ✨ (veja em Ajustes)");
+    } catch (err) { avisar(err.message); }
+  };
+  const sim = botao("", "botao-voto", () => enviar(true), "up");
+  sim.setAttribute("aria-label", "Resposta útil");
+  const nao = botao("", "botao-voto", () => {
+    caixa.replaceChildren();
+    const campo = el("input");
+    campo.placeholder = "O que faltou? (opcional)";
+    campo.maxLength = 500;
+    const ok = botao("Enviar", "botao-texto", () => enviar(false, campo.value.trim() || null));
+    campo.addEventListener("keydown", (e) => e.key === "Enter" && ok.click());
+    caixa.append(campo, ok);
+    campo.focus();
+  }, "down");
+  nao.setAttribute("aria-label", "Resposta não ajudou");
+  caixa.append(el("span", "pergunta-voto", "Ajudou?"), sim, nao);
+  return caixa;
+}
 
 // "Como cheguei aqui": as ferramentas que o agente usou, em ordem
 const ICONE_FERRAMENTA = { buscar_memorias: "search", listar_memorias: "list", listar_categorias: "tag",
@@ -862,6 +890,7 @@ async function carregarConfig() {
     f.modo_agente.checked = c.modo_agente;
     f.modelo_llm.value = c.modelo_llm;
     f.instrucoes.value = c.instrucoes;
+    $("#perfil-estilo").value = c.perfil_estilo || "";
     const ro = c.somente_leitura;
     $("#info-embedding").textContent =
       `Modelo de embeddings: ${ro.modelo_embedding} (${ro.dimensao_embedding} dimensões). ` +
@@ -877,6 +906,7 @@ $("#form-config").addEventListener("submit", async (e) => {
     chunk_size: Number(f.chunk_size.value), chunk_overlap: Number(f.chunk_overlap.value),
     top_k: Number(f.top_k.value), margem_relevancia: Number(f.margem_relevancia.value),
     usar_ia: f.usar_ia.checked, modo_agente: f.modo_agente.checked, modelo_llm: f.modelo_llm.value, instrucoes: f.instrucoes.value,
+    perfil_estilo: $("#perfil-estilo").value,
   };
   try {
     await chamar("/config", { metodo: "PUT", corpo });
@@ -888,6 +918,21 @@ $("#form-config").addEventListener("submit", async (e) => {
     $("#erro-config").textContent = err.message;
   }
 });
+
+$("#aprender-perfil").addEventListener("click", async (e) => {
+  const b = e.currentTarget;
+  b.disabled = true;
+  b.querySelector("span").textContent = "Aprendendo…";
+  try {
+    const r = await chamar("/perfil/aprender", { metodo: "POST" });
+    $("#perfil-estilo").value = r.perfil_estilo;
+    avisar("Perfil atualizado ✨");
+  } catch (err) { avisar(err.message); }
+  b.disabled = false;
+  b.querySelector("span").textContent = "Aprender agora";
+});
+
+$("#salvar-perfil").addEventListener("click", () => $("#form-config").requestSubmit());
 
 $("#reprocessar").addEventListener("click", async (e) => {
   if (!confirm("Refazer os chunks e vetores de todas as suas memórias com a configuração atual?")) return;

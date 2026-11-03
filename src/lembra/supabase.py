@@ -176,6 +176,28 @@ class RepositorioSupabase:
                           json={**cfg, "atualizado_em": "now()"}, timeout=TIMEOUT)
         return _checar(r)[0]
 
+    # ---------- Feedback e perfil ----------
+
+    def registrar_feedback(self, pergunta: str, resposta: str, util: bool, comentario: str | None) -> None:
+        r = _http.post(f"{self.url}/feedback", headers=self.headers, timeout=TIMEOUT,
+                       json={"pergunta": pergunta[:2000], "resposta": resposta[:6000], "util": util,
+                             "comentario": (comentario or None) and comentario[:500]})
+        _checar(r)
+
+    def listar_feedback(self, limite: int = 20, desde: str | None = None) -> list[dict]:
+        params = {"select": "pergunta,resposta,util,comentario,criado_em", "order": "criado_em.desc",
+                  "limit": str(limite)}
+        if desde:
+            params["criado_em"] = f"gt.{desde}"
+        r = _http.get(f"{self.url}/feedback", headers=self.headers, params=params, timeout=TIMEOUT)
+        return _checar(r)
+
+    def salvar_perfil(self, perfil: str) -> None:
+        h = {**self.headers, "Prefer": "resolution=merge-duplicates"}
+        r = _http.post(f"{self.url}/config_rag", headers=h, params={"on_conflict": "user_id"}, timeout=TIMEOUT,
+                       json={"perfil_estilo": perfil[:800], "perfil_atualizado_em": "now()"})
+        _checar(r)
+
     # ---------- Categorias ----------
 
     def listar_categorias(self) -> list[dict]:

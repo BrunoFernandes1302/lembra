@@ -23,6 +23,7 @@ class Settings:
     usar_ia: bool
     modo_agente: bool
     instrucoes: str
+    perfil_estilo: str
     llm_provider: str
     anthropic_model: str
     anthropic_effort: str
@@ -47,6 +48,7 @@ def get_settings() -> Settings:
         usar_ia=True,
         modo_agente=False,
         instrucoes="",
+        perfil_estilo="",
         llm_provider=os.getenv("LLM_PROVIDER", "nenhum").lower(),
         anthropic_model=os.getenv("ANTHROPIC_MODEL", "claude-opus-5-5"),
         anthropic_effort=os.getenv("ANTHROPIC_EFFORT", "medium"),
@@ -76,6 +78,7 @@ CAMPOS_DO_USUARIO = {
     "modo_agente": "modo_agente",
     "modelo_llm": "gemini_model",
     "instrucoes": "instrucoes",
+    "perfil_estilo": "perfil_estilo",
 }
 
 
