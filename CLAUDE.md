@@ -16,4 +16,4 @@ multiusuário com isolamento total de dados, testado por um grupo de pessoas num
 
 ## Regras
 - Nunca versione nada de `data/` nem `.env` (dados pessoais e segredos).
-- Toda mudança passa pelos testes (`pytest`) antes do push.
+- Toda mudança passa por `pytest` e `ruff check src tests avaliacao finetuning index.py` antes do push.
