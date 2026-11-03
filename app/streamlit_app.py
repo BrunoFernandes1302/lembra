@@ -2,12 +2,12 @@
 
 import streamlit as st
 
-from segundo_cerebro import memorias, rag
-from segundo_cerebro.config import get_settings
-from segundo_cerebro.store import VectorStore
+from lembra import memorias, rag
+from lembra.config import get_settings
+from lembra.store import VectorStore
 
-st.set_page_config(page_title="Segundo Cérebro", page_icon="🧠")
-st.title("🧠 Segundo Cérebro")
+st.set_page_config(page_title="Lembra", page_icon="🧠")
+st.title("🧠 Lembra")
 
 s = get_settings()
 st.caption(

@@ -97,6 +97,12 @@ encontram os mais próximos em milissegundos.
 - o **vetor**;
 - os **metadados**: de qual memória veio, categoria e data. Servem para citar a fonte e, no futuro, para filtrar (por exemplo, "só memórias de trabalho").
 
+**Aprendizado do primeiro teste real:** com o modelo E5, o trecho certo teve similaridade
+~0,87 e os errados ~0,82. Este modelo dá notas altas para tudo, então **a ordem importa mais que o
+número**. Consequências: (1) um corte fixo do tipo "só acima de 0,8" não funciona; (2) trechos
+irrelevantes também chegam ao LLM, e por isso o prompt manda ignorar o que não responde à
+pergunta. Soluções futuras: re-ranking e filtro por categoria.
+
 **Top-K:** quantos trechos trazemos por pergunta (`TOP_K=5`). Se forem poucos, a resposta pode
 faltar. Se forem muitos, entra ruído e o custo do prompt aumenta.
 
@@ -105,7 +111,7 @@ faltar. Se forem muitos, entra ruído e o custo do prompt aumenta.
 - `data/chroma/` é o índice, **derivado** do arquivo acima.
 
 Se você mudar o modelo de embeddings ou o tamanho do chunk, apaga o índice e reconstrói
-(`cerebro reindexar`) sem perder nada. Na empresa é igual: o documento original é a verdade, e o
+(`lembra reindexar`) sem perder nada. Na empresa é igual: o documento original é a verdade, e o
 índice é descartável.
 
 Usamos **ChromaDB** porque roda local, sem servidor. Em produção, a mesma ideia roda em

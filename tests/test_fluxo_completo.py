@@ -9,8 +9,8 @@ import math
 
 import pytest
 
-from segundo_cerebro import memorias, rag
-from segundo_cerebro.config import Settings
+from lembra import memorias, rag
+from lembra.config import Settings
 
 
 class EmbedderFalso:

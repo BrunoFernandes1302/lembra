@@ -2,7 +2,7 @@
 
 import pytest
 
-from segundo_cerebro.chunking import chunk_text
+from lembra.chunking import chunk_text
 
 PARAGRAFOS = (
     "Nasci em Belo Horizonte em 1995. Minha infância foi no bairro Santa Tereza.\n\n"

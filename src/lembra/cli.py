@@ -1,4 +1,4 @@
-"""Linha de comando:  cerebro adicionar | perguntar | buscar | reindexar | status"""
+"""Linha de comando:  lembra adicionar | perguntar | buscar | reindexar | status"""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from .store import VectorStore
 
 
 def main(argv: list[str] | None = None) -> None:
-    p = argparse.ArgumentParser(prog="cerebro", description="Segundo Cérebro — RAG pessoal")
+    p = argparse.ArgumentParser(prog="lembra", description="Lembra — seu assistente de vida pessoal")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     a = sub.add_parser("adicionar", help="adiciona uma memória (texto ou stdin)")
@@ -19,7 +19,7 @@ def main(argv: list[str] | None = None) -> None:
     a.add_argument("-c", "--categoria", default="geral")
     a.add_argument("-d", "--data", default="", help='quando aconteceu, ex.: "2020"')
 
-    q = sub.add_parser("perguntar", help="pergunta algo ao seu segundo cérebro")
+    q = sub.add_parser("perguntar", help="pergunta algo ao Lembra")
     q.add_argument("pergunta")
 
     b = sub.add_parser("buscar", help="mostra só os trechos recuperados (sem LLM)")

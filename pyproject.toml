@@ -1,5 +1,5 @@
 [project]
-name = "segundo-cerebro"
+name = "lembra"
 version = "0.1.0"
 description = "Laboratório prático de IA: RAG sobre a vida pessoal, evoluindo para LLM local e fine-tuning."
 readme = "README.md"
@@ -17,7 +17,7 @@ dependencies = [
 dev = ["pytest>=8.0", "ruff>=0.6"]
 
 [project.scripts]
-cerebro = "segundo_cerebro.cli:main"
+lembra = "lembra.cli:main"
 
 [build-system]
 requires = ["setuptools>=68"]

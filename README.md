@@ -1,7 +1,10 @@
-# 🧠 Segundo Cérebro
+# 🧠 Lembra
 
-Um **RAG sobre a minha vida pessoal**, criado para aprender IA na prática. O plano é evoluir o
-projeto para LLM local e fine-tuning e, depois, levar o aprendizado para a empresa.
+**App de organização da vida pessoal com IA.** Você registra memórias, finanças, compromissos e
+família, e conversa com um assistente que responde com base no que você mesmo registrou.
+
+Também é um laboratório para dominar IA na prática (RAG, agentes, LLM local, fine-tuning).
+Visão completa em [docs/visao-do-produto.md](docs/visao-do-produto.md).
 
 - 📖 **[Guia de conceitos](docs/conceitos.md)**: como tudo funciona, sem precisar ler código
 - 🗺️ **[Roadmap](docs/roadmap.md)**: próximas fases
@@ -47,11 +50,11 @@ streamlit run app/streamlit_app.py
 
 **Ou pelo terminal:**
 ```bash
-cerebro adicionar "Tenho uma cachorra chamada Mel, adotada em 2020." -c família -d 2020
-cerebro buscar "qual o nome do meu pet?"       # mostra só o que a busca encontrou (sem LLM)
-cerebro perguntar "qual o nome do meu pet?"    # RAG completo
-cerebro status
-cerebro reindexar                              # reconstrói o índice (ex.: após mudar o chunk)
+lembra adicionar "Tenho uma cachorra chamada Mel, adotada em 2020." -c família -d 2020
+lembra buscar "qual o nome do meu pet?"       # mostra só o que a busca encontrou (sem LLM)
+lembra perguntar "qual o nome do meu pet?"    # RAG completo
+lembra status
+lembra reindexar                              # reconstrói o índice (ex.: após mudar o chunk)
 ```
 
 Na primeira execução, o modelo de embeddings (~470 MB) é baixado automaticamente.
@@ -59,7 +62,7 @@ Na primeira execução, o modelo de embeddings (~470 MB) é baixado automaticame
 ## Estrutura
 
 ```
-src/segundo_cerebro/
+src/lembra/
 ├── chunking.py     # 1. quebra textos em pedaços
 ├── embeddings.py   # 2. texto → vetor
 ├── store.py        # 3. banco vetorial (guardar e buscar)

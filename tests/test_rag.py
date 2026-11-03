@@ -1,5 +1,5 @@
-from segundo_cerebro.rag import montar_prompt
-from segundo_cerebro.store import Trecho
+from lembra.rag import montar_prompt
+from lembra.store import Trecho
 
 
 def test_prompt_numera_trechos_e_inclui_pergunta():

@@ -14,7 +14,7 @@ from .embeddings import get_embedder
 from .llm import get_llm
 from .store import Trecho, VectorStore
 
-SYSTEM_PROMPT = """Você é o "segundo cérebro" do usuário: um assistente que conhece a vida dele \
+SYSTEM_PROMPT = """Você é o Lembra, um assistente de organização pessoal que conhece a vida do usuário \
 pelas memórias que ele mesmo registrou.
 
 Regras:
@@ -52,6 +52,6 @@ def perguntar(pergunta: str, settings: Settings | None = None) -> Resposta:
     s = settings or get_settings()
     trechos = buscar(pergunta, s)
     if not trechos:
-        return Resposta("Ainda não há memórias cadastradas. Alimente o cérebro primeiro.", [])
+        return Resposta("Ainda não há memórias cadastradas. Registre algumas memórias primeiro.", [])
     texto = get_llm(s).gerar(SYSTEM_PROMPT, montar_prompt(pergunta, trechos))
     return Resposta(texto, trechos)
