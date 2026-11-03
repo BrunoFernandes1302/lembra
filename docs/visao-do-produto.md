@@ -21,6 +21,14 @@ base no que ela mesma registrou.
 - **Editar memórias**, não só criar e apagar.
 - **Configurar o RAG dentro do app** (área avançada/"laboratório"): tamanho do chunk, sobreposição, quantos trechos buscar, modelo de IA, ver como cada memória foi quebrada em chunks e as notas de similaridade. No futuro, ligar e desligar **agentes**. Objetivo duplo: o dono aprende vendo os efeitos, e testadores comuns não precisam mexer (bons valores padrão).
 
+## Integrações desejadas
+- **WhatsApp:** escolher **conversas específicas** para entrar no Lembra e depois consultá-las perguntando.
+  Limite técnico: a API oficial do WhatsApp não lê conversas pessoais (só mensagens enviadas a um
+  número de empresa). Caminho recomendado: **exportar a conversa** (⋮ → Exportar conversa) e enviar
+  o arquivo ao Lembra; alternativa: encaminhar mensagens a um número do Lembra. Bibliotecas não
+  oficiais violam os termos e podem banir o número.
+- Outras ferramentas do dia a dia (a definir).
+
 ## Forma de trabalho (ciclo de melhoria)
 1. Usuários usam no dia a dia.
 2. Problemas são relatados (issues no GitHub).

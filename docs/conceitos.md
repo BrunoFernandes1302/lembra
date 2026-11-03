@@ -284,7 +284,48 @@ se o texto muda, chunks e vetores são refeitos numa transação.
 
 ---
 
-## 10. Agentes (próximas fases)
+## 10. Avaliação com "LLM como juiz" (`avaliacao/`)
+
+**Por que avaliar:** testar "no olho" com 3 ou 4 perguntas não diz se uma mudança melhorou o
+sistema **no geral**. Um **conjunto de avaliação** (perguntas fixas com respostas conhecidas)
+rodado a cada mudança dá números comparáveis.
+
+**O conjunto** (`avaliacao/conjunto.json`): 10 memórias fictícias e 14 perguntas de tipos
+diferentes (fato, paráfrase, conta, juntar duas memórias, detalhe em texto longo e perguntas
+**sem resposta**, para ver se o sistema inventa).
+
+**Duas famílias de métricas:**
+- **Busca** (por conta, sem IA): **recall@K** (das memórias certas, quantas vieram), **acerto@1**
+  (a 1ª veio certa?), **MRR** (média de 1/posição da primeira certa).
+- **Resposta** (decidida por um LLM juiz): **correta** (traz a informação esperada?) e **fiel**
+  (tudo o que afirma está nas memórias entregues?). Separadas porque apontam para lugares
+  diferentes: *correta mas infiel* = a IA chutou; *fiel mas incorreta* = a busca não trouxe o trecho.
+
+**Decisões:**
+- Roda num banco em memória (mesmo chunking, embeddings e LLM do app): repetível e não suja o Supabase.
+- Juiz binário (passou/não passou) com justificativa: LLMs são inconsistentes com notas de 1 a 5.
+- **Limitação:** Gemini julgando Gemini (viés de autopreferência). Em produção: juiz de outra
+  família e conferência humana de uma amostra.
+
+**O que aprendemos rodando:**
+1. **Efeito teto:** com 10 memórias e top-K=5, tudo deu 100%. Teste fácil demais não distingue
+   configurações. Apertando para top-K=1, a pergunta que precisa de duas memórias quebrou.
+2. **Testar o juiz:** `avaliacao/testar_juiz.py` entrega respostas plantadas (certas e erradas).
+   Um juiz que aprova tudo não serve.
+3. **O juiz errou mesmo assim:** num caso real, leu errado se a pergunta tinha resposta. Correção:
+   **o que o código sabe, o código decide** (o tipo da pergunta agora é informado explicitamente),
+   e o caso virou teste do juiz. Sempre confira uma amostra à mão.
+4. **Ruído:** a mesma pergunta passou numa rodada e falhou na outra. Diferença de 1 em 14 pode
+   ser acaso. Avaliação séria usa conjuntos maiores e várias repetições.
+5. **Problema real encontrado:** "tenho médico marcado?" → o Lembra achou o dentista, mas abriu
+   a resposta com "não encontrei menção a médicos" (literal demais). Candidato a ajuste de prompt.
+
+**Como usar:** `python avaliacao/avaliar.py --rotulo nome [--chunk-size N --top-k K]`, depois
+`python avaliacao/comparar.py`. Mudança só vale se melhorar sem piorar outra métrica.
+
+---
+
+## 11. Agentes (próximas fases)
 
 Um **agente** é um LLM que, em vez de seguir um roteiro fixo, recebe uma lista de
 **ferramentas** (funções que o seu código executa) e decide sozinho quais chamar.
@@ -303,7 +344,7 @@ O ciclo é: o LLM pede uma ferramenta, o código executa, o resultado volta para
 repete até ele ter a resposta. **Custo:** mais chamadas ao LLM, o que significa mais lento e mais
 caro. Só vale a pena quando a pergunta realmente precisa de decisões ou de cálculos.
 
-## 11. Fine-tuning "só a ponta" (próximas fases)
+## 12. Fine-tuning "só a ponta" (próximas fases)
 
 Um modelo de linguagem é feito de camadas. As primeiras aprendem coisas gerais (gramática,
 significado das palavras) e as últimas, coisas específicas da tarefa.
@@ -313,7 +354,7 @@ significado das palavras) e as últimas, coisas específicas da tarefa.
 - **LoRA:** em vez de mexer nos pesos originais, acopla pequenas matrizes extras e treina só elas. Fica com menos de 1% dos parâmetros e resultado próximo ao do treino completo. O arquivo final é pequeno (MBs) e pode ser ligado ou desligado no modelo base.
 - **QLoRA:** LoRA com o modelo base comprimido em 4 bits, o que cabe numa GPU grátis.
 
-## 12. Glossário rápido
+## 13. Glossário rápido
 
 | Termo | Significado |
 |-------|-------------|
@@ -344,4 +385,8 @@ significado das palavras) e as últimas, coisas específicas da tarefa.
 | **XSS** | Ataque em que código escondido num texto executa na tela de outra pessoa |
 | **CORS** | Regra do navegador que controla quais sites podem chamar uma API |
 | **Heurística** | Regra prática que funciona na maioria dos casos, sem garantia |
+| **Conjunto de avaliação** | Perguntas fixas com respostas conhecidas, rodadas a cada mudança |
+| **LLM como juiz** | Um modelo que avalia as respostas de outro segundo critérios claros |
+| **Recall@K / MRR** | Métricas de busca: quantas certas vieram / em que posição veio a primeira certa |
+| **Efeito teto** | Teste fácil demais: tudo passa e nada se compara |
 | **PEFT** | *Parameter-Efficient Fine-Tuning*: família de técnicas (LoRA etc.) que treinam poucos parâmetros |

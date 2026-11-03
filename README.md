@@ -78,6 +78,15 @@ o celular guardou em cache uma resposta antiga de DNS ("esse nome não existe").
 desligar o modo avião (ou reiniciar), tentar em aba anônima e, no Android, conferir se o **DNS
 privado** está em "Automático".
 
+## Avaliar o RAG
+
+```bash
+python avaliacao/testar_juiz.py                        # o juiz reprova respostas erradas?
+python avaliacao/avaliar.py --rotulo meu_teste         # roda o conjunto e salva o resultado
+python avaliacao/avaliar.py --rotulo chunk250 --chunk-size 250 --chunk-overlap 40
+python avaliacao/comparar.py                           # compara as rodadas lado a lado
+```
+
 ## Estrutura
 
 ```
@@ -90,6 +99,7 @@ src/lembra/
 ├── supabase.py     # login e dados, sempre com o crachá do usuário
 ├── api.py          # endpoints que o app chama
 └── config.py       # configurações (.env)
+avaliacao/             # conjunto de teste, avaliador (LLM como juiz) e resultados
 supabase/migrations/   # SQL que cria o banco (tabelas, RLS, convites, funções)
 tests/                 # testes automáticos (rodam sem internet)
 ```
