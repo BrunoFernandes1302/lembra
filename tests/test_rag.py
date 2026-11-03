@@ -1,4 +1,4 @@
-from lembra.rag import montar_prompt
+from lembra.rag import filtrar_proximos_do_melhor, montar_prompt
 from lembra.supabase import Trecho, _vetor_para_texto
 
 
@@ -15,3 +15,9 @@ def test_prompt_numera_trechos_e_inclui_pergunta():
 
 def test_vetor_vira_texto_no_formato_do_pgvector():
     assert _vetor_para_texto([0.5, -1.0]) == "[0.5000000,-1.0000000]"
+
+
+def test_filtro_mantem_so_trechos_proximos_do_melhor():
+    t = [Trecho("aluguel", {}, 0.863), Trecho("dentista", {}, 0.82), Trecho("quase", {}, 0.845)]
+    assert [x.texto for x in filtrar_proximos_do_melhor(t)] == ["aluguel", "quase"]
+    assert filtrar_proximos_do_melhor([]) == []

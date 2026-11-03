@@ -11,6 +11,7 @@ G = Generation  : o LLM responde usando SÓ esse material.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -19,6 +20,8 @@ from .config import Settings, get_settings
 from .embeddings import get_embedder
 from .llm import get_llm
 from .supabase import Trecho
+
+logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = """Você é o Lembra, um assistente de organização pessoal que conhece a vida do usuário \
 pelas memórias que ele mesmo registrou.
@@ -40,6 +43,7 @@ class Repositorio(Protocol):
 class Resposta:
     texto: str
     fontes: list[Trecho]
+    gerada_por_ia: bool = False
 
 
 def alimentar(
@@ -75,6 +79,20 @@ def montar_prompt(pergunta: str, trechos: list[Trecho]) -> str:
     return f"<memorias>\n{contexto}\n</memorias>\n\nPergunta: {pergunta}"
 
 
+# Heurística (regra prática, não garantia): o modelo E5 dá notas parecidas para tudo (~0,80-0,90),
+# então um corte fixo não funciona. Nos testes, o trecho certo ficou ~0,04 acima dos demais;
+# guardamos só os que estão a até MARGEM do melhor. Com IA, isso não é preciso: o LLM ignora o
+# que não tem relação. Sem IA, o usuário veria ruído.
+MARGEM_RELEVANCIA = 0.03
+
+
+def filtrar_proximos_do_melhor(trechos: list[Trecho], margem: float = MARGEM_RELEVANCIA) -> list[Trecho]:
+    if not trechos:
+        return trechos
+    melhor = max(t.similaridade for t in trechos)
+    return [t for t in trechos if t.similaridade >= melhor - margem]
+
+
 def perguntar(
     repo: Repositorio, pergunta: str, categoria: str | None = None, settings: Settings | None = None
 ) -> Resposta:
@@ -82,5 +100,16 @@ def perguntar(
     trechos = buscar(repo, pergunta, categoria, s)
     if not trechos:
         return Resposta("Ainda não encontrei memórias suas sobre isso. Registre algumas primeiro.", [])
-    texto = get_llm(s).gerar(SYSTEM_PROMPT, montar_prompt(pergunta, trechos))
-    return Resposta(texto, trechos)
+    llm = get_llm(s)
+    if llm is None:  # modo "nenhum": só a busca, então o próprio usuário lê os trechos
+        return Resposta("Encontrei estas memórias relacionadas:", filtrar_proximos_do_melhor(trechos))
+    try:
+        texto = llm.gerar(SYSTEM_PROMPT, montar_prompt(pergunta, trechos))
+    except Exception as e:  # limite diário, rede, chave inválida...: não derruba o app
+        logger.warning("LLM falhou (%s): %s", type(e).__name__, e)
+        return Resposta(
+            "Não consegui gerar uma resposta agora (o serviço de IA está indisponível ou atingiu o "
+            "limite). Estas são as memórias que encontrei:",
+            trechos,
+        )
+    return Resposta(texto, trechos, gerada_por_ia=True)

@@ -125,3 +125,24 @@ def test_isolamento_entre_usuarios(cliente):
 def test_memoria_vazia_e_rejeitada(cliente):
     assert cliente.post("/memorias", headers=ANA, json={"texto": ""}).status_code == 422
     assert cliente.post("/memorias", headers=ANA, json={"texto": "   \n  "}).status_code == 400
+
+
+def test_modo_sem_ia_mostra_so_as_memorias(cliente, monkeypatch):
+    monkeypatch.setattr(rag, "get_llm", lambda _: None)
+    cliente.post("/memorias", headers=ANA, json={"texto": "Minha cachorra se chama Mel."})
+    r = cliente.post("/perguntar", headers=ANA, json={"pergunta": "nome da cachorra"}).json()
+    assert r["gerada_por_ia"] is False
+    assert r["fontes"][0]["texto"] == "Minha cachorra se chama Mel."
+
+
+def test_falha_do_llm_nao_derruba_o_app(cliente, monkeypatch):
+    class LLMQuebrado:
+        def gerar(self, system, prompt):
+            raise RuntimeError("429 limite diário atingido")
+
+    monkeypatch.setattr(rag, "get_llm", lambda _: LLMQuebrado())
+    cliente.post("/memorias", headers=ANA, json={"texto": "Minha cachorra se chama Mel."})
+    r = cliente.post("/perguntar", headers=ANA, json={"pergunta": "nome da cachorra"})
+    assert r.status_code == 200
+    assert r.json()["gerada_por_ia"] is False and "Não consegui" in r.json()["resposta"]
+    assert len(r.json()["fontes"]) == 1

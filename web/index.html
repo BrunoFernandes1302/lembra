@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Lembra</title>
+  <meta name="description" content="Seu assistente de vida pessoal">
+  <meta name="theme-color" content="#4f46e5">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- ============ LOGIN / CADASTRO ============ -->
+  <section id="tela-auth" class="tela auth" hidden>
+    <div class="auth-caixa">
+      <img src="icons/icon.svg" alt="" class="auth-logo">
+      <h1>Lembra</h1>
+      <p class="sub">Seu assistente de vida pessoal</p>
+
+      <div class="abas-auth" role="tablist">
+        <button type="button" class="aba-auth ativa" data-modo="entrar" role="tab">Entrar</button>
+        <button type="button" class="aba-auth" data-modo="cadastro" role="tab">Criar conta</button>
+      </div>
+
+      <form id="form-auth" novalidate>
+        <label>E-mail
+          <input type="email" name="email" autocomplete="email" required>
+        </label>
+        <label>Senha
+          <input type="password" name="senha" autocomplete="current-password" minlength="8" required>
+        </label>
+        <label class="so-cadastro" hidden>Código de convite
+          <input type="text" name="convite" autocomplete="off" autocapitalize="characters" placeholder="XXXXX-XXXXX">
+        </label>
+        <p class="erro" id="erro-auth" role="alert"></p>
+        <button type="submit" class="botao primario" id="botao-auth">Entrar</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ APP ============ -->
+  <div id="app" hidden>
+    <header class="topo">
+      <span class="marca"><img src="icons/icon.svg" alt="">Lembra</span>
+      <button type="button" class="botao-texto" id="sair">Sair</button>
+    </header>
+
+    <main>
+      <!-- PERGUNTAR -->
+      <section id="tela-perguntar" class="tela">
+        <div id="conversa" class="conversa" aria-live="polite">
+          <div class="vazio" id="dica-perguntar">
+            <p class="vazio-titulo">Pergunte sobre a sua vida</p>
+            <p>Ex.: "quanto pago de aluguel?", "tenho consulta marcada?", "qual o nome do meu pet?"</p>
+          </div>
+        </div>
+        <form id="form-perguntar" class="barra-pergunta">
+          <select name="categoria" aria-label="Procurar em" class="filtro-mini"></select>
+          <div class="linha-pergunta">
+            <input type="text" name="pergunta" placeholder="Pergunte algo…" autocomplete="off" required>
+            <button type="submit" class="botao primario redondo" aria-label="Enviar">➤</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- REGISTRAR -->
+      <section id="tela-registrar" class="tela" hidden>
+        <h2>Nova memória</h2>
+        <form id="form-registrar">
+          <label>O que você quer lembrar?
+            <textarea name="texto" rows="7" required placeholder="Ex.: Pago 1.800 de aluguel todo dia 5."></textarea>
+          </label>
+          <fieldset>
+            <legend>Categoria</legend>
+            <div class="chips" id="chips-categoria"></div>
+          </fieldset>
+          <label>Quando aconteceu? <span class="opcional">(opcional)</span>
+            <input type="text" name="data_evento" placeholder="Ex.: 2020, março de 2018, 12/11/2026">
+          </label>
+          <p class="erro" id="erro-registrar" role="alert"></p>
+          <button type="submit" class="botao primario">Salvar memória</button>
+        </form>
+      </section>
+
+      <!-- MEMÓRIAS -->
+      <section id="tela-memorias" class="tela" hidden>
+        <div class="cabecalho-lista">
+          <h2>Minhas memórias</h2>
+          <select id="filtro-memorias" aria-label="Filtrar por categoria" class="filtro-mini"></select>
+        </div>
+        <ul id="lista-memorias" class="lista"></ul>
+      </section>
+    </main>
+
+    <nav class="abas" aria-label="Navegação">
+      <button type="button" class="aba ativa" data-tela="perguntar"><span aria-hidden="true">💬</span>Perguntar</button>
+      <button type="button" class="aba" data-tela="registrar"><span aria-hidden="true">✍️</span>Registrar</button>
+      <button type="button" class="aba" data-tela="memorias"><span aria-hidden="true">📚</span>Memórias</button>
+    </nav>
+  </div>
+
+  <div id="aviso" class="aviso" role="status" hidden></div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

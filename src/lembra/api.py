@@ -9,7 +9,11 @@ A API repassa esse crachá ao Supabase; quem decide o que a pessoa pode ver é o
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
+
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, EmailStr, Field
 
@@ -19,6 +23,13 @@ from .supabase import ErroSupabase, RepositorioSupabase, SupabaseAuth
 
 app = FastAPI(title="Lembra API", version="0.2.0", description="Assistente de vida pessoal com RAG.")
 _bearer = HTTPBearer(description="access_token recebido no login")
+
+# CORS: quando o app for hospedado em outro endereço (ex.: Vercel), o navegador só deixa ele
+# chamar esta API se o endereço estiver nesta lista. Ex.: ALLOWED_ORIGINS=https://lembra.vercel.app
+_origens = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+if _origens:
+    app.add_middleware(CORSMiddleware, allow_origins=_origens, allow_methods=["*"],
+                       allow_headers=["Authorization", "Content-Type"])
 
 
 # ---------- Modelos (formato dos dados que entram e saem) ----------
@@ -58,6 +69,7 @@ class Fonte(BaseModel):
 
 class RespostaRag(BaseModel):
     resposta: str
+    gerada_por_ia: bool
     fontes: list[Fonte]
 
 
@@ -146,6 +158,7 @@ def perguntar(dados: Pergunta, repo: RepositorioSupabase = Depends(repositorio))
         _erro(e)
     return RespostaRag(
         resposta=r.texto,
+        gerada_por_ia=r.gerada_por_ia,
         fontes=[
             Fonte(texto=t.texto, categoria=t.metadados.get("categoria"), data=t.metadados.get("data"),
                   similaridade=round(t.similaridade, 3))
@@ -166,3 +179,12 @@ def buscar(dados: Pergunta, repo: RepositorioSupabase = Depends(repositorio)):
               similaridade=round(t.similaridade, 3))
         for t in trechos
     ]
+
+
+# O app (PWA) é servido pela própria API, no endereço raiz. Fica por último para não
+# "engolir" as rotas acima.
+_WEB = Path(__file__).resolve().parents[2] / "web"
+if _WEB.is_dir():
+    from fastapi.staticfiles import StaticFiles
+
+    app.mount("/", StaticFiles(directory=_WEB, html=True), name="web")

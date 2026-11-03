@@ -39,8 +39,8 @@ Celular (PWA) ──(crachá JWT)──► API Python (FastAPI) ──(mesmo cra
 | Banco + login | Supabase (Postgres + pgvector) | Login pronto, busca vetorial e isolamento por usuário (RLS) |
 | API | FastAPI | Python, valida os dados e gera página de testes (`/docs`) |
 | Embeddings | `sentence-transformers` + `multilingual-e5-small` | Local, grátis, entende português |
-| LLM | Claude (API) ou Ollama (local) | Troca pelo `.env` |
-| App | PWA (próxima etapa) | Instala no celular sem loja de apps |
+| LLM | Gemini (grátis), Claude, Ollama ou nenhum | Troca pelo `.env` |
+| App | PWA em HTML/CSS/JS puro (`web/`) | Instala no celular sem loja de apps; sem etapa de build |
 
 ## Como rodar a API
 
@@ -48,11 +48,14 @@ Celular (PWA) ──(crachá JWT)──► API Python (FastAPI) ──(mesmo cra
 python -m venv .venv
 source .venv/bin/activate              # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
-cp .env.example .env                   # coloque sua ANTHROPIC_API_KEY
+cp .env.example .env                   # coloque a GEMINI_API_KEY (ou LLM_PROVIDER=nenhum)
 uvicorn lembra.api:app --reload
 ```
 
-Abra **http://localhost:8000/docs**: é uma página onde dá para testar cada função.
+- **http://localhost:8000**: o app (no celular, use "Adicionar à tela inicial").
+- **http://localhost:8000/docs**: página para testar cada função da API.
+
+Pela página `/docs`:
 1. `POST /auth/cadastro` com e-mail, senha e **código de convite**
 2. Copie o `access_token` da resposta, clique em **Authorize** e cole
 3. `POST /memorias` para alimentar, `POST /buscar` para ver só a busca e `POST /perguntar` para o RAG completo
@@ -62,6 +65,7 @@ Na primeira execução, o modelo de embeddings (~470 MB) é baixado automaticame
 ## Estrutura
 
 ```
+web/                   # o app (PWA): telas, estilos, manifest, service worker, ícones
 src/lembra/
 ├── chunking.py     # quebra textos em pedaços
 ├── embeddings.py   # texto → vetor
@@ -79,5 +83,8 @@ tests/                 # testes automáticos (rodam sem internet)
 - `.env` está no `.gitignore`: chaves **nunca** vão para o GitHub.
 - Cada usuário só acessa os próprios dados, garantido pelo banco (Row Level Security).
 - Os embeddings são calculados na própria API, sem serviço externo.
+- Com `LLM_PROVIDER=gemini` no **nível gratuito**, os trechos encontrados e a pergunta vão para o
+  Google, que pode usá-los para melhorar produtos. Avise os testadores. Com `nenhum` ou `ollama`,
+  nada sai do servidor.
 - Com `LLM_PROVIDER=anthropic`, os trechos recuperados em cada pergunta **são enviados** à API
   do Claude. Para manter tudo 100% local, use `LLM_PROVIDER=ollama`.

@@ -132,12 +132,21 @@ Com os trechos em mãos, montamos um prompt em três partes:
 "completar" com algo plausível porém falso sobre a sua vida. Exigir citações também deixa você
 **conferir** de onde veio cada afirmação.
 
-**Dois provedores atrás da mesma interface:**
-- **Claude (API):** respostas de alta qualidade. Os trechos recuperados **são enviados** à Anthropic.
-- **Ollama (local):** o modelo roda na sua máquina, então nada sai dela. A qualidade depende do modelo e do seu hardware.
+**Provedores atrás da mesma interface** (troca pelo `LLM_PROVIDER` no `.env`):
+- **Gemini (API do Google):** tem **nível gratuito** (chave em aistudio.google.com). O preço do grátis: o Google pode usar os trechos e perguntas enviados para melhorar produtos, e pessoas podem lê-los. No pago, não.
+- **Claude (API da Anthropic):** pago por uso, não incluso no plano Pro (que cobre só o app e o site). Não usa os dados para treino.
+- **Ollama (local):** grátis e 100% privado, mas o computador precisa ficar ligado e ter memória suficiente.
+- **Nenhum:** sem IA generativa; o app mostra as memórias encontradas.
 
-Trocar entre eles é só mudar `LLM_PROVIDER` no `.env`. Esse "plugável" é o que permite começar na
-nuvem e migrar para local depois.
+**Assinatura × API:** Claude Pro, Gemini Pro e ChatGPT são planos para *pessoas* usarem os apps.
+Para um *programa* chamar o modelo, usa-se a API, com cobrança e regras próprias.
+
+**Degradação graciosa:** se o LLM falhar (limite diário, rede, chave inválida), o app não quebra:
+mostra as memórias encontradas com um aviso. Um sistema bom continua útil quando uma peça cai.
+
+**Sem IA, filtro "perto do melhor":** como o E5 dá notas parecidas para tudo, no modo sem IA o app
+mostra só os trechos com nota até 0,03 abaixo da melhor. É uma **heurística** (regra prática
+baseada nos testes), não uma garantia. Com IA isso não é preciso, porque o LLM ignora o irrelevante.
 
 **`effort`:** no Claude, define quanto o modelo "pensa" antes de responder. `low` responde mais
 rápido e gasta menos; `high` raciocina mais.
@@ -221,7 +230,30 @@ versionada para recriar o banco em qualquer lugar.
 
 ---
 
-## 8. Agentes (próximas fases)
+## 8. O app (PWA)
+
+**PWA (*Progressive Web App*):** um site que se comporta como app. Duas peças fazem isso:
+- **Manifest** (`web/manifest.webmanifest`): nome, ícones e cores. Faz o celular oferecer
+  "Adicionar à tela inicial" e abrir em tela cheia, sem barra do navegador.
+- **Service worker** (`web/sw.js`): programa que o navegador guarda e que serve a "casca" do app
+  (telas, estilos, ícones) do próprio celular, por isso abre rápido. **Decisão de privacidade:**
+  ele nunca guarda memórias nem respostas, só a casca.
+
+**XSS (*Cross-Site Scripting*):** ataque em que alguém escreve código dentro de um texto (ex.: uma
+memória) e esse código "executa" na tela de quem vê. Defesa: todo texto vindo do usuário é exibido
+como texto puro (`textContent`), nunca como HTML. Testado: uma memória com código malicioso apareceu
+como texto e não executou.
+
+**Sessão no celular:** o app guarda o crachá e, quando ele vence (~1 hora), usa o *refresh token*
+para pegar outro sem pedir senha. Ao sair, a tela é limpa: quem entrar depois não vê nada.
+
+**CORS:** por segurança, o navegador só deixa um site chamar uma API de **outro endereço** se a API
+autorizar esse endereço. Quando o app for para a Vercel e a API ficar em outro lugar, o endereço do
+app entra em `ALLOWED_ORIGINS`.
+
+---
+
+## 9. Agentes (próximas fases)
 
 Um **agente** é um LLM que, em vez de seguir um roteiro fixo, recebe uma lista de
 **ferramentas** (funções que o seu código executa) e decide sozinho quais chamar.
@@ -240,7 +272,7 @@ O ciclo é: o LLM pede uma ferramenta, o código executa, o resultado volta para
 repete até ele ter a resposta. **Custo:** mais chamadas ao LLM, o que significa mais lento e mais
 caro. Só vale a pena quando a pergunta realmente precisa de decisões ou de cálculos.
 
-## 9. Fine-tuning "só a ponta" (próximas fases)
+## 10. Fine-tuning "só a ponta" (próximas fases)
 
 Um modelo de linguagem é feito de camadas. As primeiras aprendem coisas gerais (gramática,
 significado das palavras) e as últimas, coisas específicas da tarefa.
@@ -250,7 +282,7 @@ significado das palavras) e as últimas, coisas específicas da tarefa.
 - **LoRA:** em vez de mexer nos pesos originais, acopla pequenas matrizes extras e treina só elas. Fica com menos de 1% dos parâmetros e resultado próximo ao do treino completo. O arquivo final é pequeno (MBs) e pode ser ligado ou desligado no modelo base.
 - **QLoRA:** LoRA com o modelo base comprimido em 4 bits, o que cabe numa GPU grátis.
 
-## 10. Glossário rápido
+## 11. Glossário rápido
 
 | Termo | Significado |
 |-------|-------------|
@@ -276,4 +308,9 @@ significado das palavras) e as últimas, coisas específicas da tarefa.
 | **Trigger** | Regra que o banco executa automaticamente quando algo acontece (ex.: nova conta) |
 | **SECURITY DEFINER** | Função que roda com os poderes de quem a criou, e não de quem a chama |
 | **Condição de corrida** | Bug em que duas operações simultâneas interferem uma na outra |
+| **PWA** | Site instalável que se comporta como app |
+| **Service worker** | Programa do navegador que guarda a "casca" do app para abrir rápido |
+| **XSS** | Ataque em que código escondido num texto executa na tela de outra pessoa |
+| **CORS** | Regra do navegador que controla quais sites podem chamar uma API |
+| **Heurística** | Regra prática que funciona na maioria dos casos, sem garantia |
 | **PEFT** | *Parameter-Efficient Fine-Tuning*: família de técnicas (LoRA etc.) que treinam poucos parâmetros |

@@ -1,9 +1,12 @@
 """LLM: o modelo que escreve a resposta final (o "G" de RAG, de Generation).
 
-Dois provedores atrás da mesma interface `gerar(system, prompt) -> str`:
-  * ClaudeLLM  -> API da Anthropic (os chunks recuperados SÃO enviados para a API).
-  * OllamaLLM  -> modelo rodando na sua máquina (100% local).
-Trocar um pelo outro é só mudar LLM_PROVIDER no .env.
+Provedores atrás da mesma interface `gerar(system, prompt) -> str`
+(trocar é só mudar LLM_PROVIDER no .env):
+  * "gemini"    -> API do Google. Tem nível GRATUITO, mas nele o Google pode usar os dados
+                   enviados (trechos + pergunta) para melhorar produtos e pessoas podem lê-los.
+  * "anthropic" -> API do Claude (paga por uso; não usa os dados para treino).
+  * "ollama"    -> modelo rodando na sua máquina (grátis e 100% local).
+  * "nenhum"    -> sem geração: o app só mostra as memórias encontradas.
 """
 
 from __future__ import annotations
@@ -42,6 +45,24 @@ class ClaudeLLM:
         return "".join(b.text for b in response.content if b.type == "text").strip()
 
 
+class GeminiLLM:
+    def __init__(self, model: str, api_key: str):
+        from google import genai
+
+        self.client = genai.Client(api_key=api_key)
+        self.model = model
+
+    def gerar(self, system: str, prompt: str) -> str:
+        from google.genai import types
+
+        response = self.client.models.generate_content(
+            model=self.model,
+            contents=prompt,
+            config=types.GenerateContentConfig(system_instruction=system),
+        )
+        return (response.text or "").strip()
+
+
 class OllamaLLM:
     def __init__(self, model: str, url: str):
         self.model = model
@@ -66,8 +87,13 @@ class OllamaLLM:
         return r.json()["message"]["content"].strip()
 
 
-def get_llm(settings: Settings | None = None) -> LLM:
+def get_llm(settings: Settings | None = None) -> LLM | None:
+    """Devolve o LLM configurado, ou None no modo "nenhum" (só busca, sem geração)."""
     s = settings or get_settings()
+    if s.llm_provider == "nenhum":
+        return None
+    if s.llm_provider == "gemini":
+        return GeminiLLM(s.gemini_model, s.gemini_api_key)
     if s.llm_provider == "anthropic":
         return ClaudeLLM(s.anthropic_model, s.anthropic_effort)
     if s.llm_provider == "ollama":
