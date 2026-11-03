@@ -4,6 +4,10 @@ Uso (precisa de GEMINI_API_KEY no ambiente ou no .env):
     python avaliacao/avaliar.py --rotulo chunk800
     python avaliacao/avaliar.py --rotulo chunk250 --chunk-size 250 --chunk-overlap 40
     python avaliacao/avaliar.py --so-busca            # só a busca: rápido e quase sem gastar cota
+    python avaliacao/avaliar.py --conjunto conjunto_dificil.json --rotulo dificil   # conjunto com armadilhas
+    python avaliacao/avaliar.py --repeticoes 3 --rotulo v1_x3   # repete cada pergunta (menos ruído)
+    python avaliacao/avaliar.py --prompt avaliacao/prompts/v2_interpretar_sentido.txt --rotulo v2
+                                                       # testa um prompt candidato sem mudar o app
     python avaliacao/comparar.py                       # compara os resultados salvos
 
 O que mede:
