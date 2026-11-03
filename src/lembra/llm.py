@@ -62,6 +62,22 @@ class GeminiLLM:
         )
         return (response.text or "").strip()
 
+    def gerar_json(self, system: str, prompt: str, esquema):
+        """SAÍDA ESTRUTURADA: o modelo é obrigado a responder no formato do esquema (Pydantic).
+        Nada de texto solto para "decifrar" depois."""
+        from google.genai import types
+
+        response = self.client.models.generate_content(
+            model=self.model,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=system, temperature=0,
+                response_mime_type="application/json", response_schema=esquema),
+        )
+        if isinstance(response.parsed, esquema):
+            return response.parsed
+        return esquema.model_validate_json(response.text)
+
 
 class OllamaLLM:
     def __init__(self, model: str, url: str):

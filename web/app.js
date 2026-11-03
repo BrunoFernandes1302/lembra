@@ -401,6 +401,42 @@ function desenharCategorias() {
   });
 }
 
+// ---------------- Sugestão de categoria pela IA ----------------
+// "debounce": só pergunta à IA quando a pessoa PARA de digitar por 1,5 s (e não a cada letra).
+let timerSugestao = null;
+let pedidoSugestao = 0;
+let sugestaoAtual = null;
+
+function esconderSugestao() { $("#sugestao-cat").hidden = true; sugestaoAtual = null; }
+
+$("#form-registrar").texto.addEventListener("input", (e) => {
+  clearTimeout(timerSugestao);
+  const texto = e.target.value.trim();
+  if (texto.length < 25) return esconderSugestao();
+  timerSugestao = setTimeout(async () => {
+    const meu = ++pedidoSugestao; // descarta respostas de pedidos antigos (a pessoa continuou digitando)
+    try {
+      const r = await chamar("/categorias/sugerir", { metodo: "POST", corpo: { texto } });
+      if (meu !== pedidoSugestao || !r.categoria) return;
+      if (r.categoria === categoriaEscolhida) return esconderSugestao();
+      sugestaoAtual = r;
+      $("#aceitar-sugestao").textContent = r.nova ? `+ ${r.categoria} (nova)` : r.categoria;
+      $("#motivo-sugestao").textContent = r.motivo || "";
+      $("#sugestao-cat").hidden = false;
+    } catch { /* sugestão é opcional */ }
+  }, 1500);
+});
+
+$("#aceitar-sugestao").addEventListener("click", async () => {
+  if (!sugestaoAtual) return;
+  try {
+    if (sugestaoAtual.nova) await criarCategoria(sugestaoAtual.categoria);
+    categoriaEscolhida = sugestaoAtual.categoria;
+    desenharChips();
+    esconderSugestao();
+  } catch (err) { avisar(err.message); }
+});
+
 // ---------------- Registrar ----------------
 $("#form-registrar").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -415,6 +451,7 @@ $("#form-registrar").addEventListener("submit", async (e) => {
     const r = await chamar("/memorias", { metodo: "POST",
       corpo: { texto: f.texto.value, categoria: categoriaEscolhida, data_evento: f.data_evento.value } });
     f.reset();
+    esconderSugestao();
     avisar(`Memória salva ✓ (${r.chunks} chunk${r.chunks > 1 ? "s" : ""})`);
     carregarCategorias().catch(() => {});
   } catch (err) {

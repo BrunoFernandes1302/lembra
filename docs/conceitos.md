@@ -264,6 +264,14 @@ Técnicas usadas: vidro fosco (`backdrop-filter: blur`), fundo "aurora" animado 
 - As respostas da IA vêm em marcação (negrito, listas, [1]). São formatadas montando os
   elementos um a um com `textContent`, nunca `innerHTML`, o que mantém a proteção contra XSS.
 
+**Sugestão de categoria (classificação "zero-shot"):** ao parar de digitar por 1,5 s (*debounce*),
+a IA escolhe entre as categorias **que a pessoa criou**, ou propõe uma nova. Usa **saída estruturada**:
+o Gemini é obrigado a responder no esquema `{categoria, e_nova, motivo}`. Mesmo assim o código
+confere (se a IA disser "existente" com um nome fora da lista, vira "nova"). Alternativa
+considerada: comparar o embedding da memória com a média dos embeddings de cada categoria. É mais
+barato, mas só funciona com muitas memórias já categorizadas e não propõe categorias novas.
+Teste real: conta de luz → finanças; cardiologista → saúde; aula de violão → "hobbies" (nova).
+
 **Categorias:** cada pessoa cria as próprias; nada vem pré-definido. Sem categoria escolhida, a
 memória vai para "geral" (criada só nesse caso).
 

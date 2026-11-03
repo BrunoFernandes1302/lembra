@@ -124,6 +124,10 @@ class ImportacaoWhatsApp(BaseModel):
     confirmar: bool = False
 
 
+class TextoMemoria(BaseModel):
+    texto: str = Field(min_length=1, max_length=20_000)
+
+
 class Pergunta(BaseModel):
     pergunta: str = Field(min_length=1, max_length=2_000)
     categoria: str | None = None
@@ -294,6 +298,15 @@ def importar_whatsapp(dados: ImportacaoWhatsApp, repo: RepositorioSupabase = Dep
                                      dados.pausa_horas, dados.confirmar)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
+    except ErroSupabase as e:
+        _erro(e)
+
+
+@app.post("/categorias/sugerir", tags=["categorias"])
+def sugerir_categoria(dados: TextoMemoria, repo: RepositorioSupabase = Depends(repositorio)):
+    """A IA sugere uma categoria (existente ou nova) para o texto. {} se não houver sugestão."""
+    try:
+        return rag.sugerir_categoria(repo, dados.texto) or {}
     except ErroSupabase as e:
         _erro(e)
 

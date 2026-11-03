@@ -116,6 +116,12 @@
           </label>
           <fieldset>
             <legend>Categoria</legend>
+            <div class="sugestao-cat" id="sugestao-cat" hidden aria-live="polite">
+              <svg class="ic"><use href="#i-sparkles"/></svg>
+              <span>Sugestão da IA:</span>
+              <button type="button" class="chip ativo-sugerido" id="aceitar-sugestao"></button>
+              <span class="motivo" id="motivo-sugestao"></span>
+            </div>
             <div class="chips" id="chips-categoria"></div>
             <p class="dica-cat" id="dica-cat" hidden>Sem categoria escolhida: a memória vai para "geral". Toque em <b>nova</b> para criar as suas.</p>
             <div class="linha-nova-cat" id="linha-nova-cat" hidden>

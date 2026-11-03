@@ -500,6 +500,16 @@ label .menu-botao, .item.editando .menu-botao { border-radius: var(--raio-p); pa
 .fonte-meta .nota { margin-left: auto; }
 @keyframes revelar { from { opacity: 0; transform: translateY(4px); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
 
+/* ---------------------------------------------------------- Sugestão de categoria */
+.sugestao-cat {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; padding: 10px 12px;
+  border-radius: 14px; background: var(--gradiente-suave); border: 1px solid rgba(139, 92, 246, .35);
+  font-size: .85rem; color: var(--suave); animation: surgir 320ms cubic-bezier(.2, .8, .2, 1) both;
+}
+.sugestao-cat > .ic { width: 16px; height: 16px; color: var(--violeta); }
+.ativo-sugerido { background: var(--gradiente); color: #fff; border-color: transparent; font-weight: 600; }
+.sugestao-cat .motivo { flex-basis: 100%; font-size: .78rem; color: var(--fraco); }
+
 /* ---------------------------------------------------------- Passos do agente */
 .passos-agente { margin-top: 12px; font-size: .84rem; white-space: normal; }
 .passos-agente summary {

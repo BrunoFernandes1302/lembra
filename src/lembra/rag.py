@@ -14,6 +14,8 @@ from __future__ import annotations
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
+
+from pydantic import BaseModel
 from typing import Protocol
 
 from .chunking import chunk_text
@@ -252,3 +254,38 @@ def importar_conversa(
                             s.embedding_model)
         i += len(cs)
     return {**resumo, "salvo": True, "memorias_criadas": len(blocos), "chunks": i}
+
+
+class SugestaoCategoria(BaseModel):
+    categoria: str
+    e_nova: bool
+    motivo: str
+
+
+PROMPT_CATEGORIA = """Você organiza as memórias pessoais de um usuário em categorias.
+Recebe as CATEGORIAS EXISTENTES dele e uma MEMÓRIA nova. Escolha a categoria mais adequada.
+- Prefira SEMPRE uma categoria existente quando ela servir razoavelmente (e_nova = false).
+- Só proponha uma nova se nenhuma existente servir (e_nova = true): nome curto (1 ou 2 palavras),
+  em português, minúsculas, genérico o bastante para outras memórias parecidas (ex.: "saúde",
+  "finanças", "viagens"; nunca algo específico como "consulta do dia 12").
+- motivo: uma frase curta."""
+
+
+def sugerir_categoria(repo, texto: str, settings: Settings | None = None) -> dict | None:
+    """Classificação "zero-shot": o LLM escolhe entre as categorias QUE O USUÁRIO CRIOU
+    (ou propõe uma nova). Devolve None se a IA estiver desligada ou indisponível."""
+    s = settings_do_usuario(repo, settings)
+    llm = get_llm(s) if s.usar_ia else None
+    if llm is None or not hasattr(llm, "gerar_json") or len(texto.strip()) < 15:
+        return None
+    existentes = [c["nome"] for c in repo.listar_categorias()]
+    prompt = (f"CATEGORIAS EXISTENTES: {', '.join(existentes) if existentes else '(nenhuma ainda)'}\n\n"
+              f"MEMÓRIA:\n{texto[:2000]}")
+    try:
+        r = llm.gerar_json(PROMPT_CATEGORIA, prompt, SugestaoCategoria)
+    except Exception as e:  # noqa: BLE001 — sugestão é opcional: falhou, não sugere
+        logger.warning("sugestão de categoria falhou: %s", e)
+        return None
+    # Nunca confiar cegamente na saída do LLM: o código confere e normaliza.
+    nome = " ".join(r.categoria.strip().lower().split())[:40] or "geral"
+    return {"categoria": nome, "nova": nome not in existentes, "motivo": r.motivo}

@@ -323,3 +323,32 @@ def test_importar_whatsapp_salva_e_busca(cliente):
 def test_importar_arquivo_invalido(cliente):
     r = cliente.post("/importar/whatsapp", headers=ANA, json={"conteudo": "isto não é uma conversa", "nome_conversa": "x"})
     assert r.status_code == 400 and "Exportar conversa" in r.json()["detail"]
+
+
+class LLMComJson(LLMFalso):
+    def __init__(self, categoria, e_nova):
+        self.c, self.n = categoria, e_nova
+
+    def gerar_json(self, system, prompt, esquema):
+        LLMComJson.prompt = prompt
+        return esquema(categoria=self.c, e_nova=self.n, motivo="teste")
+
+
+def test_sugerir_categoria_existente(cliente, monkeypatch):
+    cliente.post("/categorias", headers=ANA, json={"nome": "finanças"})
+    monkeypatch.setattr(rag, "get_llm", lambda _: LLMComJson("Finanças ", False))
+    r = cliente.post("/categorias/sugerir", headers=ANA, json={"texto": "Paguei 300 reais de luz este mês."}).json()
+    assert r == {"categoria": "finanças", "nova": False, "motivo": "teste"}
+    assert "finanças" in LLMComJson.prompt, "o LLM recebe as categorias do usuário"
+
+
+def test_sugerir_categoria_nova_e_validacao(cliente, monkeypatch):
+    # o LLM diz que é existente, mas inventa um nome que não está na lista: o código corrige para "nova"
+    monkeypatch.setattr(rag, "get_llm", lambda _: LLMComJson("Pets", False))
+    r = cliente.post("/categorias/sugerir", headers=ANA, json={"texto": "A Mel foi ao veterinário hoje."}).json()
+    assert r["categoria"] == "pets" and r["nova"] is True
+
+
+def test_sem_ia_nao_sugere(cliente, monkeypatch):
+    monkeypatch.setattr(rag, "get_llm", lambda _: None)
+    assert cliente.post("/categorias/sugerir", headers=ANA, json={"texto": "Texto longo o bastante aqui."}).json() == {}
