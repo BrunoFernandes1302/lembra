@@ -98,7 +98,7 @@ input, textarea, select {
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
 }
 input::placeholder, textarea::placeholder { color: var(--fraco); }
-textarea { resize: vertical; line-height: 1.5; }
+textarea { resize: none; line-height: 1.5; min-height: 110px; max-height: 45vh; overflow-y: auto; field-sizing: content; }
 input:focus, textarea:focus, select:focus {
   outline: none; border-color: rgba(139, 92, 246, .7);
   box-shadow: 0 0 0 4px rgba(139, 92, 246, .18); background: var(--vidro-forte);
@@ -155,7 +155,10 @@ legend { font-weight: 600; font-size: .85rem; margin-bottom: 10px; color: var(--
   transition: all var(--rapido); backdrop-filter: blur(10px);
 }
 .chip.ativo { background: var(--gradiente); border-color: transparent; color: #fff; box-shadow: 0 4px 16px -6px rgba(99, 102, 241, .8); }
+.chip { display: inline-flex; align-items: center; gap: 5px; line-height: 1.2; }
+.chip .ic { width: 15px; height: 15px; stroke-width: 2.2; }
 .chip-nova { border-style: dashed; color: var(--violeta); }
+.dica-cat { color: var(--fraco); font-size: .82rem; margin: 10px 0 0; }
 @media (hover: hover) {
   .chip:not(.ativo):hover { color: var(--texto); border-color: var(--borda-forte); transform: translateY(-1px); }
 }
@@ -227,7 +230,7 @@ main { flex: 1; overflow: hidden; display: flex; }
 .conversa { flex: 1; overflow-y: auto; padding: 8px 16px 16px; display: flex; flex-direction: column; gap: 14px; }
 .barra-pergunta { padding: 8px 16px calc(96px + var(--seguro-baixo)); }
 .linha-pergunta {
-  display: flex; gap: 8px; align-items: center; padding: 6px 6px 6px 8px;
+  display: flex; gap: 6px; align-items: center; padding: 6px;
   background: var(--vidro); border: 1px solid var(--borda-forte); border-radius: 20px;
   backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: var(--sombra);
   transition: border-color var(--rapido), box-shadow var(--rapido);
@@ -235,9 +238,7 @@ main { flex: 1; overflow: hidden; display: flex; }
 .linha-pergunta:focus-within { border-color: rgba(139, 92, 246, .7); box-shadow: 0 0 0 4px rgba(139, 92, 246, .16), var(--sombra); }
 .linha-pergunta input { margin: 0; border: 0; background: none; backdrop-filter: none; box-shadow: none; padding: 10px 6px; }
 .linha-pergunta input:focus { box-shadow: none; background: none; }
-.filtro-mini {
-  width: auto; margin: 0 0 10px; padding: 7px 32px 7px 12px; font-size: .82rem; border-radius: 999px; color: var(--suave);
-}
+.filtro-mini { width: auto; }
 
 .boas-vindas { margin: auto; padding: 24px 8px; text-align: center; animation: surgir 700ms cubic-bezier(.2, .8, .2, 1) both; }
 .orbe {
@@ -317,7 +318,7 @@ main { flex: 1; overflow: hidden; display: flex; }
   .item:hover { transform: translateY(-2px); border-color: var(--borda-forte); box-shadow: 0 16px 40px -18px rgba(99, 102, 241, .55); }
 }
 .cabecalho-lista { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 14px; }
-.cabecalho-lista .filtro-mini { margin: 0; }
+.cabecalho-lista .menu { margin: 0; }
 .lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .lista > .item { animation: entrar 360ms cubic-bezier(.2, .8, .2, 1) both; }
 .lista > .item:nth-child(2) { animation-delay: 40ms; }
@@ -433,9 +434,80 @@ form.linha-nova-cat { margin-top: 0; padding: 10px; }
   max-height: 220px; overflow-y: auto;
 }
 
+/* ---------------------------------------------------------- Menu de seleção */
+.select-escondido { position: absolute !important; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.menu { position: relative; display: inline-block; margin-top: 8px; }
+label .menu, .item.editando .menu { display: block; }
+.menu-botao {
+  display: inline-flex; align-items: center; gap: 8px; width: 100%;
+  background: var(--vidro); color: var(--texto); border: 1px solid var(--borda); border-radius: 999px;
+  padding: 9px 14px; font: inherit; font-size: .88rem; font-weight: 500; cursor: pointer;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  transition: border-color var(--rapido), background var(--rapido), box-shadow var(--rapido);
+}
+label .menu-botao, .item.editando .menu-botao { border-radius: var(--raio-p); padding: 13px 14px; font-size: 16px; }
+.menu-botao .ic { width: 16px; height: 16px; color: var(--fraco); }
+.menu-botao .ic:last-child { margin-left: auto; transition: transform var(--medio); }
+.menu.aberto .menu-botao .ic:last-child { transform: rotate(180deg); }
+.menu-rotulo { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.menu.aberto .menu-botao, .menu-botao:focus-visible {
+  outline: none; border-color: rgba(139, 92, 246, .6); box-shadow: 0 0 0 4px rgba(139, 92, 246, .14);
+}
+@media (hover: hover) { .menu-botao:hover { border-color: var(--borda-forte); background: var(--vidro-forte); } }
+.menu-lista {
+  position: absolute; left: 0; top: calc(100% + 8px); z-index: 30; min-width: 100%; width: max-content; max-width: min(320px, 86vw);
+  max-height: 300px; overflow-y: auto; list-style: none; margin: 0; padding: 6px;
+  /* fundo SÓLIDO: vidro fosco não funciona dentro de outro vidro (a barra de pergunta) */
+  background: #161624; border: 1px solid var(--borda-forte); border-radius: 16px;
+  box-shadow: 0 24px 60px -16px rgba(0, 0, 0, .75), 0 0 0 1px rgba(139, 92, 246, .08); transform-origin: top left;
+  animation: menuAbrir 180ms cubic-bezier(.2, .8, .2, 1) both;
+}
+@media (prefers-color-scheme: light) { .menu-lista { background: #ffffff; box-shadow: 0 24px 60px -18px rgba(40, 40, 90, .35); } }
+.menu.para-cima .menu-lista { top: auto; bottom: calc(100% + 8px); transform-origin: bottom left; }
+.menu-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 10px 12px; border-radius: 10px; font-size: .92rem; cursor: pointer; outline: none;
+  transition: background var(--rapido), color var(--rapido);
+}
+.menu-item .ic { width: 16px; height: 16px; color: var(--violeta); opacity: 0; }
+.menu-item.escolhido { color: var(--texto); font-weight: 600; }
+.menu-item.escolhido .ic { opacity: 1; }
+.menu-item:hover, .menu-item:focus { background: var(--gradiente-suave); }
+@keyframes menuAbrir { from { opacity: 0; transform: translateY(-4px) scale(.97); } to { opacity: 1; transform: none; } }
+
+/* Filtro dentro da barra de pergunta */
+.linha-pergunta .menu { margin: 0; flex: none; }
+.linha-pergunta .menu-botao { padding: 9px 12px; background: var(--vidro-forte); max-width: 140px; }
+.linha-pergunta .menu.compacto .menu-rotulo { max-width: 72px; }
+
+/* ---------------------------------------------------------- Resposta formatada */
+.resposta p { margin: 0 0 10px; }
+.resposta p:last-child { margin-bottom: 0; }
+.resposta ul, .resposta ol { margin: 4px 0 10px; padding-left: 20px; }
+.resposta li { margin: 4px 0; }
+.resposta li::marker { color: var(--violeta); }
+.resposta strong { font-weight: 650; color: var(--texto); }
+.resposta p, .resposta li { animation: revelar 420ms cubic-bezier(.2, .8, .2, 1) both; animation-delay: var(--atraso, 0ms); }
+.balao.lembra { white-space: normal; }
+.cita {
+  display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin: 0 2px;
+  border-radius: 6px; font-size: .7rem; font-weight: 700; vertical-align: 1px;
+  background: var(--gradiente); color: #fff;
+}
+.sem-ia .resposta { color: var(--suave); }
+.fontes summary .ic { width: 15px; height: 15px; }
+.fontes summary::before { content: none; }
+.fonte-meta .nota { margin-left: auto; }
+@keyframes revelar { from { opacity: 0; transform: translateY(4px); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
+
+/* ---------------------------------------------------------- Estados vazios */
+.estado-vazio { list-style: none; text-align: center; padding: 48px 16px !important; }
+.orbe.pequeno { width: 56px; height: 56px; border-radius: 18px; margin-bottom: 14px; }
+.orbe.pequeno .ic { width: 26px; height: 26px; }
+
 /* ---------------------------------------------------------- Aviso (toast) */
 .aviso {
-  position: fixed; left: 50%; top: calc(16px + env(safe-area-inset-top, 0px)); transform: translateX(-50%);
+  position: fixed; left: 50%; top: calc(72px + env(safe-area-inset-top, 0px)); transform: translateX(-50%);
   display: flex; align-items: center; gap: 8px;
   background: rgba(20, 20, 34, .85); color: #fff; padding: 11px 16px; border-radius: 14px;
   border: 1px solid var(--borda-forte); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);

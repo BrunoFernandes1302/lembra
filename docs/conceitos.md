@@ -254,6 +254,19 @@ Técnicas usadas: vidro fosco (`backdrop-filter: blur`), fundo "aurora" animado 
 (`@media (hover: hover)`) e respeito a quem pede "reduzir movimento" no sistema
 (`prefers-reduced-motion`).
 
+**Revisão visual v2:**
+- O `<select>` nativo foi trocado por um **menu próprio**: a lista do `select` é desenhada pelo
+  sistema operacional e o CSS não a alcança. O `select` continua existindo, escondido, guardando
+  o valor (aparência nova, comportamento antigo), e um `MutationObserver` redesenha o menu
+  quando as opções mudam.
+- Vidro fosco (`backdrop-filter`) **não funciona dentro de outro vidro fosco**: a lista do menu
+  usa fundo sólido.
+- As respostas da IA vêm em marcação (negrito, listas, [1]). São formatadas montando os
+  elementos um a um com `textContent`, nunca `innerHTML`, o que mantém a proteção contra XSS.
+
+**Categorias:** cada pessoa cria as próprias; nada vem pré-definido. Sem categoria escolhida, a
+memória vai para "geral" (criada só nesse caso).
+
 **CORS:** por segurança, o navegador só deixa um site chamar uma API de **outro endereço** se a API
 autorizar esse endereço. Quando o app for para a Vercel e a API ficar em outro lugar, o endereço do
 app entra em `ALLOWED_ORIGINS`.

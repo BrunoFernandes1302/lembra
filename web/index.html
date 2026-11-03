@@ -34,6 +34,9 @@
     <symbol id="i-flask" viewBox="0 0 24 24"><path d="M10 2v7.53a2 2 0 0 1-.21.9L4.72 20.55A1 1 0 0 0 5.62 22h12.76a1 1 0 0 0 .9-1.45l-5.07-10.12a2 2 0 0 1-.21-.9V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></symbol>
     <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></symbol>
     <symbol id="i-message-dots" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
     <symbol id="i-tag" viewBox="0 0 24 24"><path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></symbol>
   </svg>
   <div class="aurora" aria-hidden="true"></div>
@@ -85,8 +88,8 @@
           </div>
         </div>
         <form id="form-perguntar" class="barra-pergunta">
-          <select name="categoria" aria-label="Procurar em" class="filtro-mini"><option value="">Procurar em: todas</option></select>
           <div class="linha-pergunta">
+            <select name="categoria" aria-label="Procurar em" class="filtro-mini" data-icone="tag" data-compacto><option value="">Todas</option></select>
             <input type="text" name="pergunta" placeholder="Pergunte algo…" autocomplete="off" required>
             <button type="submit" class="botao primario redondo" aria-label="Enviar"><svg class="ic"><use href="#i-send"/></svg></button>
           </div>
@@ -104,11 +107,12 @@
         <p class="sub-tela">Escreva do seu jeito. Eu quebro em pedaços, entendo o significado e guardo para você.</p>
         <form id="form-registrar">
           <label>O que você quer lembrar?
-            <textarea name="texto" rows="7" required placeholder="Ex.: Pago 1.800 de aluguel todo dia 5."></textarea>
+            <textarea name="texto" rows="4" required placeholder="Ex.: Pago 1.800 de aluguel todo dia 5."></textarea>
           </label>
           <fieldset>
             <legend>Categoria</legend>
             <div class="chips" id="chips-categoria"></div>
+            <p class="dica-cat" id="dica-cat" hidden>Sem categoria escolhida: a memória vai para "geral". Toque em <b>nova</b> para criar as suas.</p>
             <div class="linha-nova-cat" id="linha-nova-cat" hidden>
               <input type="text" id="nova-cat-registrar" maxlength="40" placeholder="Nome da nova categoria">
               <button type="button" class="botao secundario pequeno" id="criar-cat-registrar">Criar</button>
@@ -156,7 +160,7 @@
       <section id="tela-memorias" class="tela" hidden>
         <div class="cabecalho-lista">
           <h2 class="titulo-tela">Memórias</h2>
-          <select id="filtro-memorias" aria-label="Filtrar por categoria" class="filtro-mini"><option value="">Todas</option></select>
+          <select id="filtro-memorias" aria-label="Filtrar por categoria" class="filtro-mini" data-icone="tag"><option value="">Todas</option></select>
         </div>
         <ul id="lista-memorias" class="lista"></ul>
       </section>

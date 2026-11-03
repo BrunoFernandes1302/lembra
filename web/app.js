@@ -92,6 +92,120 @@ function botao(texto, classe, aoClicar, nomeIcone) {
 
 const rotulo = (c) => c[0].toUpperCase() + c.slice(1);
 
+// ---------------- Menu de seleção (substitui o <select> nativo) ----------------
+// A lista do <select> nativo é desenhada pelo sistema operacional e o CSS não a alcança.
+// Aqui o <select> continua existindo (escondido) e guarda o valor; desenhamos por cima
+// uma pílula + lista própria. Toda a lógica que lê select.value continua funcionando.
+function aprimorarSelect(select) {
+  if (select._menu) return select._menu;
+  const caixa = el("div", "menu" + (select.hasAttribute("data-compacto") ? " compacto" : ""));
+  const botaoMenu = el("button", "menu-botao");
+  botaoMenu.type = "button";
+  botaoMenu.setAttribute("aria-haspopup", "listbox");
+  botaoMenu.setAttribute("aria-label", select.getAttribute("aria-label") || "Escolher");
+  const rotuloMenu = el("span", "menu-rotulo");
+  if (select.dataset.icone) botaoMenu.append(icone(select.dataset.icone));
+  botaoMenu.append(rotuloMenu, icone("chevron"));
+  const lista = el("ul", "menu-lista");
+  lista.setAttribute("role", "listbox");
+  lista.hidden = true;
+  caixa.append(botaoMenu, lista);
+  select.after(caixa);
+  select.classList.add("select-escondido");
+  select.tabIndex = -1;
+
+  const fechar = () => { lista.hidden = true; caixa.classList.remove("aberto"); botaoMenu.setAttribute("aria-expanded", "false"); };
+  const desenhar = () => {
+    const op = select.options[select.selectedIndex];
+    rotuloMenu.textContent = op ? op.text : "";
+    lista.replaceChildren();
+    [...select.options].forEach((o) => {
+      const li = el("li", "menu-item" + (o.selected ? " escolhido" : ""));
+      li.setAttribute("role", "option");
+      li.setAttribute("aria-selected", String(o.selected));
+      li.tabIndex = -1;
+      li.append(el("span", null, o.text), icone("check"));
+      li.addEventListener("click", () => {
+        select.value = o.value;
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+        desenhar();
+        fechar();
+        botaoMenu.focus();
+      });
+      lista.append(li);
+    });
+  };
+  botaoMenu.addEventListener("click", () => {
+    if (!lista.hidden) return fechar();
+    $$(".menu.aberto").forEach((m) => m._fechar?.());
+    desenhar();
+    // abre para cima quando está na parte de baixo da tela (ex.: barra de pergunta)
+    caixa.classList.toggle("para-cima", botaoMenu.getBoundingClientRect().top > innerHeight * 0.55);
+    lista.hidden = false;
+    caixa.classList.add("aberto");
+    botaoMenu.setAttribute("aria-expanded", "true");
+    (lista.querySelector(".escolhido") || lista.firstChild)?.focus();
+  });
+  lista.addEventListener("keydown", (e) => {
+    const itens = [...lista.children];
+    const i = itens.indexOf(document.activeElement);
+    if (e.key === "ArrowDown") { e.preventDefault(); itens[Math.min(i + 1, itens.length - 1)]?.focus(); }
+    if (e.key === "ArrowUp") { e.preventDefault(); itens[Math.max(i - 1, 0)]?.focus(); }
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); document.activeElement.click(); }
+    if (e.key === "Escape") { fechar(); botaoMenu.focus(); }
+  });
+  caixa._fechar = fechar;
+  // redesenha sozinho quando as opções mudam (ex.: categorias recarregadas)
+  new MutationObserver(() => queueMicrotask(desenhar)).observe(select, { childList: true });
+  select.addEventListener("change", desenhar);
+  select.form?.addEventListener("reset", () => setTimeout(desenhar));
+  select._menu = { desenhar, fechar };
+  desenhar();
+  return select._menu;
+}
+document.addEventListener("click", (e) => {
+  $$(".menu.aberto").forEach((m) => { if (!m.contains(e.target)) m._fechar(); });
+});
+
+// ---------------- Resposta da IA: formatação segura + revelação suave ----------------
+// O Gemini responde com marcações (**negrito**, listas, [1]). Montamos os elementos
+// um a um com textContent — nunca innerHTML —, então nada vindo da IA "executa" na tela.
+function trechoFormatado(texto) {
+  const frag = document.createDocumentFragment();
+  // **negrito** e citações [1], [2]
+  texto.split(/(\*\*[^*]+\*\*|\[\d+\])/g).forEach((parte) => {
+    if (!parte) return;
+    if (/^\*\*[^*]+\*\*$/.test(parte)) frag.append(el("strong", null, parte.slice(2, -2)));
+    else if (/^\[\d+\]$/.test(parte)) frag.append(el("span", "cita", parte.slice(1, -1)));
+    else frag.append(document.createTextNode(parte));
+  });
+  return frag;
+}
+
+function renderizarResposta(caixa, texto) {
+  const corpo = el("div", "resposta");
+  let lista = null;
+  texto.trim().split("\n").forEach((linha) => {
+    const t = linha.trim();
+    const item = t.match(/^(?:[-*•]|\d+[.)])\s+(.*)$/);
+    if (item) {
+      if (!lista) { lista = el(/^\d/.test(t) ? "ol" : "ul"); corpo.append(lista); }
+      const li = el("li");
+      li.append(trechoFormatado(item[1]));
+      lista.append(li);
+    } else {
+      lista = null;
+      if (!t) return;
+      const p = el("p");
+      p.append(trechoFormatado(t));
+      corpo.append(p);
+    }
+  });
+  // cada bloco surge em sequência (efeito "digitando"); quem pediu menos movimento vê tudo de uma vez
+  [...corpo.querySelectorAll("p, li")].forEach((b, i) => b.style.setProperty("--atraso", `${Math.min(i, 12) * 70}ms`));
+  caixa.append(corpo);
+}
+
 // ---------------- Login / cadastro ----------------
 let modoAuth = "entrar";
 
@@ -182,9 +296,9 @@ let categoriaEscolhida = "geral";
 
 async function carregarCategorias() {
   categorias = await chamar("/categorias");
-  if (!categorias.some((c) => c.nome === categoriaEscolhida)) categoriaEscolhida = "geral";
+  if (!categorias.some((c) => c.nome === categoriaEscolhida)) categoriaEscolhida = categorias[0]?.nome || "geral";
   desenharChips();
-  preencherSelect($("#form-perguntar").categoria, "Procurar em: todas");
+  preencherSelect($("#form-perguntar").categoria, "Todas");
   preencherSelect($("#filtro-memorias"), "Todas");
   const ci = $("#cat-importar");
   const atualCi = ci.value || "conversas";
@@ -204,6 +318,7 @@ function preencherSelect(select, rotuloTodas) {
 function desenharChips() {
   const box = $("#chips-categoria");
   box.replaceChildren();
+  $("#dica-cat").hidden = categorias.some((c) => c.nome === categoriaEscolhida);
   categorias.forEach((c) => {
     const chip = botao(c.nome, "chip" + (c.nome === categoriaEscolhida ? " ativo" : ""), () => {
       categoriaEscolhida = c.nome;
@@ -424,16 +539,21 @@ $("#form-perguntar").addEventListener("submit", async (e) => {
     const r = await chamar("/perguntar", { metodo: "POST",
       corpo: { pergunta, categoria: f.categoria.value || null } });
     pensando.classList.remove("pensando");
-    pensando.textContent = r.resposta;
+    pensando.replaceChildren();
+    renderizarResposta(pensando, r.resposta);
+    if (!r.gerada_por_ia) pensando.classList.add("sem-ia");
     if (r.fontes.length) {
       const det = el("details", "fontes");
       det.open = !r.gerada_por_ia; // sem IA, as memórias SÃO a resposta: já mostra abertas
-      det.append(el("summary", null, `${r.fontes.length} memória(s) usada(s)`));
+      const resumo = el("summary");
+      resumo.append(icone("layers"), document.createTextNode(`${r.fontes.length} ${r.fontes.length > 1 ? "memórias usadas" : "memória usada"}`));
+      det.append(resumo);
       r.fontes.forEach((fo, i) => {
         const d = el("div", "fonte");
-        const meta = [`[${i + 1}]`, fo.categoria, fo.data].filter(Boolean).join(" · ");
         const cab = el("span", "fonte-meta");
-        cab.append(document.createTextNode(meta + " "), el("span", "nota", `similaridade ${fo.similaridade.toFixed(2)}`));
+        cab.append(el("span", "cita", String(i + 1)),
+                   document.createTextNode([fo.categoria, fo.data].filter(Boolean).join(" · ")),
+                   el("span", "nota", `similaridade ${fo.similaridade.toFixed(2)}`));
         d.append(cab, document.createTextNode(fo.texto));
         det.append(d);
       });
@@ -457,8 +577,12 @@ async function carregarMemorias() {
     const memorias = await chamar("/memorias" + (cat ? `?categoria=${encodeURIComponent(cat)}` : ""));
     lista.replaceChildren();
     if (!memorias.length) {
-      const v = el("li", "vazio");
-      v.append(el("p", "vazio-titulo", "Nenhuma memória ainda"), el("p", null, "Use a aba Registrar para começar."));
+      const v = el("li", "vazio estado-vazio");
+      const orbe = el("div", "orbe pequeno");
+      orbe.append(icone(cat ? "tag" : "inbox"));
+      v.append(orbe,
+        el("p", "vazio-titulo", cat ? `Nada em "${cat}" ainda` : "Nenhuma memória ainda"),
+        el("p", null, cat ? "Escolha outra categoria ou registre algo novo." : "Comece na aba Registrar: escreva algo ou importe uma conversa."));
       return lista.append(v);
     }
     memorias.forEach((m) => lista.append(itemMemoria(m)));
@@ -535,6 +659,7 @@ function formEdicao(m) {
     })
   );
   li.append(texto, cat, data, erro, acoes);
+  queueMicrotask(() => aprimorarSelect(cat));
   return li;
 }
 
@@ -631,5 +756,12 @@ $("#lab-testar").addEventListener("click", async () => {
 });
 
 // ---------------- Início ----------------
+$$("select").forEach(aprimorarSelect);
+// caixas de texto crescem conforme se escreve (para navegadores sem "field-sizing")
+document.addEventListener("input", (e) => {
+  if (e.target.tagName !== "TEXTAREA" || CSS.supports("field-sizing", "content")) return;
+  e.target.style.height = "auto";
+  e.target.style.height = Math.min(e.target.scrollHeight + 2, innerHeight * 0.45) + "px";
+});
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 sessao.get()?.access_token ? mostrarApp() : mostrarAuth();
