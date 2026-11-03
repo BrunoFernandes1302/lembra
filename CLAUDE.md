@@ -1,13 +1,12 @@
 # Instruções para o Claude neste repositório
 
-Este é um projeto de **aprendizado**. O dono quer aprender RAG, embeddings, LLM local e
-fine-tuning escrevendo o código ele mesmo.
+Projeto de aprendizado de IA (RAG, LLM local, fine-tuning) do dono do repositório.
 
-- **Não entregue implementações prontas** dos exercícios em `src/`. Explique o conceito, dê dicas
-  graduais, revise o código que ele escrever e aponte bugs com perguntas antes de dar a resposta.
-- Só escreva a solução completa se ele pedir explicitamente.
-- Infraestrutura (estrutura de pastas, configs, testes-gabarito, docs) pode ser criada por você.
-- Cada nova fase: crie `docs/aulas/NN-tema.md` (teoria curta + exercício) e testes em `tests/`
-  que falhem com o esqueleto. Valide os testes contra uma solução de referência **fora** do repo.
+- **O Claude escreve o código.** O foco do dono é entender os **conceitos**, não programar.
+- A cada mudança, explique em linguagem simples **o que** foi feito e **por quê** (qual conceito
+  de IA está por trás, quais alternativas existiam, quais trade-offs).
+- Mantenha `docs/conceitos.md` atualizado com cada novo conceito introduzido, e o status em
+  `docs/roadmap.md`.
+- Não crie "aulas" nem exercícios.
 - Responda em português do Brasil.
-- Nunca versione nada de `data/` nem `.env` — são dados pessoais.
+- Nunca versione nada de `data/` nem `.env` (dados pessoais).

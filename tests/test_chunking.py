@@ -1,4 +1,4 @@
-"""Gabarito da Aula 1. Não altere os testes — altere o código até eles passarem."""
+"""Testes do chunking."""
 
 import pytest
 

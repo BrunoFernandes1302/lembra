@@ -1,99 +1,80 @@
 # 🧠 Segundo Cérebro
 
-> Laboratório pessoal para **aprender IA na prática**: começa como um RAG sobre a minha vida
-> pessoal e evolui, aula por aula, para LLM local e fine-tuning — com o objetivo final de
-> aplicar o aprendizado na empresa.
+Um **RAG sobre a minha vida pessoal**, criado para aprender IA na prática. O plano é evoluir o
+projeto para LLM local e fine-tuning e, depois, levar o aprendizado para a empresa.
 
-**Regra do projeto:** nada vem pronto. Cada etapa é uma aula com teoria curta, um exercício e
-testes automáticos que funcionam como gabarito. O código é escrito por mim; o Claude explica,
-revisa e tira dúvidas.
+- 📖 **[Guia de conceitos](docs/conceitos.md)**: como tudo funciona, sem precisar ler código
+- 🗺️ **[Roadmap](docs/roadmap.md)**: próximas fases
 
----
+## Como funciona
 
-## A ideia
+Dois chats:
 
-Dois "chats":
-
-1. **Alimentar** — escrevo memórias, fatos e histórias da minha vida. Cada texto é quebrado em
-   *chunks*, transformado em *embeddings* (vetores) e guardado num banco vetorial.
-2. **Perguntar** — faço uma pergunta; o sistema busca os chunks mais parecidos e entrega para
-   um LLM, que responde **só com base nas minhas memórias**, citando as fontes.
+1. **✍️ Alimentar:** você escreve memórias e fatos da sua vida. Cada texto é quebrado em
+   *chunks*, transformado em *embeddings* (vetores de significado) e guardado num banco vetorial.
+2. **💬 Perguntar:** você faz uma pergunta. O sistema busca os trechos mais parecidos e um LLM
+   responde **só com base nas suas memórias**, citando as fontes.
 
 ```mermaid
 flowchart LR
-    subgraph Alimentar
-        A[Texto da memória] --> B[Chunking] --> C[Embeddings] --> D[(Banco vetorial)]
-    end
-    subgraph Perguntar
-        P[Pergunta] --> E[Embedding da pergunta] --> F{Busca por similaridade}
-        D --> F
-        F --> G[Top-K chunks] --> H[Prompt = pergunta + contexto] --> I[LLM] --> R[Resposta com fontes]
-    end
+    A[Memória] --> B[Chunks] --> C[Embeddings] --> D[(ChromaDB)]
+    P[Pergunta] --> E[Embedding] --> F{Busca} --> G[Trechos] --> H[LLM] --> R[Resposta + fontes]
+    D --> F
 ```
-
-Isso é **RAG** (*Retrieval-Augmented Generation*): em vez de treinar o modelo com meus dados,
-eu *busco* o que é relevante e *entrego* junto com a pergunta.
-
-## Trilha de aprendizado
-
-| Fase | Tema | Status |
-|------|------|--------|
-| 0 | Fundação do repositório | ✅ |
-| 1 | [Chunking](docs/aulas/01-chunking.md) | 🟡 em andamento |
-| 2 | Embeddings | ⬜ |
-| 3 | Banco vetorial e busca | ⬜ |
-| 4 | Geração com LLM (o "G" do RAG) | ⬜ |
-| 5 | Interface com os dois chats | ⬜ |
-| 6 | Avaliação e melhorias de RAG | ⬜ |
-| 7 | LLM local (Ollama) | ⬜ |
-| 8 | Fine-tuning (LoRA) | ⬜ |
-| 9 | Levando para a empresa | ⬜ |
-
-Detalhes de cada fase em [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Stack
 
 | Peça | Escolha | Por quê |
 |------|---------|---------|
-| Linguagem | Python 3.10+ | Ecossistema padrão de IA |
-| Embeddings | `sentence-transformers` (local) | Grátis, privado, entende português |
-| Banco vetorial | ChromaDB | Roda local, zero infraestrutura |
-| LLM | Claude (API) → Ollama (local) | Começa com qualidade alta, depois migra para local |
-| Interface | Streamlit | UI em Python puro |
-| Testes | pytest | Os testes são o gabarito das aulas |
+| Embeddings | `sentence-transformers` + `multilingual-e5-small` | Local, grátis, entende português |
+| Banco vetorial | ChromaDB | Local, sem servidor |
+| LLM | Claude (API) ou Ollama (local) | Troca pelo `.env` |
+| Interface | Streamlit | UI simples em Python |
 
 ## Como rodar
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
+source .venv/bin/activate              # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
-cp .env.example .env               # e preencha o que for pedido em cada aula
-
-pytest -v                          # mostra quais exercícios já estão resolvidos
+cp .env.example .env                   # coloque sua ANTHROPIC_API_KEY
 ```
+
+**Interface (os dois chats):**
+```bash
+streamlit run app/streamlit_app.py
+```
+
+**Ou pelo terminal:**
+```bash
+cerebro adicionar "Tenho uma cachorra chamada Mel, adotada em 2020." -c família -d 2020
+cerebro buscar "qual o nome do meu pet?"       # mostra só o que a busca encontrou (sem LLM)
+cerebro perguntar "qual o nome do meu pet?"    # RAG completo
+cerebro status
+cerebro reindexar                              # reconstrói o índice (ex.: após mudar o chunk)
+```
+
+Na primeira execução, o modelo de embeddings (~470 MB) é baixado automaticamente.
 
 ## Estrutura
 
 ```
-.
-├── docs/
-│   ├── roadmap.md            # visão de todas as fases
-│   └── aulas/                # uma aula por arquivo (teoria + exercício)
-├── src/segundo_cerebro/      # código do projeto (escrito ao longo das aulas)
-│   ├── config.py             # configurações lidas do .env
-│   └── chunking.py           # Aula 1
-├── tests/                    # gabaritos das aulas
-├── data/                     # SEUS DADOS — ignorado pelo git
-├── .env.example
-└── pyproject.toml
+src/segundo_cerebro/
+├── chunking.py     # 1. quebra textos em pedaços
+├── embeddings.py   # 2. texto → vetor
+├── store.py        # 3. banco vetorial (guardar e buscar)
+├── memorias.py     # fluxo "Alimentar": salvar + indexar
+├── llm.py          # 4. Claude ou Ollama
+├── rag.py          # fluxo "Perguntar": buscar → montar prompt → gerar
+├── config.py       # configurações (.env)
+└── cli.py          # comandos de terminal
+app/streamlit_app.py   # interface com as duas abas
+data/                  # SEUS DADOS (ignorado pelo git)
 ```
 
 ## Privacidade
 
-Este projeto lida com dados pessoais.
-
-- `data/` e `.env` estão no `.gitignore` — **nunca** suba memórias ou chaves para o GitHub.
+- `data/` e `.env` estão no `.gitignore`: memórias e chaves **nunca** vão para o GitHub.
 - Embeddings e banco vetorial rodam **localmente**.
-- Na fase de geração com a API do Claude, os chunks recuperados **são enviados** para a API.
-  A Fase 7 (Ollama) existe justamente para ter a opção 100% local.
+- Com `LLM_PROVIDER=anthropic`, os trechos recuperados em cada pergunta **são enviados** à API
+  do Claude. Para manter tudo 100% local, use `LLM_PROVIDER=ollama`.

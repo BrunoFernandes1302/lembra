@@ -1,0 +1,156 @@
+# Guia de conceitos
+
+Explicação, em linguagem simples, de cada peça do projeto e do **porquê** de cada decisão.
+Não precisa ler código para entender este documento.
+
+---
+
+## 1. O problema que o RAG resolve
+
+Um LLM (Claude, GPT, Llama…) sabe muita coisa sobre o mundo, mas **nada sobre você** nem
+sobre os documentos da sua empresa. Há dois jeitos de dar esse conhecimento a ele:
+
+| Abordagem | Como funciona | Bom para | Ruim para |
+|-----------|---------------|----------|-----------|
+| **RAG** | A cada pergunta, *busca* os trechos relevantes e *cola* no prompt | Fatos, documentos, coisas que mudam | — |
+| **Fine-tuning** | *Re-treina* o modelo com exemplos | Estilo, tom, formato, tarefas repetitivas | Fatos (alucina, desatualiza, caro de refazer) |
+
+Regra prática: **conhecimento → RAG; comportamento → fine-tuning.** Por isso começamos por RAG.
+
+RAG = **R**etrieval (buscar) + **A**ugmented (aumentar o prompt) + **G**eneration (gerar a resposta).
+
+---
+
+## 2. Os dois fluxos
+
+```mermaid
+flowchart LR
+    subgraph "Alimentar (ingestão)"
+        A[Memória em texto] --> B[Chunking] --> C[Embeddings] --> D[(Banco vetorial)]
+    end
+    subgraph "Perguntar (consulta)"
+        P[Pergunta] --> E[Embedding da pergunta] --> F{Busca por<br/>similaridade}
+        D --> F
+        F --> G[Top-K trechos] --> H[Prompt = regras + trechos + pergunta] --> I[LLM] --> R[Resposta com fontes]
+    end
+```
+
+O fluxo **Alimentar** acontece uma vez por memória. O fluxo **Perguntar** acontece a cada pergunta.
+
+---
+
+## 3. Chunking — quebrar o texto em pedaços
+
+**O quê:** dividir textos longos em pedaços de ~800 caracteres.
+
+**Por quê:** cada pedaço vai virar *um* vetor. Se uma memória fala da infância, de uma viagem e
+do primeiro emprego, um único vetor seria a "média" dos três assuntos e não combinaria bem com
+nenhuma pergunta específica. Pedaços focados resultam numa busca precisa.
+
+**Os dois ajustes:**
+- `CHUNK_SIZE`: se for pequeno demais, o pedaço perde contexto ("ela foi adotada em 2020", mas ela quem?). Se for grande demais, a busca fica imprecisa.
+- `CHUNK_OVERLAP`: repete o final de um pedaço no começo do próximo, para que uma informação que caiu na "fronteira" não se perca.
+
+**Como cortamos:** de forma *recursiva*, respeitando a estrutura do texto. Primeiro tentamos por
+parágrafo; se ainda ficar grande, por linha, depois por frase e por último por palavra. Assim
+quase nunca cortamos uma frase no meio.
+
+---
+
+## 4. Embeddings — transformar significado em números
+
+**O quê:** um modelo de IA lê um texto e devolve uma lista de números (um **vetor**; aqui são
+384 números). É como uma "coordenada" do significado do texto.
+
+**A mágica:** textos com **sentido** parecido ganham coordenadas próximas, mesmo sem nenhuma
+palavra em comum:
+
+```
+"minha cachorra Mel"   →  [0.12, -0.40, 0.88, ...]  ┐ perto
+"meu animal de estimação" → [0.10, -0.38, 0.85, ...] ┘
+"meu salário em 2021"  →  [-0.70, 0.22, 0.05, ...]     longe
+```
+
+Uma busca por palavra-chave ("cachorra") não acharia "animal de estimação". A busca por
+embedding acha. Isso se chama **busca semântica**.
+
+**Similaridade de cosseno:** é a medida de "quão perto" estão dois vetores, de -1 a 1. Quanto
+mais perto de 1, mais parecido. É o número `similaridade` que aparece nas fontes.
+
+**Decisões do projeto:**
+- **Modelo `multilingual-e5-small`**: entende português, é pequeno (~470 MB) e roda no seu computador, **grátis e sem enviar seus dados para fora**.
+- **Prefixos `query:` / `passage:`**: esse modelo foi treinado sabendo diferenciar "texto guardado" de "pergunta". Marcar cada um melhora a busca.
+- **Atenção:** pergunta e documentos **precisam** usar o mesmo modelo. Se você trocar o modelo, as coordenadas mudam e é preciso **reindexar** tudo.
+
+---
+
+## 5. Banco vetorial — guardar e buscar vetores
+
+**O quê:** um banco de dados especializado em responder: *"quais vetores estão mais perto deste?"*
+
+**Por que não um banco normal:** comparar a pergunta com milhões de vetores, um por um, é lento.
+Bancos vetoriais usam índices aproximados (como o **HNSW**, um "grafo de vizinhos") que
+encontram os mais próximos em milissegundos.
+
+**O que guardamos para cada chunk:**
+- o **texto** do chunk;
+- o **vetor**;
+- os **metadados**: de qual memória veio, categoria e data. Servem para citar a fonte e, no futuro, para filtrar (por exemplo, "só memórias de trabalho").
+
+**Top-K:** quantos trechos trazemos por pergunta (`TOP_K=5`). Se forem poucos, a resposta pode
+faltar. Se forem muitos, entra ruído e o custo do prompt aumenta.
+
+**Decisão: fonte da verdade separada do índice**
+- `data/memorias.jsonl` é o texto original de tudo que você escreveu, legível e fácil de copiar para backup.
+- `data/chroma/` é o índice, **derivado** do arquivo acima.
+
+Se você mudar o modelo de embeddings ou o tamanho do chunk, apaga o índice e reconstrói
+(`cerebro reindexar`) sem perder nada. Na empresa é igual: o documento original é a verdade, e o
+índice é descartável.
+
+Usamos **ChromaDB** porque roda local, sem servidor. Em produção, a mesma ideia roda em
+**pgvector** (extensão do Postgres), Qdrant, Weaviate, Pinecone etc.
+
+---
+
+## 6. Geração — o LLM escreve a resposta
+
+Com os trechos em mãos, montamos um prompt em três partes:
+
+1. **Instruções (system prompt):** "responda APENAS com base nas memórias; cite [1], [2]; se não souber, diga que não sabe."
+2. **Contexto:** os trechos recuperados, numerados, com categoria e data.
+3. **Pergunta** do usuário.
+
+**Por que tanta regra?** Para combater a **alucinação**: sem instrução, o modelo poderia
+"completar" com algo plausível porém falso sobre a sua vida. Exigir citações também deixa você
+**conferir** de onde veio cada afirmação.
+
+**Dois provedores atrás da mesma interface:**
+- **Claude (API):** respostas de alta qualidade. Os trechos recuperados **são enviados** à Anthropic.
+- **Ollama (local):** o modelo roda na sua máquina, então nada sai dela. A qualidade depende do modelo e do seu hardware.
+
+Trocar entre eles é só mudar `LLM_PROVIDER` no `.env`. Esse "plugável" é o que permite começar na
+nuvem e migrar para local depois.
+
+**`effort`:** no Claude, define quanto o modelo "pensa" antes de responder. `low` responde mais
+rápido e gasta menos; `high` raciocina mais.
+
+---
+
+## 7. Glossário rápido
+
+| Termo | Significado |
+|-------|-------------|
+| **LLM** | *Large Language Model*: o modelo que gera texto |
+| **Token** | Pedaço de palavra; é a unidade de custo e de limite dos LLMs |
+| **Janela de contexto** | Quanto texto o LLM consegue "ler" de uma vez |
+| **Chunk** | Pedaço de um documento |
+| **Embedding / vetor** | Lista de números que representa o significado de um texto |
+| **Busca semântica** | Busca por significado, não por palavra exata |
+| **Top-K** | Os K resultados mais parecidos |
+| **Alucinação** | Quando o modelo inventa algo com confiança |
+| **Grounding** | "Ancorar" a resposta em fontes fornecidas |
+| **Re-ranking** | Segundo passo que reordena os resultados da busca com um modelo mais preciso |
+| **Busca híbrida** | Combina busca por palavra-chave (BM25) com busca vetorial |
+| **Quantização** | Comprimir um modelo (ex.: 16 bits → 4 bits) para rodar em hardware mais modesto |
+| **Fine-tuning / LoRA** | Re-treinar um modelo; LoRA ajusta só uma pequena parte dele, de forma barata |
