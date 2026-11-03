@@ -17,6 +17,8 @@ dependencies = [
 [project.optional-dependencies]
 # Embeddings locais (privados, mas exigem ~1 GB de RAM): pip install -e ".[local]"
 local = ["sentence-transformers>=3.0"]
+# Experimentos de fine-tuning (finetuning/README.md). Separado do app: a Vercel nunca instala o PyTorch.
+finetuning = ["numpy>=1.26", "torch>=2.2", "transformers>=4.45", "peft>=0.13", "accelerate>=1.0"]
 dev = ["pytest>=8.0", "ruff>=0.6", "httpx>=0.27"]
 
 [build-system]
