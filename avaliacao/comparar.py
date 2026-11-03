@@ -20,8 +20,8 @@ def main():
         sys.exit("Nenhuma rodada encontrada. Rode avaliacao/avaliar.py antes.")
     larg = max(12, *(len(r["rotulo"]) for r in rodadas))
     print(f"{'métrica':<20}" + "".join(f"{r['rotulo']:>{larg + 2}}" for r in rodadas))
-    for campo in ("chunk_size", "chunk_overlap", "top_k", "chunks_indexados"):
-        print(f"{campo:<20}" + "".join(f"{str(r['config'][campo]):>{larg + 2}}" for r in rodadas))
+    for campo in ("chunk_size", "chunk_overlap", "top_k", "chunks_indexados", "prompt", "repeticoes"):
+        print(f"{campo:<20}" + "".join(f"{str(r['config'].get(campo, '—')):>{larg + 2}}" for r in rodadas))
     print("-" * (20 + (larg + 2) * len(rodadas)))
     for m in METRICAS:
         vals = [r["resumo"].get(m) for r in rodadas]

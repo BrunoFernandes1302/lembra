@@ -28,6 +28,7 @@ Decisões:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 import time
@@ -160,7 +161,14 @@ def main():
     ap.add_argument("--modelo-juiz", default="gemini-flash-lite-latest")
     ap.add_argument("--so-busca", action="store_true", help="mede só a busca (sem LLM nem juiz)")
     ap.add_argument("--pausa", type=float, default=2.0, help="segundos entre chamadas ao LLM")
+    ap.add_argument("--repeticoes", type=int, default=1,
+                    help="quantas vezes gerar+julgar cada pergunta (o LLM varia; mais repetições = menos ruído)")
+    ap.add_argument("--prompt", help="arquivo .txt com um prompt de sistema CANDIDATO (testa sem mudar o app)")
     a = ap.parse_args()
+
+    if a.prompt:  # avalia um prompt candidato antes de levá-lo para o app
+        rag.SYSTEM_PROMPT = Path(a.prompt).read_text(encoding="utf-8").strip()
+    versao_prompt = hashlib.sha1(rag.SYSTEM_PROMPT.encode()).hexdigest()[:8]
 
     s = get_settings()
     s = replace(s, usar_ia=True, instrucoes="", llm_provider="gemini",
@@ -170,7 +178,8 @@ def main():
                 gemini_model=a.modelo_llm or s.gemini_model)
     conjunto = json.loads((PASTA / "conjunto.json").read_text(encoding="utf-8"))
     print(f"Rodada '{a.rotulo}': chunk={s.chunk_size} sobreposição={s.chunk_overlap} top_k={s.top_k} "
-          f"embeddings={s.embedding_model} llm={s.gemini_model} juiz={a.modelo_juiz}\n")
+          f"embeddings={s.embedding_model} llm={s.gemini_model} juiz={a.modelo_juiz} "
+          f"prompt={versao_prompt}{' (' + a.prompt + ')' if a.prompt else ''} repetições={a.repeticoes}\n")
 
     # 1) indexar as memórias (um lote só de embeddings)
     repo = RepositorioEmMemoria()
@@ -202,15 +211,26 @@ def main():
             linha += f"(sem resposta; melhor nota {busca['nota_top1']:.2f})"
 
         if not a.so_busca:
-            time.sleep(a.pausa)
-            resposta = com_novas_tentativas(llm.gerar, rag.prompt_do_sistema(s), rag.montar_prompt(q["pergunta"], trechos))
-            time.sleep(a.pausa)
-            v = com_novas_tentativas(julgar, juiz, a.modelo_juiz, q["pergunta"], q["esperada"], trechos, resposta)
-            item.update(resposta=resposta, correta=v.correta, fiel=v.fiel, justificativa=v.justificativa)
-            linha += f" | correta={'✓' if v.correta else '✗'} fiel={'✓' if v.fiel else '✗'}"
+            tentativas = []
+            for _ in range(a.repeticoes):
+                time.sleep(a.pausa)
+                resposta = com_novas_tentativas(llm.gerar, rag.prompt_do_sistema(s),
+                                                rag.montar_prompt(q["pergunta"], trechos))
+                time.sleep(a.pausa)
+                v = com_novas_tentativas(julgar, juiz, a.modelo_juiz, q["pergunta"], q["esperada"], trechos, resposta)
+                tentativas.append({"resposta": resposta, "correta": v.correta, "fiel": v.fiel,
+                                   "justificativa": v.justificativa})
+            # taxa de acerto nas repetições (ex.: 2 de 3 = 0,67)
+            item.update(tentativas=tentativas,
+                        correta=media(float(t["correta"]) for t in tentativas),
+                        fiel=media(float(t["fiel"]) for t in tentativas))
+            simb = lambda x: "✓" if x == 1 else ("✗" if x == 0 else f"{x:.0%}")  # noqa: E731
+            linha += f" | correta={simb(item['correta'])} fiel={simb(item['fiel'])}"
         print(linha, flush=True)
-        if not a.so_busca and not (item["correta"] and item["fiel"]):
-            print(f"      resposta: {item['resposta'][:160]}\n      juiz: {item['justificativa']}")
+        if not a.so_busca:
+            for t in item["tentativas"]:
+                if not (t["correta"] and t["fiel"]):
+                    print(f"      resposta: {t['resposta'][:160]}\n      juiz: {t['justificativa']}")
         resultados.append(item)
 
     # 2) resumo
@@ -223,13 +243,13 @@ def main():
     }
     if not a.so_busca:
         resumo.update({
-            "correta": media(float(r["correta"]) for r in resultados),
-            "fiel": media(float(r["fiel"]) for r in resultados),
-            "abstencao_correta": media(float(r["correta"]) for r in sem_resp),
+            "correta": media(r["correta"] for r in resultados),
+            "fiel": media(r["fiel"] for r in resultados),
+            "abstencao_correta": media(r["correta"] for r in sem_resp),
         })
         por_tipo = {}
         for r in resultados:
-            por_tipo.setdefault(r["tipo"], []).append(float(r["correta"]))
+            por_tipo.setdefault(r["tipo"], []).append(r["correta"])
         resumo["correta_por_tipo"] = {t: media(v) for t, v in sorted(por_tipo.items())}
 
     print("\nRESUMO")
@@ -248,7 +268,8 @@ def main():
         "rotulo": a.rotulo, "quando": datetime.now().isoformat(timespec="seconds"),
         "config": {"chunk_size": s.chunk_size, "chunk_overlap": s.chunk_overlap, "top_k": s.top_k,
                    "embeddings": s.embedding_model, "llm": None if a.so_busca else s.gemini_model,
-                   "juiz": None if a.so_busca else a.modelo_juiz, "chunks_indexados": len(todos)},
+                   "juiz": None if a.so_busca else a.modelo_juiz, "chunks_indexados": len(todos),
+                   "prompt": versao_prompt, "prompt_arquivo": a.prompt, "repeticoes": a.repeticoes},
         "resumo": resumo, "resultados": resultados,
     }, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\nSalvo em {arquivo.relative_to(RAIZ)}")
