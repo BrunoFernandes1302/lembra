@@ -253,7 +253,38 @@ app entra em `ALLOWED_ORIGINS`.
 
 ---
 
-## 9. Agentes (próximas fases)
+## 9. Configurar o RAG pelo app (Ajustes)
+
+Cada pessoa tem a **sua** configuração (tabela `config_rag`, com RLS). Sem configuração salva,
+valem os padrões do servidor. Os limites (ex.: chunk entre 200 e 3.000) ficam **no banco**.
+
+| Ajuste | O que muda | Trade-off |
+|--------|------------|-----------|
+| Tamanho do chunk | Em quantos caracteres a memória é quebrada | Menor = busca precisa, pouco contexto; maior = o contrário |
+| Sobreposição | Quanto se repete entre pedaços vizinhos | Só age quando o texto quebra em partes menores que ela |
+| Top-K | Quantos trechos vão para a IA | Poucos = pode faltar; muitos = ruído e lentidão |
+| Margem de relevância | No modo sem IA, quão longe da melhor nota ainda aparece | Pequena = só o melhor; grande = mais ruído |
+| Usar IA | Gerar resposta ou só mostrar memórias | Sem IA: grátis e nada vai para o Google |
+| Modelo | Flash-Lite (rápido, mais cota) ou Flash (mais elaborado) | Qualidade × cota grátis |
+| Instruções | Preferências de formato ("responda em tópicos") | Entram **depois** das regras e não podem anulá-las |
+
+**Teste real (chunk 800 × 250)** numa memória de viagem com 3 parágrafos: com 800 virou 1 chunk
+misturando Chile, Atacama e Santiago; com 250 virou 3 chunks, e a pergunta "quanto gastei?"
+achou o trecho exato do gasto (0,79) bem à frente dos outros (0,67). Chunks menores, busca mais precisa.
+
+**Reprocessar:** mudar o tamanho do chunk não altera as memórias antigas. O botão "Reprocessar"
+refaz pedaços e vetores a partir do texto original (fonte da verdade), num único lote de
+embeddings para gastar menos chamadas à API.
+
+**Laboratório:** "testar chunking" mostra como um texto seria quebrado, sem salvar; cada
+memória mostra os próprios chunks; cada fonte de resposta mostra a nota de similaridade.
+
+**Editar memória:** se só a categoria ou a data mudam, os vetores são mantidos (economia de cota);
+se o texto muda, chunks e vetores são refeitos numa transação.
+
+---
+
+## 10. Agentes (próximas fases)
 
 Um **agente** é um LLM que, em vez de seguir um roteiro fixo, recebe uma lista de
 **ferramentas** (funções que o seu código executa) e decide sozinho quais chamar.
@@ -272,7 +303,7 @@ O ciclo é: o LLM pede uma ferramenta, o código executa, o resultado volta para
 repete até ele ter a resposta. **Custo:** mais chamadas ao LLM, o que significa mais lento e mais
 caro. Só vale a pena quando a pergunta realmente precisa de decisões ou de cálculos.
 
-## 10. Fine-tuning "só a ponta" (próximas fases)
+## 11. Fine-tuning "só a ponta" (próximas fases)
 
 Um modelo de linguagem é feito de camadas. As primeiras aprendem coisas gerais (gramática,
 significado das palavras) e as últimas, coisas específicas da tarefa.
@@ -282,7 +313,7 @@ significado das palavras) e as últimas, coisas específicas da tarefa.
 - **LoRA:** em vez de mexer nos pesos originais, acopla pequenas matrizes extras e treina só elas. Fica com menos de 1% dos parâmetros e resultado próximo ao do treino completo. O arquivo final é pequeno (MBs) e pode ser ligado ou desligado no modelo base.
 - **QLoRA:** LoRA com o modelo base comprimido em 4 bits, o que cabe numa GPU grátis.
 
-## 11. Glossário rápido
+## 12. Glossário rápido
 
 | Termo | Significado |
 |-------|-------------|

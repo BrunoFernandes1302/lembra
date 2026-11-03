@@ -74,6 +74,10 @@
           <fieldset>
             <legend>Categoria</legend>
             <div class="chips" id="chips-categoria"></div>
+            <div class="linha-nova-cat" id="linha-nova-cat" hidden>
+              <input type="text" id="nova-cat-registrar" maxlength="40" placeholder="Nome da nova categoria">
+              <button type="button" class="botao secundario pequeno" id="criar-cat-registrar">Criar</button>
+            </div>
           </fieldset>
           <label>Quando aconteceu? <span class="opcional">(opcional)</span>
             <input type="text" name="data_evento" placeholder="Ex.: 2020, março de 2018, 12/11/2026">
@@ -91,12 +95,94 @@
         </div>
         <ul id="lista-memorias" class="lista"></ul>
       </section>
+      <!-- AJUSTES -->
+      <section id="tela-ajustes" class="tela" hidden>
+        <div class="segmentos" role="tablist">
+          <button type="button" class="segmento ativo" data-sub="rag">Configurar RAG</button>
+          <button type="button" class="segmento" data-sub="lab">Laboratório</button>
+          <button type="button" class="segmento" data-sub="cats">Categorias</button>
+        </div>
+
+        <!-- Configurar RAG -->
+        <div id="sub-rag" class="sub">
+          <form id="form-config" class="cartao">
+            <div class="campo-faixa">
+              <label for="cfg-chunk_size">Tamanho do chunk <output id="out-chunk_size"></output></label>
+              <input type="range" id="cfg-chunk_size" name="chunk_size" min="200" max="3000" step="50">
+              <p class="ajuda">Em quantos caracteres cada memória é quebrada. Menor = busca mais precisa, mas cada pedaço tem menos contexto. Maior = mais contexto, busca mais "genérica".</p>
+            </div>
+            <div class="campo-faixa">
+              <label for="cfg-chunk_overlap">Sobreposição <output id="out-chunk_overlap"></output></label>
+              <input type="range" id="cfg-chunk_overlap" name="chunk_overlap" min="0" max="1000" step="10">
+              <p class="ajuda">Quanto do fim de um pedaço se repete no começo do próximo, para não perder informação na "fronteira". Só funciona quando o texto quebra em partes menores que esse valor (frases curtas).</p>
+            </div>
+            <div class="campo-faixa">
+              <label for="cfg-top_k">Trechos por pergunta (top-K) <output id="out-top_k"></output></label>
+              <input type="range" id="cfg-top_k" name="top_k" min="1" max="20" step="1">
+              <p class="ajuda">Quantos pedaços a busca entrega para a IA. Poucos = pode faltar informação. Muitos = mais ruído e mais lento.</p>
+            </div>
+            <div class="campo-faixa">
+              <label for="cfg-margem_relevancia">Margem de relevância (sem IA) <output id="out-margem_relevancia"></output></label>
+              <input type="range" id="cfg-margem_relevancia" name="margem_relevancia" min="0" max="0.5" step="0.01">
+              <p class="ajuda">Sem IA, mostra só trechos com nota até essa distância da melhor. 0 = só o melhor; maior = mostra mais.</p>
+            </div>
+            <label class="interruptor">
+              <input type="checkbox" name="usar_ia"> <span>Usar IA para escrever a resposta</span>
+            </label>
+            <p class="ajuda">Desligado: o Lembra só mostra as memórias encontradas (grátis, nada vai para a IA).</p>
+            <label>Modelo de IA
+              <select name="modelo_llm" id="cfg-modelo_llm"></select>
+            </label>
+            <label>Instruções para a IA <span class="opcional">(opcional, até 500 caracteres)</span>
+              <textarea name="instrucoes" rows="3" maxlength="500" placeholder='Ex.: "Responda em tópicos curtos" ou "Seja bem direto"'></textarea>
+            </label>
+            <p class="info-fixa" id="info-embedding"></p>
+            <p class="erro" id="erro-config" role="alert"></p>
+            <button type="submit" class="botao primario">Salvar configurações</button>
+          </form>
+          <div class="cartao">
+            <h3>Reprocessar memórias</h3>
+            <p class="ajuda">Mudou o tamanho do chunk ou a sobreposição? As memórias antigas continuam quebradas do jeito antigo até você reprocessar. O texto original nunca muda; só os pedaços e vetores são refeitos.</p>
+            <button type="button" class="botao secundario" id="reprocessar">Reprocessar todas as memórias</button>
+          </div>
+        </div>
+
+        <!-- Laboratório -->
+        <div id="sub-lab" class="sub" hidden>
+          <div class="cartao">
+            <h3>Testar chunking</h3>
+            <p class="ajuda">Cole um texto e veja como ele seria quebrado com as configurações da aba anterior. Nada é salvo.</p>
+            <textarea id="lab-texto" rows="6" placeholder="Cole aqui um texto longo, com parágrafos…"></textarea>
+            <button type="button" class="botao secundario" id="lab-testar">Ver como fica</button>
+            <p class="resumo-lab" id="lab-resumo"></p>
+            <ol class="lista-chunks" id="lab-chunks"></ol>
+          </div>
+          <div class="cartao">
+            <h3>Dicas para explorar</h3>
+            <ul class="dicas">
+              <li>Em <b>Memórias</b>, toque em <b>Chunks</b> para ver como cada memória foi quebrada.</li>
+              <li>Em <b>Perguntar</b>, abra as fontes para ver a <b>nota de similaridade</b> de cada trecho (1 = idêntico).</li>
+              <li>Teste o mesmo texto com chunk 200 e 1500 e compare.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Categorias -->
+        <div id="sub-cats" class="sub" hidden>
+          <form id="form-nova-cat" class="cartao linha-nova-cat">
+            <input type="text" name="nome" maxlength="40" placeholder="Nova categoria" required>
+            <button type="submit" class="botao primario pequeno">Criar</button>
+          </form>
+          <ul id="lista-categorias" class="lista"></ul>
+        </div>
+      </section>
     </main>
 
     <nav class="abas" aria-label="Navegação">
       <button type="button" class="aba ativa" data-tela="perguntar"><span aria-hidden="true">💬</span>Perguntar</button>
       <button type="button" class="aba" data-tela="registrar"><span aria-hidden="true">✍️</span>Registrar</button>
       <button type="button" class="aba" data-tela="memorias"><span aria-hidden="true">📚</span>Memórias</button>
+      <button type="button" class="aba" data-tela="ajustes"><span aria-hidden="true">⚙️</span>Ajustes</button>
     </nav>
   </div>
 

@@ -120,7 +120,7 @@ class RepositorioSupabase:
         r = requests.post(f"{self.url}/rpc/salvar_memoria", headers=self.headers, json=payload, timeout=TIMEOUT)
         return _checar(r)
 
-    def listar_memorias(self, categoria: str | None = None, limite: int = 50) -> list[dict]:
+    def listar_memorias(self, categoria: str | None = None, limite: int = 200) -> list[dict]:
         params = {
             "select": "id,texto,categoria,data_evento,criado_em",
             "order": "criado_em.desc",
@@ -151,6 +151,25 @@ class RepositorioSupabase:
             payload["p_modelo"] = modelo
         r = requests.post(f"{self.url}/rpc/atualizar_memoria", headers=self.headers, json=payload, timeout=TIMEOUT)
         return bool(_checar(r))
+
+    def listar_chunks(self, memoria_id: str) -> list[dict]:
+        params = {"select": "indice,texto,modelo_embedding", "memoria_id": f"eq.{memoria_id}", "order": "indice"}
+        r = requests.get(f"{self.url}/chunks", headers=self.headers, params=params, timeout=TIMEOUT)
+        return _checar(r)
+
+    # ---------- Configuração do RAG ----------
+
+    def obter_config(self) -> dict | None:
+        r = requests.get(f"{self.url}/config_rag", headers=self.headers, params={"select": "*"}, timeout=TIMEOUT)
+        linhas = _checar(r)
+        return linhas[0] if linhas else None
+
+    def salvar_config(self, cfg: dict) -> dict:
+        # "upsert": cria a linha se não existir, atualiza se existir
+        h = {**self.headers, "Prefer": "resolution=merge-duplicates,return=representation"}
+        r = requests.post(f"{self.url}/config_rag", headers=h, params={"on_conflict": "user_id"},
+                          json={**cfg, "atualizado_em": "now()"}, timeout=TIMEOUT)
+        return _checar(r)[0]
 
     # ---------- Categorias ----------
 

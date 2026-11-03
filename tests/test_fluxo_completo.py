@@ -38,11 +38,12 @@ class EmbedderFalso:
 
 class LLMFalso:
     def gerar(self, system, prompt):
+        LLMFalso.ultimo_system = system
         LLMFalso.ultimo_prompt = prompt
         return "resposta falsa [1]"
 
 
-BANCO = {"memorias": [], "chunks": [], "categorias": []}
+BANCO = {"memorias": [], "chunks": [], "categorias": [], "config": []}
 PADRAO = ["geral", "família", "finanças", "compromissos"]
 
 
@@ -78,6 +79,17 @@ class RepoFalso:
                 if c["memoria_id"] == mid:
                     c["categoria"] = categoria
         return True
+
+    def obter_config(self):
+        return next((c["cfg"] for c in BANCO["config"] if c["dono"] == self.dono), None)
+
+    def salvar_config(self, cfg):
+        BANCO["config"] = [c for c in BANCO["config"] if c["dono"] != self.dono] + [{"dono": self.dono, "cfg": cfg}]
+        return cfg
+
+    def listar_chunks(self, mid):
+        return [{"indice": i, "texto": c["texto"]} for i, c in
+                enumerate(c for c in BANCO["chunks"] if c["memoria_id"] == mid and c["dono"] == self.dono)]
 
     def _minhas_cats(self):
         if not any(c["dono"] == self.dono for c in BANCO["categorias"]):
@@ -233,3 +245,56 @@ def test_categorias_criar_renomear_apagar_move_memorias(cliente):
     r = cliente.delete("/categorias/animais?mover_para=família", headers=ANA).json()
     assert r["memorias_movidas"] == 1
     assert cliente.get("/memorias?categoria=família", headers=ANA).json()[0]["texto"] == "Mel é minha cachorra."
+
+
+CFG = {"chunk_size": 800, "chunk_overlap": 150, "top_k": 5, "margem_relevancia": 0.05,
+       "usar_ia": True, "modelo_llm": "gemini-flash-lite-latest", "instrucoes": ""}
+
+
+def test_config_padrao_e_salvar(cliente):
+    assert cliente.get("/config", headers=ANA).json()["top_k"] == 5
+    r = cliente.put("/config", headers=ANA, json={**CFG, "top_k": 2})
+    assert r.status_code == 200
+    assert cliente.get("/config", headers=ANA).json()["top_k"] == 2
+    assert cliente.get("/config", headers=BETO).json()["top_k"] == 5, "config é por usuário"
+
+
+def test_config_muda_o_comportamento(cliente):
+    for i in range(4):
+        cliente.post("/memorias", headers=ANA, json={"texto": f"Mercado semana {i} gastei pouco."})
+    assert len(cliente.post("/buscar", headers=ANA, json={"pergunta": "mercado"}).json()) == 4
+    cliente.put("/config", headers=ANA, json={**CFG, "top_k": 2, "instrucoes": "Responda em tópicos."})
+    assert len(cliente.post("/buscar", headers=ANA, json={"pergunta": "mercado"}).json()) == 2
+    cliente.post("/perguntar", headers=ANA, json={"pergunta": "mercado"})
+    assert "Responda em tópicos." in LLMFalso.ultimo_system
+    assert LLMFalso.ultimo_system.index("Regras") < LLMFalso.ultimo_system.index("Responda em tópicos.")
+
+
+def test_desligar_ia_mostra_so_memorias(cliente):
+    cliente.post("/memorias", headers=ANA, json={"texto": "Minha cachorra se chama Mel."})
+    cliente.put("/config", headers=ANA, json={**CFG, "usar_ia": False})
+    assert cliente.post("/perguntar", headers=ANA, json={"pergunta": "cachorra Mel"}).json()["gerada_por_ia"] is False
+
+
+def test_config_invalida_e_recusada(cliente):
+    assert cliente.put("/config", headers=ANA, json={**CFG, "chunk_overlap": 500}).status_code == 400
+    assert cliente.put("/config", headers=ANA, json={**CFG, "chunk_size": 50}).status_code == 422
+    assert cliente.put("/config", headers=ANA, json={**CFG, "modelo_llm": "gpt-9"}).status_code == 400
+
+
+def test_previa_chunking_nao_salva_nada(cliente):
+    texto = "Primeiro parágrafo sobre a infância.\n\n" * 20
+    r = cliente.post("/lab/chunking", json={"texto": texto, "chunk_size": 200, "chunk_overlap": 0}).json()
+    assert r["total"] > 1 and max(r["tamanhos"]) <= 200
+    assert BANCO["memorias"] == []
+
+
+def test_reprocessar_refaz_chunks_com_nova_config(cliente):
+    texto = "Frase sobre a minha vida pessoal e meus planos. " * 40  # ~1900 caracteres
+    mid = cliente.post("/memorias", headers=ANA, json={"texto": texto}).json()["id"]
+    antes = len(cliente.get(f"/memorias/{mid}/chunks", headers=ANA).json())
+    cliente.put("/config", headers=ANA, json={**CFG, "chunk_size": 300, "chunk_overlap": 50})
+    r = cliente.post("/memorias/reprocessar", headers=ANA).json()
+    depois = len(cliente.get(f"/memorias/{mid}/chunks", headers=ANA).json())
+    assert r["memorias"] == 1 and depois > antes
+    assert cliente.get(f"/memorias/{mid}/chunks", headers=BETO).json() == []

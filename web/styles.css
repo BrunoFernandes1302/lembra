@@ -141,3 +141,50 @@ main { flex: 1; overflow: hidden; display: flex; }
   background: var(--texto); color: var(--fundo); padding: 10px 16px; border-radius: 10px;
   font-size: .9rem; max-width: calc(100% - 32px); z-index: 10;
 }
+
+/* ---------- Ajustes / Laboratório ---------- */
+h3 { margin: 0 0 6px; font-size: 1.05rem; }
+.cartao {
+  background: var(--cartao); border: 1px solid var(--borda); border-radius: var(--raio);
+  padding: 16px; margin-bottom: 14px; box-shadow: var(--sombra);
+}
+.segmentos { display: flex; background: var(--borda); border-radius: 12px; padding: 4px; margin-bottom: 14px; }
+.segmento {
+  flex: 1; border: 0; background: none; padding: 9px 4px; border-radius: 9px; font: inherit;
+  font-size: .85rem; font-weight: 600; color: var(--suave); cursor: pointer;
+}
+.segmento.ativo { background: var(--cartao); color: var(--texto); box-shadow: var(--sombra); }
+.campo-faixa { margin-bottom: 16px; }
+.campo-faixa label { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.campo-faixa output { color: var(--primaria); font-weight: 700; white-space: nowrap; }
+input[type=range] { padding: 0; border: 0; background: none; accent-color: var(--primaria); margin-top: 4px; }
+input[type=range]:focus { outline: none; }
+.ajuda { color: var(--suave); font-size: .82rem; line-height: 1.4; margin: 4px 0 0; }
+.interruptor { display: flex; align-items: center; gap: 10px; margin: 6px 0 0; }
+.interruptor input { width: 22px; height: 22px; margin: 0; accent-color: var(--primaria); flex: none; }
+.interruptor + .ajuda { margin-bottom: 14px; }
+.info-fixa { font-size: .8rem; color: var(--suave); background: var(--primaria-clara); border-radius: 10px; padding: 10px 12px; }
+.botao.secundario { background: var(--primaria-clara); color: var(--primaria); margin-top: 10px; }
+.botao.pequeno { width: auto; padding: 10px 16px; margin-top: 0; }
+.chip-nova { border-style: dashed; color: var(--primaria); }
+.linha-nova-cat { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+.linha-nova-cat input { margin: 0; }
+form.linha-nova-cat { margin-top: 0; }
+.acoes { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.acoes .botao-texto { font-size: .85rem; padding: 4px 6px; }
+.suave { color: var(--suave); }
+.item-cat { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.item.editando { display: flex; flex-direction: column; gap: 8px; }
+.item.editando textarea, .item.editando select, .item.editando input { margin: 0; }
+.lista-chunks { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-direction: column; gap: 8px; counter-reset: none; }
+.chunk {
+  border-left: 3px solid var(--primaria); background: var(--primaria-clara); border-radius: 0 8px 8px 0;
+  padding: 8px 10px; font-size: .88rem; white-space: pre-wrap; word-wrap: break-word;
+}
+.chunk:nth-child(even) { border-left-color: #f59e0b; }
+.resumo-lab { font-weight: 600; margin: 12px 0 0; }
+.nota { background: var(--cartao); border-radius: 999px; padding: 1px 8px; margin-left: 4px; font-weight: 600; color: var(--primaria); }
+.dicas { margin: 6px 0 0; padding-left: 18px; color: var(--suave); font-size: .88rem; line-height: 1.5; }
+#lab-texto { margin-top: 8px; }
+.item-cat .acoes { flex-wrap: nowrap; flex: none; }
+.item-cat .item-info { min-width: 0; }

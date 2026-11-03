@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from .chunking import chunk_text
-from .config import Settings, embedder_de, get_settings
+from .config import Settings, com_config_do_usuario, embedder_de, get_settings
 from .llm import get_llm
 from .supabase import Trecho
 
@@ -31,6 +31,21 @@ Regras:
 - Cite as memórias usadas no formato [1], [2]...
 - Se as memórias não tiverem a resposta, diga claramente que não encontrou isso nas memórias.
 - Fale com o usuário na segunda pessoa ("você"), em português do Brasil, de forma natural."""
+
+
+def settings_do_usuario(repo, settings: Settings | None = None) -> Settings:
+    """Padrões do servidor + a configuração que o usuário salvou no app."""
+    s = settings or get_settings()
+    obter = getattr(repo, "obter_config", None)
+    return com_config_do_usuario(s, obter() if obter else None)
+
+
+def prompt_do_sistema(s: Settings) -> str:
+    if not s.instrucoes.strip():
+        return SYSTEM_PROMPT
+    # As preferências do usuário entram DEPOIS das regras e não podem anulá-las.
+    return (SYSTEM_PROMPT + "\n\nPreferências do usuário sobre o formato da resposta (siga, desde que não "
+            "contrariem as regras acima):\n" + s.instrucoes.strip())
 
 
 class Repositorio(Protocol):
@@ -50,7 +65,7 @@ def alimentar(
     settings: Settings | None = None,
 ) -> tuple[str, int]:
     """Quebra, gera embeddings e salva. Retorna (id da memória, número de chunks)."""
-    s = settings or get_settings()
+    s = settings_do_usuario(repo, settings)
     chunks = chunk_text(texto, s.chunk_size, s.chunk_overlap)
     if not chunks:
         raise ValueError("A memória está vazia")
@@ -64,7 +79,7 @@ def editar(
 ) -> dict | None:
     """Edita uma memória. Só recalcula chunks e vetores se o TEXTO mudou (economiza tempo e cota);
     mudar só categoria ou data atualiza apenas os rótulos."""
-    s = settings or get_settings()
+    s = settings_do_usuario(repo, settings)
     atual = repo.obter_memoria(memoria_id)
     if atual is None:
         return None
@@ -83,7 +98,7 @@ def buscar(
     repo: Repositorio, pergunta: str, categoria: str | None = None, settings: Settings | None = None
 ) -> list[Trecho]:
     """Retrieval: embedding da pergunta -> vizinhos mais próximos no banco."""
-    s = settings or get_settings()
+    s = settings_do_usuario(repo, settings) if settings is None else settings
     vetor = embedder_de(s).embed_query(pergunta)
     return repo.buscar(vetor, s.top_k, categoria, s.embedding_model)
 
@@ -107,6 +122,7 @@ MARGEM_RELEVANCIA = 0.05
 
 
 def filtrar_proximos_do_melhor(trechos: list[Trecho], margem: float = MARGEM_RELEVANCIA) -> list[Trecho]:
+    """Guarda só os trechos com nota até `margem` abaixo da melhor."""
     if not trechos:
         return trechos
     melhor = max(t.similaridade for t in trechos)
@@ -116,15 +132,16 @@ def filtrar_proximos_do_melhor(trechos: list[Trecho], margem: float = MARGEM_REL
 def perguntar(
     repo: Repositorio, pergunta: str, categoria: str | None = None, settings: Settings | None = None
 ) -> Resposta:
-    s = settings or get_settings()
+    s = settings_do_usuario(repo, settings)
     trechos = buscar(repo, pergunta, categoria, s)
     if not trechos:
         return Resposta("Ainda não encontrei memórias suas sobre isso. Registre algumas primeiro.", [])
-    llm = get_llm(s)
-    if llm is None:  # modo "nenhum": só a busca, então o próprio usuário lê os trechos
-        return Resposta("Encontrei estas memórias relacionadas:", filtrar_proximos_do_melhor(trechos))
+    llm = get_llm(s) if s.usar_ia else None
+    if llm is None:  # sem IA: só a busca, então o próprio usuário lê os trechos
+        return Resposta("Encontrei estas memórias relacionadas:",
+                        filtrar_proximos_do_melhor(trechos, s.margem_relevancia))
     try:
-        texto = llm.gerar(SYSTEM_PROMPT, montar_prompt(pergunta, trechos))
+        texto = llm.gerar(prompt_do_sistema(s), montar_prompt(pergunta, trechos))
     except Exception as e:  # limite diário, rede, chave inválida...: não derruba o app
         logger.warning("LLM falhou (%s): %s", type(e).__name__, e)
         return Resposta(
@@ -133,3 +150,28 @@ def perguntar(
             trechos,
         )
     return Resposta(texto, trechos, gerada_por_ia=True)
+
+
+def previa_chunking(texto: str, chunk_size: int, chunk_overlap: int) -> list[str]:
+    """Laboratório: mostra como um texto SERIA quebrado, sem salvar nada."""
+    return chunk_text(texto, chunk_size, chunk_overlap)
+
+
+def reprocessar(repo, settings: Settings | None = None) -> dict:
+    """Refaz chunks e vetores de TODAS as memórias do usuário com a configuração atual.
+    Necessário depois de mudar tamanho/sobreposição do chunk (o índice é descartável;
+    a fonte da verdade, o texto original, não muda)."""
+    s = settings_do_usuario(repo, settings)
+    memorias = repo.listar_memorias(limite=1000)
+    pedacos = {m["id"]: chunk_text(m["texto"], s.chunk_size, s.chunk_overlap) for m in memorias}
+    todos = [c for cs in pedacos.values() for c in cs]
+    if not todos:
+        return {"memorias": 0, "chunks": 0}
+    vetores = embedder_de(s).embed_documents(todos)  # um lote só: menos chamadas à API
+    i = 0
+    for m in memorias:
+        n = len(pedacos[m["id"]])
+        repo.atualizar_memoria(m["id"], m["texto"], m["categoria"], m.get("data_evento") or "",
+                               pedacos[m["id"]], vetores[i : i + n], s.embedding_model)
+        i += n
+    return {"memorias": len(memorias), "chunks": len(todos)}

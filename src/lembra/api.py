@@ -92,6 +92,29 @@ class RenomearCategoria(BaseModel):
     novo_nome: str = Field(min_length=1, max_length=40)
 
 
+class ConfigRag(BaseModel):
+    # Mesmos limites do banco (validação dupla: aqui dá mensagem amigável; o banco é a garantia).
+    chunk_size: int = Field(ge=200, le=3000)
+    chunk_overlap: int = Field(ge=0)
+    top_k: int = Field(ge=1, le=20)
+    margem_relevancia: float = Field(ge=0, le=0.5)
+    usar_ia: bool
+    modelo_llm: str
+    instrucoes: str = Field(default="", max_length=500)
+
+
+class PreviaChunking(BaseModel):
+    texto: str = Field(min_length=1, max_length=20_000)
+    chunk_size: int = Field(ge=200, le=3000)
+    chunk_overlap: int = Field(ge=0)
+
+
+MODELOS_LLM = {
+    "gemini-flash-lite-latest": "Gemini Flash-Lite: mais rápido, maior cota grátis",
+    "gemini-flash-latest": "Gemini Flash: respostas mais elaboradas, cota grátis menor",
+}
+
+
 class Pergunta(BaseModel):
     pergunta: str = Field(min_length=1, max_length=2_000)
     categoria: str | None = None
@@ -189,6 +212,62 @@ def editar_memoria(memoria_id: str, dados: EdicaoMemoria, repo: RepositorioSupab
     if r is None:
         raise HTTPException(status_code=404, detail="Memória não encontrada")
     return r
+
+
+@app.get("/memorias/{memoria_id}/chunks", tags=["laboratório"])
+def chunks_da_memoria(memoria_id: str, repo: RepositorioSupabase = Depends(repositorio)):
+    """Laboratório: como esta memória foi quebrada em chunks."""
+    try:
+        return repo.listar_chunks(memoria_id)
+    except ErroSupabase as e:
+        _erro(e)
+
+
+@app.get("/config", tags=["laboratório"])
+def ler_config(repo: RepositorioSupabase = Depends(repositorio)):
+    """Configuração efetiva do usuário (padrões do servidor + o que ele ajustou)."""
+    try:
+        s = rag.settings_do_usuario(repo)
+    except ErroSupabase as e:
+        _erro(e)
+    return {
+        "chunk_size": s.chunk_size, "chunk_overlap": s.chunk_overlap, "top_k": s.top_k,
+        "margem_relevancia": s.margem_relevancia, "usar_ia": s.usar_ia,
+        "modelo_llm": s.gemini_model, "instrucoes": s.instrucoes,
+        "modelos_llm": MODELOS_LLM,
+        "somente_leitura": {"modelo_embedding": s.embedding_model, "dimensao_embedding": s.embedding_dim,
+                            "provedor_llm": s.llm_provider},
+    }
+
+
+@app.put("/config", tags=["laboratório"])
+def salvar_config(dados: ConfigRag, repo: RepositorioSupabase = Depends(repositorio)):
+    if dados.chunk_overlap * 2 >= dados.chunk_size:
+        raise HTTPException(status_code=400, detail="A sobreposição precisa ser menor que metade do chunk.")
+    if dados.modelo_llm not in MODELOS_LLM:
+        raise HTTPException(status_code=400, detail="Modelo de IA desconhecido.")
+    try:
+        return repo.salvar_config(dados.model_dump())
+    except ErroSupabase as e:
+        _erro(e)
+
+
+@app.post("/lab/chunking", tags=["laboratório"])
+def previa_chunking(dados: PreviaChunking):
+    """Mostra como um texto SERIA quebrado, sem salvar nada (não precisa de login)."""
+    if dados.chunk_overlap * 2 >= dados.chunk_size:
+        raise HTTPException(status_code=400, detail="A sobreposição precisa ser menor que metade do chunk.")
+    chunks = rag.previa_chunking(dados.texto, dados.chunk_size, dados.chunk_overlap)
+    return {"chunks": chunks, "total": len(chunks), "tamanhos": [len(c) for c in chunks]}
+
+
+@app.post("/memorias/reprocessar", tags=["laboratório"])
+def reprocessar(repo: RepositorioSupabase = Depends(repositorio)):
+    """Refaz chunks e vetores de todas as memórias com a configuração atual."""
+    try:
+        return rag.reprocessar(repo)
+    except ErroSupabase as e:
+        _erro(e)
 
 
 @app.get("/categorias", tags=["categorias"])

@@ -1,7 +1,7 @@
 // Service worker do Lembra.
 // Guarda só a "casca" do app (telas, estilos, ícones) para abrir rápido.
 // NUNCA guarda dados da API (memórias, respostas): privacidade.
-const VERSAO = "lembra-v1";
+const VERSAO = "lembra-v2";
 const CASCA = ["./", "index.html", "styles.css", "app.js", "config.js", "manifest.webmanifest",
                "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png"];
 
