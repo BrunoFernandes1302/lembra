@@ -58,12 +58,12 @@ class SupabaseAuth:
         self.url = url.rstrip("/")
         self.headers = {"apikey": chave_publica, "Content-Type": "application/json"}
 
-    def cadastrar(self, email: str, senha: str, convite: str | None = None) -> dict:
-        # Cadastro livre. Se a trava de convites for religada no banco, o código vai nos metadados.
+    def cadastrar(self, email: str, senha: str) -> dict:
+        # Cadastro livre: qualquer pessoa cria a própria conta (sem convite).
         r = _http.post(
             f"{self.url}/auth/v1/signup",
             headers=self.headers,
-            json={"email": email, "password": senha, "data": {"convite": convite} if convite else {}},
+            json={"email": email, "password": senha},
             timeout=TIMEOUT,
         )
         return _sessao(_checar(r))

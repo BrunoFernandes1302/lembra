@@ -64,7 +64,6 @@ if _origens:
 class Cadastro(BaseModel):
     email: EmailStr
     senha: str = Field(min_length=8)
-    convite: str | None = None  # opcional: só usado se a trava de convites for religada
 
 
 class Login(BaseModel):
@@ -185,7 +184,7 @@ def repositorio(cred: HTTPAuthorizationCredentials = Depends(_bearer)) -> Reposi
 
 def _erro(e: ErroSupabase):
     # 401 = crachá vencido ou inválido (o app deve renovar a sessão).
-    # 5xx do Supabase no cadastro = o trigger recusou o convite: para o app, é erro do pedido (400).
+    # 5xx do Supabase: o app mostra a mensagem como erro do pedido (400).
     raise HTTPException(status_code=400 if e.status >= 500 else e.status, detail=e.mensagem)
 
 
@@ -199,7 +198,7 @@ def saude():
 @app.post("/auth/cadastro", tags=["auth"])
 def cadastro(dados: Cadastro, auth: SupabaseAuth = Depends(_auth)):
     try:
-        return auth.cadastrar(dados.email, dados.senha, dados.convite)
+        return auth.cadastrar(dados.email, dados.senha)
     except ErroSupabase as e:
         _erro(e)
 
