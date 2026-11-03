@@ -18,10 +18,10 @@ RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ / "src"))
 sys.path.insert(0, str(RAIZ / "avaliacao"))
 
-from pydantic import BaseModel  # noqa: E402
+from avaliar import com_novas_tentativas
+from pydantic import BaseModel
 
-from avaliar import com_novas_tentativas  # noqa: E402
-from lembra.config import get_settings  # noqa: E402
+from lembra.config import get_settings
 
 PASTA = Path(__file__).resolve().parent / "dados"
 
@@ -58,7 +58,7 @@ def main():
         lote = memorias[i : i + 10]
         texto = "\n".join(f'- id="{m["id"]}" (data: {m["data_evento"] or "—"}): {m["texto"]}' for m in lote)
 
-        def pedir():
+        def pedir(texto=texto):
             r = cliente.models.generate_content(
                 model=s.gemini_model, contents=f"MEMÓRIAS:\n{texto}",
                 config=types.GenerateContentConfig(system_instruction=INSTRUCOES, temperature=0.9,

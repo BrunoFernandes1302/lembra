@@ -38,7 +38,7 @@ async def _ciclo_de_vida(_app):
             if s.embedding_provider == "local":  # só o modelo local precisa ser carregado
                 embedder_de(s).embed_query("aquecimento")
                 logger.info("Modelo de embeddings carregado")
-        except Exception as e:  # sem o modelo o app ainda abre; o erro aparece no primeiro uso
+        except Exception as e:  # noqa: BLE001 — sem o modelo o app ainda abre; o erro aparece no 1º uso
             logger.warning("Não consegui pré-carregar o modelo: %s", e)
     yield
 

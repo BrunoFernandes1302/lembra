@@ -10,6 +10,7 @@ import math
 import uuid
 
 import pytest
+from fastapi import Depends
 from fastapi.testclient import TestClient
 
 from lembra import api, rag
@@ -159,7 +160,10 @@ def cliente(monkeypatch):
         v.clear()
     monkeypatch.setattr(rag, "embedder_de", lambda _: EmbedderFalso())
     monkeypatch.setattr(rag, "get_llm", lambda _: LLMFalso())
-    api.app.dependency_overrides[api.repositorio] = lambda cred=api.Depends(api._bearer): RepoFalso(cred.credentials)
+    def repo_falso(cred=Depends(api._bearer)):
+        return RepoFalso(cred.credentials)
+
+    api.app.dependency_overrides[api.repositorio] = repo_falso
     yield TestClient(api.app)
     api.app.dependency_overrides.clear()
 

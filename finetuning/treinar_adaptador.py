@@ -30,8 +30,9 @@ RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ / "src"))
 sys.path.insert(0, str(RAIZ / "avaliacao"))
 
-from avaliar import com_novas_tentativas  # noqa: E402
-from lembra.config import embedder_de, get_settings  # noqa: E402
+from avaliar import com_novas_tentativas
+
+from lembra.config import embedder_de, get_settings
 
 PASTA = Path(__file__).resolve().parent / "dados"
 SEMENTE = 42

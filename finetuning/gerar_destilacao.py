@@ -23,12 +23,12 @@ RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ / "src"))
 sys.path.insert(0, str(RAIZ / "avaliacao"))
 
-from pydantic import BaseModel  # noqa: E402
+from avaliar import com_novas_tentativas
+from pydantic import BaseModel
 
-from avaliar import com_novas_tentativas  # noqa: E402
-from lembra import rag  # noqa: E402
-from lembra.config import get_settings  # noqa: E402
-from lembra.supabase import Trecho  # noqa: E402
+from lembra import rag
+from lembra.config import get_settings
+from lembra.supabase import Trecho
 
 PASTA = Path(__file__).resolve().parent / "dados"
 N_EXEMPLOS = 120
@@ -78,7 +78,7 @@ def main():
         lote = exemplos[i : i + 8]
         conteudo = "\n\n".join(f"=== CASO {j + 1} ===\n{e['prompt']}" for j, e in enumerate(lote))
 
-        def pedir():
+        def pedir(conteudo=conteudo, lote=lote):
             r = cliente.models.generate_content(
                 model=s.gemini_model, contents=conteudo,
                 config=types.GenerateContentConfig(system_instruction=instr, temperature=0.2,

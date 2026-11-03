@@ -39,13 +39,13 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ / "src"))
 
-from pydantic import BaseModel  # noqa: E402
+from pydantic import BaseModel
 
-from lembra import rag  # noqa: E402
-from lembra.chunking import chunk_text  # noqa: E402
-from lembra.config import embedder_de, get_settings  # noqa: E402
-from lembra.llm import get_llm  # noqa: E402
-from lembra.supabase import Trecho  # noqa: E402
+from lembra import rag
+from lembra.chunking import chunk_text
+from lembra.config import embedder_de, get_settings
+from lembra.llm import get_llm
+from lembra.supabase import Trecho
 
 PASTA = Path(__file__).resolve().parent
 NAO_SABE = "NAO_SABE"
@@ -79,7 +79,7 @@ def com_novas_tentativas(func, *args, tentativas=6, **kwargs):
     for i in range(tentativas):
         try:
             return func(*args, **kwargs)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             msg = str(e)
             temporario = any(x in msg for x in ("429", "RESOURCE_EXHAUSTED", "503", "UNAVAILABLE", "500"))
             if not temporario or i == tentativas - 1 or "prepayment" in msg:
@@ -225,7 +225,7 @@ def main():
             item.update(tentativas=tentativas,
                         correta=media(float(t["correta"]) for t in tentativas),
                         fiel=media(float(t["fiel"]) for t in tentativas))
-            simb = lambda x: "✓" if x == 1 else ("✗" if x == 0 else f"{x:.0%}")  # noqa: E731
+            simb = lambda x: "✓" if x == 1 else ("✗" if x == 0 else f"{x:.0%}")
             linha += f" | correta={simb(item['correta'])} fiel={simb(item['fiel'])}"
         print(linha, flush=True)
         if not a.so_busca:

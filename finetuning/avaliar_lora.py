@@ -20,10 +20,11 @@ RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ / "src"))
 sys.path.insert(0, str(RAIZ / "avaliacao"))
 
-from avaliar import com_novas_tentativas, julgar  # noqa: E402
-from lembra import rag  # noqa: E402
-from lembra.config import get_settings  # noqa: E402
-from lembra.supabase import Trecho  # noqa: E402
+from avaliar import com_novas_tentativas, julgar
+
+from lembra import rag
+from lembra.config import get_settings
+from lembra.supabase import Trecho
 
 PASTA = Path(__file__).resolve().parent
 MODELO = "Qwen/Qwen2.5-0.5B-Instruct"

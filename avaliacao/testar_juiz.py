@@ -13,9 +13,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from avaliar import com_novas_tentativas, julgar  # noqa: E402
-from lembra.config import get_settings  # noqa: E402
-from lembra.supabase import Trecho  # noqa: E402
+from avaliar import com_novas_tentativas, julgar
+
+from lembra.config import get_settings
+from lembra.supabase import Trecho
 
 ALUGUEL = Trecho("Pago 1.800 reais de aluguel todo dia 5. O condomínio é 450 reais e vence no dia 10.", {}, 0.7)
 MEL = Trecho("Tenho uma cachorra chamada Mel, vira-lata caramelo que adotei num abrigo em 2020.", {}, 0.7)

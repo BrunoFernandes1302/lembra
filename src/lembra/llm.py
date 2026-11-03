@@ -69,8 +69,8 @@ class GeminiLLM:
         response = self.client.models.generate_content(
             model=self.model,
             contents=[types.Part.from_bytes(data=audio, mime_type=mime),
-                      "Transcreva fielmente este áudio em português do Brasil, com pontuação. "
-                      "Responda só com a transcrição. Se não houver fala, responda vazio."],
+                      ("Transcreva fielmente este áudio em português do Brasil, com pontuação. "
+                       "Responda só com a transcrição. Se não houver fala, responda vazio.")],
             config=types.GenerateContentConfig(temperature=0),
         )
         return (response.text or "").strip()

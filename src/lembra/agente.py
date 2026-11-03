@@ -169,7 +169,7 @@ class Ferramentas:
             return {"erro": f"ferramenta desconhecida: {nome}"}
         try:
             return getattr(self, nome)(**(args or {}))
-        except Exception as e:  # erro vira informação para o LLM, não derruba o app
+        except Exception as e:  # noqa: BLE001 — erro de ferramenta vira informação para o LLM
             return {"erro": str(e)}
 
 

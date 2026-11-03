@@ -14,9 +14,9 @@ from __future__ import annotations
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
+from typing import Protocol
 
 from pydantic import BaseModel
-from typing import Protocol
 
 from .chunking import chunk_text
 from .config import Settings, com_config_do_usuario, embedder_de, get_settings
@@ -178,7 +178,7 @@ def perguntar(
                         filtrar_proximos_do_melhor(trechos, s.margem_relevancia))
     try:
         texto = llm.gerar(prompt_do_sistema(s), montar_prompt(pergunta, trechos))
-    except Exception as e:  # limite diário, rede, chave inválida...: não derruba o app
+    except Exception as e:  # noqa: BLE001 — limite diário, rede, chave inválida: não derruba o app
         logger.warning("LLM falhou (%s): %s", type(e).__name__, e)
         return Resposta(
             "Não consegui gerar uma resposta agora (o serviço de IA está indisponível ou atingiu o "

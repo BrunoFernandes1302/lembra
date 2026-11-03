@@ -24,7 +24,7 @@ import torch
 RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ / "src"))
 
-from lembra.rag import SYSTEM_PROMPT  # noqa: E402
+from lembra.rag import SYSTEM_PROMPT
 
 MODELO = "Qwen/Qwen2.5-0.5B-Instruct"
 PASTA = Path(__file__).resolve().parent
@@ -63,7 +63,8 @@ def main():
     print(f"Parâmetros: {total / 1e6:.0f} M no modelo | treináveis (LoRA): {treinaveis / 1e6:.2f} M "
           f"({treinaveis / total:.2%})", flush=True)
 
-    dados = [json.loads(l) for l in open(PASTA / "dados" / "destilacao.jsonl", encoding="utf-8")]
+    with open(PASTA / "dados" / "destilacao.jsonl", encoding="utf-8") as f:
+        dados = [json.loads(linha) for linha in f]
     exemplos = [preparar(tok, e) for e in dados]
     opt = torch.optim.AdamW([p for p in modelo.parameters() if p.requires_grad], lr=LR)
     modelo.train()
