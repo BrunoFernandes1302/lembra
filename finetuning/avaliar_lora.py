@@ -7,7 +7,6 @@ Uso:  python finetuning/avaliar_lora.py   -> finetuning/dados/resultado_lora.jso
 
 from __future__ import annotations
 
-import hashlib
 import json
 import sys
 import time
@@ -31,8 +30,11 @@ MODELO = "Qwen/Qwen2.5-0.5B-Instruct"
 
 
 def vetores(textos, tipo):
-    cache = json.loads((PASTA / "dados" / "cache_embeddings.json").read_text())
-    return np.array([cache[hashlib.sha1(f"{tipo}|{t}".encode()).hexdigest()] for t in textos], dtype=np.float32)
+    # Mesmo cache do treinar_adaptador.py, que também GERA os vetores que faltam (o cache não vai
+    # para o git: some ao clonar o repositório ou reiniciar a máquina).
+    from treinar_adaptador import embeddings
+
+    return embeddings(textos, tipo)
 
 
 def responder(modelo, tok, prompt):
