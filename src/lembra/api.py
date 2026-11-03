@@ -9,17 +9,21 @@ A API repassa esse crachá ao Supabase; quem decide o que a pessoa pode ver é o
 
 from __future__ import annotations
 
+import hmac
+import json
 import logging
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, EmailStr, Field
 
-from . import rag
+from . import rag, whatsapp_bot
 from .config import get_settings
 from .supabase import ErroSupabase, RepositorioSupabase, SupabaseAuth
 
@@ -442,6 +446,63 @@ def buscar(dados: Pergunta, repo: RepositorioSupabase = Depends(repositorio)):
               similaridade=round(t.similaridade, 3))
         for t in trechos
     ]
+
+
+# ---------- WhatsApp (bot oficial) ----------
+
+@app.get("/whatsapp/webhook", tags=["whatsapp"], response_class=PlainTextResponse)
+def whatsapp_verificar(
+    modo: str = Query("", alias="hub.mode"), token: str = Query("", alias="hub.verify_token"),
+    desafio: str = Query("", alias="hub.challenge"),
+):
+    """Cadastro do webhook: a Meta manda um token combinado; devolvemos o "desafio" se bater."""
+    cfg = whatsapp_bot.ConfigWhatsApp.do_ambiente()
+    if modo == "subscribe" and cfg.verify_token and hmac.compare_digest(token, cfg.verify_token):
+        return desafio
+    raise HTTPException(status_code=403, detail="Token de verificação inválido")
+
+
+@app.post("/whatsapp/webhook", tags=["whatsapp"])
+async def whatsapp_receber(request: Request):
+    """Mensagens recebidas. Sem crachá de usuário: quem prova a origem é a ASSINATURA da Meta."""
+    cfg = whatsapp_bot.ConfigWhatsApp.do_ambiente()
+    if not cfg.completa:
+        raise HTTPException(status_code=503, detail="WhatsApp não configurado no servidor")
+    corpo = await request.body()  # bytes EXATOS: a assinatura é sobre eles, não sobre o JSON
+    if not whatsapp_bot.assinatura_valida(corpo, request.headers.get("X-Hub-Signature-256"), cfg.app_secret):
+        raise HTTPException(status_code=401, detail="Assinatura inválida")
+    s = get_settings()
+    banco = whatsapp_bot.BancoDoBot(s.supabase_url, s.supabase_key, cfg.jwt_secret)
+    meta = whatsapp_bot.MetaWhatsApp(cfg.token, cfg.phone_id)
+    # roda numa thread: o processamento faz chamadas de rede bloqueantes (Supabase, Gemini, Meta)
+    tratadas = await run_in_threadpool(whatsapp_bot.processar_webhook, json.loads(corpo), banco, meta)
+    return {"tratadas": tratadas}
+
+
+@app.get("/whatsapp/vinculo", tags=["whatsapp"])
+def whatsapp_vinculo(repo: RepositorioSupabase = Depends(repositorio)):
+    """Número ligado à conta (ou null) e o número do Lembra, para o app mostrar."""
+    try:
+        return {"vinculo": repo.vinculo_whatsapp(), "numero_lembra": os.getenv("WHATSAPP_NUMERO", "")}
+    except ErroSupabase as e:
+        _erro(e)
+
+
+@app.post("/whatsapp/codigo", tags=["whatsapp"])
+def whatsapp_codigo(repo: RepositorioSupabase = Depends(repositorio)):
+    """Código de uso único (10 min) para enviar ao bot: VINCULAR <código>."""
+    try:
+        return {"codigo": repo.gerar_codigo_whatsapp(), "validade_minutos": 10}
+    except ErroSupabase as e:
+        _erro(e)
+
+
+@app.delete("/whatsapp/vinculo", tags=["whatsapp"], status_code=204)
+def whatsapp_desvincular(repo: RepositorioSupabase = Depends(repositorio)):
+    try:
+        repo.desvincular_whatsapp()
+    except ErroSupabase as e:
+        _erro(e)
 
 
 # O app (PWA) é servido pela própria API, no endereço raiz. Fica por último para não

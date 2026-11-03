@@ -219,6 +219,22 @@ class RepositorioSupabase:
                           json={"p_nome": nome, "p_mover_para": mover_para}, timeout=TIMEOUT)
         return _checar(r) or 0
 
+    def gerar_codigo_whatsapp(self) -> str:
+        r = _http.post(f"{self.url}/rpc/whatsapp_gerar_codigo", headers=self.headers, json={}, timeout=TIMEOUT)
+        return _checar(r)
+
+    def vinculo_whatsapp(self) -> dict | None:
+        r = _http.get(f"{self.url}/whatsapp_vinculos", headers=self.headers,
+                      params={"select": "telefone,criado_em"}, timeout=TIMEOUT)
+        linhas = _checar(r) or []
+        return linhas[0] if linhas else None
+
+    def desvincular_whatsapp(self) -> None:
+        # Sem filtro explícito: o RLS ("dono apaga seu vinculo") já limita ao próprio usuário.
+        r = _http.delete(f"{self.url}/whatsapp_vinculos", headers=self.headers,
+                         params={"telefone": "not.is.null"}, timeout=TIMEOUT)
+        _checar(r)
+
     def apagar_memoria(self, memoria_id: str) -> bool:
         h = {**self.headers, "Prefer": "return=representation"}
         r = _http.delete(f"{self.url}/memorias", headers=h, params={"id": f"eq.{memoria_id}"}, timeout=TIMEOUT)
