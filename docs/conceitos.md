@@ -137,7 +137,36 @@ rápido e gasta menos; `high` raciocina mais.
 
 ---
 
-## 7. Glossário rápido
+## 7. Agentes (próximas fases)
+
+Um **agente** é um LLM que, em vez de seguir um roteiro fixo, recebe uma lista de
+**ferramentas** (funções que o seu código executa) e decide sozinho quais chamar.
+
+```
+Pergunta: "Quanto gastei com mercado em outubro?"
+
+Fluxo fixo (hoje):  buscar 5 trechos parecidos → responder
+                    (pode errar a conta: os gastos estão espalhados em vários trechos)
+
+Agente:             LLM pensa → chama somar_gastos(categoria="mercado", mes="2026-10")
+                    → recebe 842,30 → responde "R$ 842,30, em 12 compras"
+```
+
+O ciclo é: o LLM pede uma ferramenta, o código executa, o resultado volta para o LLM, e isso se
+repete até ele ter a resposta. **Custo:** mais chamadas ao LLM, o que significa mais lento e mais
+caro. Só vale a pena quando a pergunta realmente precisa de decisões ou de cálculos.
+
+## 8. Fine-tuning "só a ponta" (próximas fases)
+
+Um modelo de linguagem é feito de camadas. As primeiras aprendem coisas gerais (gramática,
+significado das palavras) e as últimas, coisas específicas da tarefa.
+
+- **Treinar tudo:** caro, exige muita GPU e pode fazer o modelo "esquecer" o que sabia.
+- **Congelar o corpo e treinar a ponta:** mantém o conhecimento geral e ajusta só o final. É rápido e barato.
+- **LoRA:** em vez de mexer nos pesos originais, acopla pequenas matrizes extras e treina só elas. Fica com menos de 1% dos parâmetros e resultado próximo ao do treino completo. O arquivo final é pequeno (MBs) e pode ser ligado ou desligado no modelo base.
+- **QLoRA:** LoRA com o modelo base comprimido em 4 bits, o que cabe numa GPU grátis.
+
+## 9. Glossário rápido
 
 | Termo | Significado |
 |-------|-------------|
@@ -154,3 +183,7 @@ rápido e gasta menos; `high` raciocina mais.
 | **Busca híbrida** | Combina busca por palavra-chave (BM25) com busca vetorial |
 | **Quantização** | Comprimir um modelo (ex.: 16 bits → 4 bits) para rodar em hardware mais modesto |
 | **Fine-tuning / LoRA** | Re-treinar um modelo; LoRA ajusta só uma pequena parte dele, de forma barata |
+| **Agente** | LLM que escolhe e chama ferramentas em ciclo até resolver a tarefa |
+| **Tool / ferramenta** | Função do seu código que o LLM pode pedir para executar |
+| **Congelar camadas** | Impedir que parte do modelo mude durante o treino |
+| **PEFT** | *Parameter-Efficient Fine-Tuning*: família de técnicas (LoRA etc.) que treinam poucos parâmetros |
