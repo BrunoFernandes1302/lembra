@@ -148,9 +148,16 @@ class Audio(BaseModel):
     mime: str = Field(max_length=60)
 
 
+class Turno(BaseModel):
+    pergunta: str = Field(max_length=2_000)
+    resposta: str = Field(max_length=6_000)
+
+
 class Pergunta(BaseModel):
     pergunta: str = Field(min_length=1, max_length=2_000)
     categoria: str | None = None
+    # últimas trocas da conversa (ficam só no aparelho; o servidor não guarda)
+    historico: list[Turno] = Field(default_factory=list, max_length=6)
 
 
 class Fonte(BaseModel):
@@ -171,6 +178,7 @@ class RespostaRag(BaseModel):
     gerada_por_ia: bool
     fontes: list[Fonte]
     passos: list[Passo] = []
+    pergunta_entendida: str | None = None  # a pergunta reescrita com a conversa, se foi
 
 
 # ---------- Dependências ----------
@@ -421,13 +429,15 @@ def apagar_memoria(memoria_id: str, repo: RepositorioSupabase = Depends(reposito
 @app.post("/perguntar", tags=["perguntar"], response_model=RespostaRag)
 def perguntar(dados: Pergunta, repo: RepositorioSupabase = Depends(repositorio)):
     try:
-        r = rag.perguntar(repo, dados.pergunta, dados.categoria)
+        r = rag.perguntar(repo, dados.pergunta, dados.categoria,
+                          historico=[t.model_dump() for t in dados.historico])
     except ErroSupabase as e:
         _erro(e)
     return RespostaRag(
         resposta=r.texto,
         gerada_por_ia=r.gerada_por_ia,
         passos=[Passo(**p) for p in r.passos],
+        pergunta_entendida=r.pergunta_entendida,
         fontes=[
             Fonte(texto=t.texto, categoria=t.metadados.get("categoria"), data=t.metadados.get("data"),
                   similaridade=round(t.similaridade, 3))

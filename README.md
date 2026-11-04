@@ -32,7 +32,7 @@ flowchart LR
 | **Registrar memórias** | Escrevendo ou **falando** (áudio transcrito pelo Gemini); a IA **sugere a categoria** |
 | **Importar conversas do WhatsApp** | Registrar → Importar conversa (arquivo exportado "Sem mídia") |
 | **Lembra no WhatsApp** | Ajustes → WhatsApp → vincular o número; depois é só escrever, perguntar (com "?") ou mandar áudio para o Lembra |
-| **Perguntar** | Chat com fontes citadas e notas de similaridade; também por voz |
+| **Perguntar** | Chat com fontes citadas e notas de similaridade; também por voz; entende continuações ("e em setembro?") e mostra "Entendi como"; "Nova conversa" zera o contexto |
 | **Modo agente** (experimental) | Ajustes → a IA usa ferramentas (buscar, listar, calcular, contar dias, próxima data de eventos recorrentes) e mostra "como cheguei aqui" |
 | **Personalização** | 👍/👎 nas respostas; o perfil "Como o Lembra te conhece" é reaprendido a cada 5 avaliações |
 | **Configurar o RAG** | Ajustes → chunk, sobreposição, top-K, modelo, instruções; Laboratório para ver os chunks |
