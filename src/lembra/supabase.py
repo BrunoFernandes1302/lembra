@@ -58,12 +58,12 @@ class SupabaseAuth:
         self.url = url.rstrip("/")
         self.headers = {"apikey": chave_publica, "Content-Type": "application/json"}
 
-    def cadastrar(self, email: str, senha: str, convite: str | None = None) -> dict:
-        # Cadastro livre. Se a trava de convites for religada no banco, o código vai nos metadados.
+    def cadastrar(self, email: str, senha: str) -> dict:
+        # Cadastro livre: qualquer pessoa cria a própria conta (sem convite).
         r = _http.post(
             f"{self.url}/auth/v1/signup",
             headers=self.headers,
-            json={"email": email, "password": senha, "data": {"convite": convite} if convite else {}},
+            json={"email": email, "password": senha},
             timeout=TIMEOUT,
         )
         return _sessao(_checar(r))
@@ -218,6 +218,22 @@ class RepositorioSupabase:
         r = _http.post(f"{self.url}/rpc/apagar_categoria", headers=self.headers,
                           json={"p_nome": nome, "p_mover_para": mover_para}, timeout=TIMEOUT)
         return _checar(r) or 0
+
+    def gerar_codigo_whatsapp(self) -> str:
+        r = _http.post(f"{self.url}/rpc/whatsapp_gerar_codigo", headers=self.headers, json={}, timeout=TIMEOUT)
+        return _checar(r)
+
+    def vinculo_whatsapp(self) -> dict | None:
+        r = _http.get(f"{self.url}/whatsapp_vinculos", headers=self.headers,
+                      params={"select": "telefone,criado_em"}, timeout=TIMEOUT)
+        linhas = _checar(r) or []
+        return linhas[0] if linhas else None
+
+    def desvincular_whatsapp(self) -> None:
+        # Sem filtro explícito: o RLS ("dono apaga seu vinculo") já limita ao próprio usuário.
+        r = _http.delete(f"{self.url}/whatsapp_vinculos", headers=self.headers,
+                         params={"telefone": "not.is.null"}, timeout=TIMEOUT)
+        _checar(r)
 
     def apagar_memoria(self, memoria_id: str) -> bool:
         h = {**self.headers, "Prefer": "return=representation"}

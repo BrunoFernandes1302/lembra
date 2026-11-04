@@ -31,6 +31,7 @@ flowchart LR
 |---------|-----------|
 | **Registrar memórias** | Escrevendo ou **falando** (áudio transcrito pelo Gemini); a IA **sugere a categoria** |
 | **Importar conversas do WhatsApp** | Registrar → Importar conversa (arquivo exportado "Sem mídia") |
+| **Lembra no WhatsApp** | Ajustes → WhatsApp → vincular o número; depois é só escrever, perguntar (com "?") ou mandar áudio para o Lembra |
 | **Perguntar** | Chat com fontes citadas e notas de similaridade; também por voz |
 | **Modo agente** (experimental) | Ajustes → a IA usa ferramentas (buscar, listar, calcular, contar dias) e mostra "como cheguei aqui" |
 | **Personalização** | 👍/👎 nas respostas; o perfil "Como o Lembra te conhece" é reaprendido a cada 5 avaliações |
@@ -110,6 +111,7 @@ src/lembra/
 ├── rag.py          # alimentar, perguntar, editar, reprocessar, sugerir categoria, perfil, áudio
 ├── agente.py       # modo agente: ferramentas e ciclo pedir → executar → responder
 ├── whatsapp.py     # leitura de conversas exportadas e chunking por sessão
+├── whatsapp_bot.py # bot oficial: webhook, assinatura, vínculo número ↔ conta, respostas
 ├── supabase.py     # login e dados, sempre com o crachá do usuário
 ├── api.py          # endpoints que o app chama
 └── config.py       # configurações (.env + ajustes de cada usuário)

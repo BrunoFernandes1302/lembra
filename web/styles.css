@@ -603,3 +603,23 @@ label.sem-rotulo textarea { margin-top: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ---------- WhatsApp ---------- */
+.zap-status { display: flex; align-items: center; gap: 8px; margin: 4px 0 12px; color: var(--texto); }
+.zap-status .ic { width: 18px; height: 18px; color: var(--ok); flex: none; }
+.botao-texto.perigo { color: var(--erro); }
+.zap-codigo-caixa { display: grid; gap: 10px; margin-top: 14px; text-align: center; }
+.zap-codigo {
+  margin: 0; padding: 14px; border-radius: var(--raio-p); border: 1px dashed var(--borda-forte);
+  background: var(--vidro-forte); font: 700 1.6rem/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  letter-spacing: .25em; color: var(--texto); user-select: all;
+}
+a.botao { text-decoration: none; text-align: center; }
+/* 4 abas em telas estreitas: sem ícone, para o texto caber */
+@media (max-width: 420px) {
+  .segmentos .segmento { font-size: .78rem; padding: 10px 2px; }
+  .segmentos .segmento .ic { display: none; }
+}
+
+.link-privacidade { text-align: center; margin-top: 16px; }
+.link-privacidade a { color: var(--suave); }

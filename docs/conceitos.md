@@ -388,11 +388,81 @@ curtas, autores e horários. A estratégia:
   ("Conversa de WhatsApp "João" em 04/11/2026, entre Bruno, João Silva") que ajuda a busca.
 
 **Prévia antes de salvar:** mostra mensagens, blocos, período e participantes **sem chamar
-nenhuma IA**. Limite de 200 blocos por importação (protege a cota e o tempo da requisição);
-os embeddings saem em lotes de 100.
+nenhuma IA**. Os embeddings saem em lotes de 100.
+
+**Arquivos grandes (até 10 MB / 3000 blocos) sem o usuário dividir nada.** A Vercel limita cada
+requisição (corpo de 4,5 MB e tempo máximo), então o **app** divide o arquivo no próprio aparelho
+em partes de ~150 KB, sempre no início de uma mensagem, e envia uma por vez (limite de 200 blocos
+por parte). Três cuidados:
+- *Formato da data:* o app detecta dia/mês × mês/dia no **arquivo inteiro** e informa ao servidor,
+  porque uma parte sozinha pode não ter nenhuma data que revele o formato.
+- *Rede de segurança:* se uma parte passar de 200 blocos (conversa muito "picada"), o app a divide
+  ao meio e tenta de novo, sozinho. Teste com 8 MB sintéticos: 130.400 mensagens antes e depois.
+- *Continuar de onde parou:* se a cota da IA acabar no meio, o que foi salvo fica, e o botão
+  retoma só as partes que faltam (nunca repete uma parte: isso duplicaria memórias).
 
 **LGPD:** a conversa tem mensagens de outras pessoas. O app avisa para importar só o que o
 usuário tem o direito de guardar.
+
+### 11.1 O Lembra como contato no WhatsApp (bot oficial)
+
+**Oficial × não oficial.** Há APIs "não oficiais" (Baileys, WAHA, Evolution) que conectam o
+*seu* número como aparelho vinculado e leem todas as conversas. Elas violam os termos do
+WhatsApp (banimento sem recurso), precisam de um servidor ligado 24 h e enxergam **tudo**. A
+escolha foi a **Cloud API oficial da Meta**: o Lembra vira um contato; você encaminha ou
+escreve o que quer guardar. O histórico continua entrando pela exportação (seção 11).
+
+**Webhook.** Em vez de o Lembra perguntar "chegou mensagem?" a cada segundo (*polling*), a
+Meta **chama** o nosso endereço `POST /whatsapp/webhook` quando algo acontece. Na hora de
+cadastrar, a Meta faz um `GET` com um token combinado (`hub.verify_token`) e devolvemos um
+"desafio": prova de que o endereço é nosso.
+
+**Assinatura HMAC (quem está chamando?).** O webhook é público: qualquer pessoa pode mandar um
+`POST` fingindo ser a Meta. A Meta calcula `HMAC-SHA256(segredo do app, corpo)` e envia no
+cabeçalho `X-Hub-Signature-256`. Recalculamos com o mesmo segredo e comparamos:
+- sobre os **bytes exatos** do corpo (antes de interpretar o JSON, que poderia mudar espaços);
+- em **tempo constante** (`hmac.compare_digest`), porque uma comparação comum para na 1ª letra
+  diferente, e medir esse tempo vazaria a assinatura aos poucos (*timing attack*).
+
+**Agir em nome do usuário sem o login dele.** O app sempre manda o crachá (JWT) de quem está
+logado, e o RLS faz o resto. No WhatsApp não há login. Duas saídas:
+
+| | Chave de serviço (`service_role`) | **Crachá emitido pelo servidor** (escolhida) |
+|---|---|---|
+| Como | Chave-mestra que **ignora** o RLS | Com o segredo do Supabase, o servidor assina um JWT de 5 min com `sub` = o usuário dono do número |
+| Se o código errar | Um `where` esquecido expõe **todos** os usuários | O banco continua aplicando o RLS: o pior caso fica no próprio usuário |
+| Reuso | Reescrever cada consulta com filtro manual | Todo o RAG funciona igual (mesmo `RepositorioSupabase`) |
+
+Um JWT é só `cabeçalho.conteúdo.assinatura` em base64; `emitir_jwt()` tem ~10 linhas. O
+servidor também emite um crachá `service_role` de 60 s, mas ele só serve para **3 funções**
+(dono do número, vincular, marcar processada): elas recusam qualquer outro papel.
+
+**Vincular número ↔ conta.** No app, *Ajustes → WhatsApp → Gerar código*; no WhatsApp,
+`VINCULAR K7PX2MQA`. Por que tanto cuidado: quem acertar o código de outra pessoa liga o
+**próprio** número à conta **dela** e passa a ler suas memórias. Defesas:
+- 8 caracteres de 32 símbolos sem ambíguos (sem 0/O, 1/I): 32⁸ ≈ 1 trilhão de combinações;
+- vale **10 minutos** e **uma vez** (é apagado ao ser usado);
+- no máximo **5 tentativas erradas por número por hora**;
+- o app mostra o número vinculado e permite desvincular.
+
+**Idempotência.** Se o servidor demora a responder, a Meta **reenvia** a mesma mensagem.
+Sem cuidado, a memória seria salva duas vezes. Cada mensagem tem um id; antes de processar,
+gravamos o id numa tabela com chave única. Se já existia, é reenvio e ignoramos.
+
+**Quem decide a ação: regra, não IA.** Termina com "?" → pergunta; `VINCULAR` → vínculo;
+`ajuda` → instruções; o resto → memória (aí sim a IA sugere a categoria). Regras são
+previsíveis, grátis e instantâneas; a IA fica onde ela agrega (categoria, resposta, transcrição).
+"Vincular" falado num áudio é recusado de propósito: transcrição pode errar letras.
+
+**Lição do 1º teste real: o 9º dígito.** As mensagens chegavam (a tabela de idempotência
+registrava cada uma), mas o Lembra não respondia. O WhatsApp entrega o remetente brasileiro no
+formato antigo, sem o 9 (`55 31 8888-7777`, 12 dígitos), e a Meta recusava o envio para esse
+formato (erro 131030). Correção: na hora de **enviar**, celular BR de 12 dígitos ganha o 9; para
+**identificar** a pessoa, o número fica como veio. Diagnóstico: separar o caminho em etapas
+(chegou? passou na assinatura? enviou?) e olhar a pista que cada etapa deixa.
+
+**Custo.** Responder a quem escreveu para o bot (janela de 24 h) é gratuito ou tem franquia
+mensal, conforme a regra vigente da Meta; o número de teste também é gratuito.
 
 ---
 
@@ -482,6 +552,43 @@ Treinar a cada mensagem seria caro (GPU), instável (o modelo "esquece" o que sa
 30 memórias com armadilhas: informação desatualizada, memórias parecidas, mesmo nome, contas
 com 3 ou mais memórias, negação. Busca: acerto@1 de 88% (a régua mede alguma coisa). Respostas: 100%.
 
+### 13.4 LoRA num modelo pequeno: o resultado (`finetuning/dados/resultado_lora.json`)
+
+**O experimento.** Qwen2.5-0.5B-Instruct (0,5 bilhão de parâmetros, roda em computador comum).
+O Gemini serviu de **professor**: respondeu 120 casos no formato do Lembra (destilação), e o
+LoRA (r=8 na atenção, 1,08 milhão de parâmetros treináveis = 0,22% do modelo, arquivo de 4,4 MB)
+aprendeu a imitar. Treino: 2 épocas, 18 minutos no processador, perda de 1,12 (início) para 0,34.
+Prova: as 20 perguntas do **conjunto difícil**, que o treino nunca viu, com as mesmas memórias e
+o mesmo juiz.
+
+| Métrica | Sem LoRA | Com LoRA |
+|---|---|---|
+| Correta | 50% | **60%** |
+| Fiel (não inventou) | 70% | **80%** |
+| Admitiu não saber, quando era o caso | 0% | **50%** |
+| Tempo médio por resposta (CPU) | 2,4 s | 2,7 s |
+
+**O que o LoRA ensinou de fato: o comportamento, não o conhecimento.**
+- **Formato e postura:** com LoRA, o modelo responde em frase completa, cita a fonte `[1]` e
+  diz "Não encontrei isso nas memórias" quando não há resposta (0% → 50%). Sem LoRA, ele
+  respondia "[3]" ou "sangue tipo A" para perguntas sem resposta: **inventava**.
+- **Raciocínio não veio junto:** contas com várias memórias continuam erradas e até pioraram
+  ("aluguel + condomínio + internet = 17.800"). Um modelo de 0,5 B não tem capacidade para
+  isso, e 120 exemplos não criam essa capacidade. Ele também **exagerou** no "não sei" em 2
+  perguntas que tinham resposta (d05, d12): aprendeu a recusa um pouco demais.
+- **Português do modelo base:** "osartana" e "a sua mel" mostram que o modelo pequeno já
+  escrevia mal o português; LoRA ajusta o estilo, não ensina a língua.
+
+**Lições.**
+1. *Fine-tuning ensina forma; RAG traz fatos.* Combinação clássica: LoRA para o jeito de
+   responder, busca para o conteúdo.
+2. *Com 20 perguntas, 10 pontos são 2 perguntas.* Há ruído. O ganho na fidelidade e no "admitir
+   que não sabe" é consistente nos exemplos; o "correta +10%" sozinho não seria prova.
+3. *Tamanho importa para raciocinar.* Para contas e datas, o caminho é o modo agente com
+   ferramentas (`calcular`, `dias_ate`) ou um modelo maior, não mais treino no pequeno.
+4. **Não vai para produção:** o Gemini responde 100% desse conjunto. O LoRA serve para o
+   modo "100% local e privado" (Ollama), quando a privacidade valer mais que a precisão.
+
 ## 14. Glossário rápido
 
 | Termo | Significado |
@@ -518,3 +625,7 @@ com 3 ou mais memórias, negação. Busca: acerto@1 de 88% (a régua mede alguma
 | **Recall@K / MRR** | Métricas de busca: quantas certas vieram / em que posição veio a primeira certa |
 | **Efeito teto** | Teste fácil demais: tudo passa e nada se compara |
 | **PEFT** | *Parameter-Efficient Fine-Tuning*: família de técnicas (LoRA etc.) que treinam poucos parâmetros |
+| **Webhook** | Endereço seu que outro serviço chama quando algo acontece (o contrário de ficar perguntando) |
+| **HMAC** | Assinatura feita com um segredo compartilhado: prova que a mensagem veio de quem tem o segredo e não foi alterada |
+| **Timing attack** | Descobrir um segredo medindo quanto tempo uma comparação demora |
+| **Idempotência** | Processar a mesma coisa duas vezes dá o mesmo resultado que uma vez |

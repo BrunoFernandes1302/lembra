@@ -10,10 +10,14 @@ Lista viva. Cada ideia tem o **conceito de IA/engenharia** que ela ensina.
 - **Como:** WhatsApp Cloud API (oficial, Meta). Toda mensagem recebida chega à nossa API por um
   **webhook**; respondemos pela API da Meta.
 - **Problemas a resolver:**
-  1. *Vincular número ↔ conta:* código de 6 dígitos gerado no app ("VINCULAR 482913").
+  1. *Vincular número ↔ conta:* código de 8 caracteres gerado no app ("VINCULAR K7PX2MQA"), uso único, 10 min.
   2. *Segurança do webhook:* conferir a assinatura HMAC (`X-Hub-Signature-256`) de cada chamada.
-  3. *Agir sem o login do usuário:* credencial de serviço no servidor, com consultas sempre
-     filtradas pelo dono vinculado (o RLS sozinho não protege quando se usa a chave de serviço).
+  3. *Agir sem o login do usuário:* ~~chave de serviço com filtro manual~~ → **decidido:** o
+     servidor emite um crachá (JWT) de 5 min para o dono do número, e o RLS continua valendo
+     (ver `docs/conceitos.md`, seção 11.1).
+- **Status:** 🟡 no ar e configurado (app Meta publicado, webhook assinado, mensagens chegando). A Meta
+  bloqueia o envio para o Brasil (erro 130497) até liberar a conta; se não liberar: verificação da
+  empresa ou número brasileiro próprio. Falta também um token permanente (o temporário vence em 24 h).
 - **Precisa do dono:** conta de desenvolvedor Meta + app com WhatsApp (número de teste é grátis).
 - **Conceitos:** webhooks, assinaturas HMAC, autenticação entre serviços, idempotência (a Meta
   pode reenviar a mesma mensagem; não podemos salvar duas vezes).
