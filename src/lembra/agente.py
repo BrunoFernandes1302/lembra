@@ -14,10 +14,11 @@ O LLM nunca executa nada sozinho: ele só PEDE; quem executa (e controla) é o c
 from __future__ import annotations
 
 import ast
+import calendar
 import logging
 import operator
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Protocol
 from zoneinfo import ZoneInfo
 
@@ -39,8 +40,11 @@ Regras:
 - Para QUALQUER conta (somas, diferenças, médias), use a ferramenta calcular — não faça de cabeça.
 - Para datas: use data_de_hoje; para "quantos dias faltam/passaram", use dias_ate (nunca conte
   dias de cabeça nem somando meses).
+- Para eventos RECORRENTES ("toda última quinta do mês", "todo dia 5", "toda terça", "a cada 15
+  dias"), use proxima_ocorrencia e responda com a data concreta, não só com a regra. Ela já usa a
+  data de hoje e já devolve quantos dias faltam: não chame data_de_hoje nem dias_ate junto.
 - Cite os trechos usados pelo número que a ferramenta informou, um por colchete: [1] [2].
-  Resultados de calcular, data_de_hoje e dias_ate não são trechos: não os cite.
+  Resultados de calcular, data_de_hoje, dias_ate e proxima_ocorrencia não são trechos: não os cite.
 - Interprete a pergunta pelo sentido, não ao pé da letra.
 - Se, depois de buscar, não encontrar a resposta, diga claramente que não encontrou nas memórias.
 - Fale com o usuário na segunda pessoa ("você"), em português do Brasil, de forma natural."""
@@ -75,10 +79,66 @@ DECLARACOES = [
          "dia": {"type": "integer"}, "mes": {"type": "integer"},
          "ano": {"type": "integer", "description": "opcional"}},
          "required": ["dia", "mes"]}},
+    {"name": "proxima_ocorrencia",
+     "description": "Calcula as próximas datas de um evento RECORRENTE a partir de hoje (já sabe a data de "
+                    "hoje e devolve quantos dias faltam). Descreva a regra: "
+                    "tipo 'dia_do_mes' (todo dia 5 → dia=5); 'dia_da_semana' (toda terça → dia_semana); "
+                    "'ordem_no_mes' (2ª segunda do mês → ordem=2; ÚLTIMA quinta → ordem=-1; com dia_semana); "
+                    "'a_cada_n_dias' (a cada 15 dias desde 01/10/2026 → n=15, a_partir_de).",
+     "parameters": {"type": "object", "properties": {
+         "tipo": {"type": "string", "enum": ["dia_do_mes", "dia_da_semana", "ordem_no_mes", "a_cada_n_dias"]},
+         "dia": {"type": "integer", "description": "1 a 31 (dia_do_mes)"},
+         "dia_semana": {"type": "string", "enum": DIAS},
+         "ordem": {"type": "integer", "description": "1 a 5, ou -1 para a última (ordem_no_mes)"},
+         "n": {"type": "integer", "description": "intervalo em dias (a_cada_n_dias)"},
+         "a_partir_de": {"type": "string", "description": "dd/mm/aaaa de uma ocorrência conhecida (a_cada_n_dias)"},
+         "quantidade": {"type": "integer", "description": "quantas próximas datas (padrão 1, máx. 6)"}},
+         "required": ["tipo"]}},
     {"name": "data_de_hoje",
      "description": "Retorna a data e o dia da semana de hoje (fuso de Brasília).",
      "parameters": {"type": "object", "properties": {}}},
 ]
+
+
+# ---------------------------------------------------------------- recorrências (calculadas, não chutadas)
+def _no_mes(ano: int, mes: int, tipo: str, dia=None, dia_semana=None, ordem=None) -> tuple[date | None, bool]:
+    """A ocorrência DENTRO de um mês (ou None se não existir, ex.: 5ª segunda). Devolve (data, ajustada)."""
+    ultimo = calendar.monthrange(ano, mes)[1]
+    if tipo == "dia_do_mes":
+        return date(ano, mes, min(int(dia), ultimo)), int(dia) > ultimo  # dia 31 em fev → último dia
+    alvo = DIAS.index(dia_semana)
+    dias = [d for d in range(1, ultimo + 1) if date(ano, mes, d).weekday() == alvo]
+    ordem = int(ordem)
+    if ordem == -1:
+        return date(ano, mes, dias[-1]), False
+    return (date(ano, mes, dias[ordem - 1]), False) if 1 <= ordem <= len(dias) else (None, False)
+
+
+def proximas_ocorrencias(tipo: str, hoje: date, quantidade: int = 1, dia=None, dia_semana=None, ordem=None,
+                         n=None, a_partir_de=None) -> list[tuple[date, bool]]:
+    """Próximas datas (a partir de hoje, inclusive) de uma regra recorrente."""
+    quantidade = max(1, min(int(quantidade or 1), 6))
+    if tipo == "dia_da_semana":
+        primeira = hoje + timedelta(days=(DIAS.index(dia_semana) - hoje.weekday()) % 7)
+        return [(primeira + timedelta(weeks=k), False) for k in range(quantidade)]
+    if tipo == "a_cada_n_dias":
+        n = int(n)
+        if n < 1:
+            raise ValueError("n precisa ser pelo menos 1")
+        base = datetime.strptime(a_partir_de, "%d/%m/%Y").date()
+        saltos = max(0, -(-(hoje - base).days // n))  # arredonda para cima: primeira ocorrência >= hoje
+        return [(base + timedelta(days=n * (saltos + k)), False) for k in range(quantidade)]
+    if tipo not in ("dia_do_mes", "ordem_no_mes"):
+        raise ValueError(f"tipo desconhecido: {tipo}")
+    datas, ano, mes = [], hoje.year, hoje.month
+    for _ in range(24):  # olha até 2 anos à frente (ex.: 5ª segunda é rara)
+        d, ajustada = _no_mes(ano, mes, tipo, dia, dia_semana, ordem)
+        if d and d >= hoje:
+            datas.append((d, ajustada))
+            if len(datas) == quantidade:
+                break
+        ano, mes = (ano + 1, 1) if mes == 12 else (ano, mes + 1)
+    return datas
 
 
 # ---------------------------------------------------------------- calculadora segura
@@ -164,6 +224,15 @@ class Ferramentas:
         return {"data": alvo.strftime("%d/%m/%Y"), "dia_da_semana": DIAS[alvo.weekday()],
                 "dias": dias, "sentido": "faltam" if dias >= 0 else "passaram"}
 
+    def proxima_ocorrencia(self, tipo: str, hoje: date | None = None, **regra) -> dict:
+        hoje = hoje or datetime.now(ZoneInfo("America/Sao_Paulo")).date()
+        datas = proximas_ocorrencias(tipo, hoje, **regra)
+        if not datas:
+            return {"erro": "essa regra não tem ocorrência nos próximos 2 anos"}
+        return {"hoje": hoje.strftime("%d/%m/%Y"), "ocorrencias": [
+            {"data": d.strftime("%d/%m/%Y"), "dia_da_semana": DIAS[d.weekday()], "dias": (d - hoje).days,
+             **({"ajustada_para_o_ultimo_dia_do_mes": True} if aj else {})} for d, aj in datas]}
+
     def executar(self, nome: str, args: dict) -> dict:
         if nome not in {d["name"] for d in DECLARACOES}:
             return {"erro": f"ferramenta desconhecida: {nome}"}
@@ -246,6 +315,9 @@ def _resumo(nome: str, args: dict, res: dict) -> str:
         return f"{res['data']} ({res['dia_da_semana']})"
     if nome == "dias_ate":
         return f"{abs(res['dias'])} dias até {res['data']}"
+    if nome == "proxima_ocorrencia":
+        prox = res["ocorrencias"][0]
+        return f"próxima: {prox['data']} ({prox['dia_da_semana']})"
     return "ok"
 
 

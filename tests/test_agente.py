@@ -2,10 +2,18 @@
 conhecido. Testa o ciclo (pedir → executar → devolver → responder) sem gastar cota."""
 
 from dataclasses import replace
+from datetime import date as _date
 
 import pytest
 
-from lembra.agente import MAX_PASSOS, Chamada, Ferramentas, calcular_seguro, executar_agente
+from lembra.agente import (
+    MAX_PASSOS,
+    Chamada,
+    Ferramentas,
+    calcular_seguro,
+    executar_agente,
+    proximas_ocorrencias,
+)
 from lembra.config import get_settings
 from lembra.supabase import Trecho
 
@@ -115,3 +123,37 @@ def test_dias_ate_conta_em_codigo(s):
     assert r["dias"] == 291 and r["data"] == "21/08/2027"
     assert f.dias_ate(25, 12, 2026, hoje=date(2026, 11, 3))["dias"] == 52
     assert f.dias_ate(1, 1, 2026, hoje=date(2026, 11, 3))["sentido"] == "passaram"
+
+
+# ---------------------------------------------------------------- recorrências
+HOJE = _date(2026, 11, 4)  # quarta-feira
+
+
+def _datas(**regra):
+    return [d.strftime("%d/%m/%Y") for d, _ in proximas_ocorrencias(hoje=regra.pop("hoje", HOJE), **regra)]
+
+
+def test_ultima_quinta_do_mes_inclusive_virada_de_ano():
+    assert _datas(tipo="ordem_no_mes", ordem=-1, dia_semana="quinta-feira", quantidade=3) == \
+        ["26/11/2026", "31/12/2026", "28/01/2027"]
+    # já passou a deste mês: pula para dezembro
+    assert _datas(tipo="ordem_no_mes", ordem=-1, dia_semana="quinta-feira", hoje=_date(2026, 11, 27)) == ["31/12/2026"]
+
+
+def test_quinta_segunda_so_em_meses_que_tem():
+    assert _datas(tipo="ordem_no_mes", ordem=5, dia_semana="segunda-feira", quantidade=2) == \
+        ["30/11/2026", "29/03/2027"]
+
+
+def test_dia_do_mes_ajusta_para_o_ultimo_dia_em_fevereiro():
+    r = proximas_ocorrencias("dia_do_mes", _date(2027, 2, 4), dia=31)
+    assert r == [(_date(2027, 2, 28), True)]
+
+
+def test_dia_da_semana_conta_hoje():
+    assert _datas(tipo="dia_da_semana", dia_semana="quarta-feira", quantidade=2) == ["04/11/2026", "11/11/2026"]
+
+
+def test_a_cada_n_dias():
+    assert _datas(tipo="a_cada_n_dias", n=15, a_partir_de="01/10/2026") == ["15/11/2026"]
+    assert _datas(tipo="a_cada_n_dias", n=15, a_partir_de="20/12/2026") == ["20/12/2026"], "base no futuro"
