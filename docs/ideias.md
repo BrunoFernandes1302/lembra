@@ -10,7 +10,7 @@ Lista viva. Cada ideia tem o **conceito de IA/engenharia** que ela ensina.
 - **Como:** WhatsApp Cloud API (oficial, Meta). Toda mensagem recebida chega à nossa API por um
   **webhook**; respondemos pela API da Meta.
 - **Problemas a resolver:**
-  1. *Vincular número ↔ conta:* código de 6 dígitos gerado no app ("VINCULAR 482913").
+  1. *Vincular número ↔ conta:* código de 8 caracteres gerado no app ("VINCULAR K7PX2MQA"), uso único, 10 min.
   2. *Segurança do webhook:* conferir a assinatura HMAC (`X-Hub-Signature-256`) de cada chamada.
   3. *Agir sem o login do usuário:* ~~chave de serviço com filtro manual~~ → **decidido:** o
      servidor emite um crachá (JWT) de 5 min para o dono do número, e o RLS continua valendo
