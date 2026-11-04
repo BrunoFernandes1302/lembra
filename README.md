@@ -20,7 +20,7 @@ Dois chats:
 
 ```mermaid
 flowchart LR
-    A[Memória] --> B[Chunks] --> C[Embeddings] --> D[(ChromaDB)]
+    A[Memória] --> B[Chunks] --> C[Embeddings] --> D[(Supabase + pgvector)]
     P[Pergunta] --> E[Embedding] --> F{Busca} --> G[Trechos] --> H[LLM] --> R[Resposta + fontes]
     D --> F
 ```
@@ -33,7 +33,7 @@ flowchart LR
 | **Importar conversas do WhatsApp** | Registrar → Importar conversa (arquivo exportado "Sem mídia") |
 | **Lembra no WhatsApp** | Ajustes → WhatsApp → vincular o número; depois é só escrever, perguntar (com "?") ou mandar áudio para o Lembra |
 | **Perguntar** | Chat com fontes citadas e notas de similaridade; também por voz |
-| **Modo agente** (experimental) | Ajustes → a IA usa ferramentas (buscar, listar, calcular, contar dias) e mostra "como cheguei aqui" |
+| **Modo agente** (experimental) | Ajustes → a IA usa ferramentas (buscar, listar, calcular, contar dias, próxima data de eventos recorrentes) e mostra "como cheguei aqui" |
 | **Personalização** | 👍/👎 nas respostas; o perfil "Como o Lembra te conhece" é reaprendido a cada 5 avaliações |
 | **Configurar o RAG** | Ajustes → chunk, sobreposição, top-K, modelo, instruções; Laboratório para ver os chunks |
 | **Categorias** | Cada pessoa cria as suas (renomear/apagar movem as memórias, nunca as perdem) |
@@ -42,9 +42,9 @@ flowchart LR
 
 ```
 Celular (PWA) ──(crachá JWT)──► API Python (FastAPI) ──(mesmo crachá)──► Supabase
-                                 ├─ chunking                              ├─ Login + convites
+                                 ├─ chunking                              ├─ Login (cadastro livre)
                                  ├─ embeddings (Gemini)                   ├─ Postgres + pgvector
-                                 └─ LLM (Claude ou Ollama)                └─ RLS: cada um vê só o seu
+                                 └─ LLM (Gemini, Claude ou Ollama)        └─ RLS: cada um vê só o seu
 ```
 
 | Peça | Escolha | Por quê |
