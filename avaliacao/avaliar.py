@@ -182,6 +182,9 @@ def main():
                 top_k=a.top_k or s.top_k,
                 gemini_model=a.modelo_llm or s.gemini_model)
     conjunto = json.loads((PASTA / a.conjunto).read_text(encoding="utf-8"))
+    # Data de referência FIXA do conjunto: perguntas como "qual a PRÓXIMA consulta?" dependem de hoje.
+    # Com a data real, a resposta certa mudaria com o calendário e as rodadas deixariam de ser comparáveis.
+    hoje = datetime.strptime(conjunto["hoje"], "%d/%m/%Y").date() if conjunto.get("hoje") else None
     print(f"Rodada '{a.rotulo}': chunk={s.chunk_size} sobreposição={s.chunk_overlap} top_k={s.top_k} "
           f"embeddings={s.embedding_model} llm={s.gemini_model} juiz={a.modelo_juiz} "
           f"prompt={versao_prompt}{' (' + a.prompt + ')' if a.prompt else ''} repetições={a.repeticoes}\n")
@@ -220,7 +223,7 @@ def main():
             for _ in range(a.repeticoes):
                 time.sleep(a.pausa)
                 resposta = com_novas_tentativas(llm.gerar, rag.prompt_do_sistema(s),
-                                                rag.montar_prompt(q["pergunta"], trechos))
+                                                rag.montar_prompt(q["pergunta"], trechos, hoje=hoje))
                 time.sleep(a.pausa)
                 v = com_novas_tentativas(julgar, juiz, a.modelo_juiz, q["pergunta"], q["esperada"], trechos, resposta)
                 tentativas.append({"resposta": resposta, "correta": v.correta, "fiel": v.fiel,
@@ -275,7 +278,7 @@ def main():
                    "embeddings": s.embedding_model, "llm": None if a.so_busca else s.gemini_model,
                    "juiz": None if a.so_busca else a.modelo_juiz, "chunks_indexados": len(todos),
                    "prompt": versao_prompt, "prompt_arquivo": a.prompt, "repeticoes": a.repeticoes,
-                   "conjunto": a.conjunto},
+                   "conjunto": a.conjunto, "hoje": conjunto.get("hoje")},
         "resumo": resumo, "resultados": resultados,
     }, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\nSalvo em {arquivo.relative_to(RAIZ)}")

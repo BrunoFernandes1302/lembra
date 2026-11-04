@@ -22,3 +22,11 @@ def test_filtro_mantem_so_trechos_proximos_do_melhor():
     t = [Trecho("aluguel", {}, 0.72), Trecho("dentista", {}, 0.59), Trecho("quase", {}, 0.70)]
     assert [x.texto for x in filtrar_proximos_do_melhor(t)] == ["aluguel", "quase"]
     assert filtrar_proximos_do_melhor([]) == []
+
+
+
+def test_prompt_traz_a_data_de_hoje_depois_das_memorias():
+    from datetime import date
+    p = montar_prompt("Quando é a reunião?", [], hoje=date(2026, 11, 4))
+    assert "Hoje é quarta-feira, 04/11/2026." in p
+    assert p.index("</memorias>") < p.index("Hoje é") < p.index("Pergunta:"), "data no fim: não quebra o cache"

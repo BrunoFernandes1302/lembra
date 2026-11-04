@@ -14,10 +14,13 @@ from __future__ import annotations
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
+from datetime import date, datetime
 from typing import Protocol
+from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel
 
+from .agente import DIAS
 from .chunking import chunk_text
 from .config import Settings, com_config_do_usuario, embedder_de, get_settings
 from .llm import get_llm
@@ -33,6 +36,10 @@ Regras:
 - Ignore memórias que não tenham relação com a pergunta.
 - Interprete a pergunta pelo sentido, não ao pé da letra: palavras mais gerais incluem as mais específicas (por exemplo, uma consulta com a nutricionista responde a "tenho algum compromisso de saúde?"; um carro responde a "quais veículos eu tenho?"). Quando uma memória responder à pergunta dessa forma, vá direto à resposta, sem começar dizendo que não encontrou.
 - Cite as memórias usadas no formato [1], [2]...
+- Raciocine sobre o tempo usando a data de hoje (informada junto da pergunta). Se uma memória descreve algo \
+recorrente (ex.: "toda última quinta-feira do mês", "todo dia 5", "toda terça") e a pergunta é quando acontece, \
+calcule e responda a PRÓXIMA data concreta (dia da semana e data), não apenas a regra. Para "quanto falta" ou \
+"já passou", compare com hoje.
 - Se as memórias não tiverem a resposta, diga claramente que não encontrou isso nas memórias.
 - Fale com o usuário na segunda pessoa ("você"), em português do Brasil, de forma natural."""
 
@@ -135,15 +142,23 @@ def _config_e_vetor(repo, pergunta: str, settings: Settings | None) -> tuple[Set
     return s, vetor
 
 
-def montar_prompt(pergunta: str, trechos: list[Trecho]) -> str:
-    """Augmentation: junta pergunta + trechos recuperados num único prompt."""
+def hoje_em_sp() -> date:
+    return datetime.now(ZoneInfo("America/Sao_Paulo")).date()
+
+
+def montar_prompt(pergunta: str, trechos: list[Trecho], hoje: date | None = None) -> str:
+    """Augmentation: junta trechos recuperados + data de hoje + pergunta num único prompt.
+    A data vai AQUI (no fim, junto da pergunta) e não nas instruções do sistema: assim o começo do
+    prompt fica idêntico entre chamadas e o cache de prompt do provedor continua funcionando."""
     blocos = []
     for i, t in enumerate(trechos, start=1):
         quando = f' data="{t.metadados["data"]}"' if t.metadados.get("data") else ""
         categoria = t.metadados.get("categoria", "geral")
         blocos.append(f'<memoria indice="{i}" categoria="{categoria}"{quando}>\n{t.texto}\n</memoria>')
     contexto = "\n".join(blocos) or "(nenhuma memória encontrada)"
-    return f"<memorias>\n{contexto}\n</memorias>\n\nPergunta: {pergunta}"
+    hoje = hoje or hoje_em_sp()
+    return (f"<memorias>\n{contexto}\n</memorias>\n\n"
+            f"Hoje é {DIAS[hoje.weekday()]}, {hoje.strftime('%d/%m/%Y')}.\n\nPergunta: {pergunta}")
 
 
 # Heurística (regra prática, não garantia): as notas absolutas variam por modelo, então um corte

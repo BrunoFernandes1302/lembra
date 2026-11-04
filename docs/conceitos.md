@@ -498,6 +498,33 @@ Pergunta: "Quanto gasto por mês somando moradia e academia?"
 uma conta montada errada. **Ferramenta não corrige raciocínio errado: dê a ferramenta certa para
 a tarefa.** Com `dias_ate` (datas calculadas em código), passou a acertar.
 
+### 12.1 RAG que raciocina, não que copia (datas e recorrências)
+
+**O problema relatado:** memória "reunião toda última quinta-feira do mês"; pergunta "quando é a
+próxima?". A IA respondia "não encontrei" ou repetia a regra. Causa raiz: a busca (R) achava a
+memória certa, mas a geração (G) **não sabia que dia era hoje**: sem esse dado, não há como calcular.
+
+**O comportamento ideal de um RAG:** a busca traz os **fatos**; a geração **usa** os fatos para
+responder à pergunta (calcula, compara, combina), em vez de devolver o trecho. Para isso o modelo
+precisa do contexto que falta nas memórias, como a data de hoje.
+
+**O que mudou:**
+- *Modo normal:* `Hoje é quarta-feira, 04/11/2026.` vai **junto da pergunta**, mais uma regra nas
+  instruções ("calcule a PRÓXIMA data concreta de recorrências"). Gemini real: "próxima reunião" →
+  26/11/2026; "quantos dias faltam" → 22 (antes: "não encontrei").
+- *Modo agente:* ferramenta `proxima_ocorrencia`. O modelo só **descreve a regra** em campos
+  (`ordem_no_mes`, `ordem=-1`, `quinta-feira`) e o **Python calcula**. Modelos de linguagem erram
+  aritmética de calendário; código não. Testes com datas conferidas no calendário (virada de ano,
+  fevereiro, "5ª segunda do mês").
+
+**E os tokens?** Medido: instruções ~220 tokens + memórias ~980; a data soma ~8 e a regra ~40
+(≈ +4%). O grosso do custo é o top-K, não as instruções. Três cuidados:
+- a data vai no **fim** do prompt: o começo (instruções) fica idêntico entre chamadas e continua
+  aproveitando o **cache de prompt** do provedor;
+- a conta sai da IA e vai para o Python (custo zero de tokens);
+- a descrição da ferramenta avisa que ela já sabe a data de hoje: o agente deixou de chamar
+  `data_de_hoje` antes (3 → 2 chamadas por pergunta = uma ida e volta a menos com a IA).
+
 ## Desempenho: medir antes de otimizar
 
 Medição de uma pergunta comum: o Gemini respondia em ~1 s (sem "pensar"); o lento eram duas
@@ -628,4 +655,5 @@ o mesmo juiz.
 | **Webhook** | Endereço seu que outro serviço chama quando algo acontece (o contrário de ficar perguntando) |
 | **HMAC** | Assinatura feita com um segredo compartilhado: prova que a mensagem veio de quem tem o segredo e não foi alterada |
 | **Timing attack** | Descobrir um segredo medindo quanto tempo uma comparação demora |
+| **Cache de prompt** | Desconto do provedor quando o começo do prompt se repete entre chamadas |
 | **Idempotência** | Processar a mesma coisa duas vezes dá o mesmo resultado que uma vez |
