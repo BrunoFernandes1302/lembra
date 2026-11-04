@@ -868,7 +868,7 @@ $("#form-perguntar").addEventListener("submit", async (e) => {
     $("#nova-conversa").hidden = false;
     if (!r.gerada_por_ia) pensando.classList.add("sem-ia");
     if (r.passos?.length) pensando.append(blocoPassos(r.passos));
-    if (r.gerada_por_ia) pensando.append(blocoAvaliacao(pergunta, r.resposta));
+    if (r.gerada_por_ia) pensando.append(blocoAvaliacao(r.pergunta_entendida || pergunta, r.resposta));
     if (r.fontes.length) {
       const det = el("details", "fontes");
       det.open = !r.gerada_por_ia; // sem IA, as memórias SÃO a resposta: já mostra abertas
