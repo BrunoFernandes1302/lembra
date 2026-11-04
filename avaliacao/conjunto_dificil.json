@@ -1,4 +1,5 @@
 {
+  "hoje": "03/11/2026",
   "descricao": "Conjunto DIFÍCIL: 30 memórias com armadilhas realistas (informação desatualizada, memórias parecidas, pessoas com o mesmo nome, contas com 3+ memórias, negação). Feito para medir melhorias que o conjunto fácil (100% em tudo) não consegue mostrar.",
   "memorias": [
     {"id": "aluguel_2025", "categoria": "finanças", "data_evento": "01/2025", "texto": "Meu aluguel é 1.800 reais por mês, pago todo dia 5."},

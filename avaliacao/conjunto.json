@@ -1,4 +1,5 @@
 {
+  "hoje": "03/11/2026",
   "descricao": "Conjunto de avaliação do Lembra: memórias fictícias + perguntas com resposta esperada. Não altere as perguntas entre comparações, senão os números deixam de ser comparáveis.",
   "memorias": [
     {"id": "aluguel", "categoria": "finanças", "data_evento": "",
