@@ -118,6 +118,9 @@ class BancoFalso:
     def repositorio_de(self, uid):
         return self.repos.setdefault(uid, RepoFalso())
 
+    def registrar_falha(self, codigo, titulo, detalhe):
+        self.falhas = [*getattr(self, "falhas", []), (codigo, titulo, detalhe)]
+
 
 class MetaFalsa:
     def __init__(self):
@@ -251,3 +254,14 @@ def test_webhook_sem_configuracao_responde_503(monkeypatch):
 ])
 def test_numero_para_envio_corrige_o_nono_digito(veio, envia):
     assert whatsapp_bot.numero_para_envio(veio) == envia
+
+
+def test_falha_de_entrega_e_registrada_sem_conteudo(rag_falso):
+    payload = {"entry": [{"changes": [{"value": {"statuses": [
+        {"id": "x", "status": "delivered"},
+        {"id": "y", "status": "failed", "recipient_id": ANA,
+         "errors": [{"code": 131026, "title": "Message undeliverable", "error_data": {"details": "motivo"}}]},
+    ]}}]}]}
+    banco, meta = BancoFalso(), MetaFalsa()
+    assert processar_webhook(payload, banco, meta) == 0 and meta.enviadas == []
+    assert banco.falhas == [(131026, "Message undeliverable", "motivo")], "só código e motivo, sem número"

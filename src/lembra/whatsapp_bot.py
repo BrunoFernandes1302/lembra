@@ -128,6 +128,21 @@ def extrair_mensagens(payload: dict) -> list[MensagemRecebida]:
     return saida
 
 
+def extrair_falhas(payload: dict) -> list[dict]:
+    """Avisos de status "failed": a Meta aceitou o envio, mas não conseguiu entregar. Guardamos só
+    o código e o motivo (sem conteúdo nem número) para diagnosticar."""
+    falhas = []
+    for entrada in payload.get("entry", []):
+        for mudanca in entrada.get("changes", []):
+            for st in mudanca.get("value", {}).get("statuses", []) or []:
+                if st.get("status") != "failed":
+                    continue
+                for e in st.get("errors") or [{}]:
+                    falhas.append({"codigo": e.get("code"), "titulo": e.get("title") or e.get("message") or "",
+                                   "detalhe": (e.get("error_data") or {}).get("details", "")})
+    return falhas
+
+
 _VINCULAR = re.compile(r"^\s*vincular\s+([A-Za-z0-9]{6,12})\s*$", re.IGNORECASE)
 _AJUDA = {"ajuda", "help", "menu", "oi", "olá", "ola", "comandos"}
 
@@ -167,6 +182,9 @@ class BancoDoBot:
 
     def vincular(self, codigo: str, telefone: str) -> str | None:
         return self._rpc("whatsapp_vincular", {"p_codigo": codigo, "p_telefone": telefone})
+
+    def registrar_falha(self, codigo: int | None, titulo: str, detalhe: str) -> None:
+        self._rpc("whatsapp_registrar_falha", {"p_codigo": codigo, "p_titulo": titulo, "p_detalhe": detalhe})
 
     def repositorio_de(self, user_id: str) -> RepositorioSupabase:
         """Crachá de 5 min DAQUELE usuário: a partir daqui, o RLS limita tudo às memórias dele."""
@@ -266,6 +284,12 @@ def responder(msg: MensagemRecebida, banco: BancoDoBot, meta: MetaWhatsApp) -> s
 
 def processar_webhook(payload: dict, banco: BancoDoBot, meta: MetaWhatsApp) -> int:
     """Trata todas as mensagens do envio; um erro numa mensagem não impede as outras."""
+    for falha in extrair_falhas(payload):
+        logger.warning("Meta não entregou uma resposta: %s", falha)
+        try:
+            banco.registrar_falha(falha["codigo"], falha["titulo"], falha["detalhe"])
+        except ErroSupabase:
+            logger.exception("não consegui registrar a falha de entrega")
     tratadas = 0
     for msg in extrair_mensagens(payload):
         try:
