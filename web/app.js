@@ -624,36 +624,133 @@ $$("[data-reg]").forEach((b) =>
 );
 
 // ---------------- Importar conversa do WhatsApp ----------------
-let conteudoImportar = null;
+// O usuário escolhe UM arquivo (até 10 MB / 3000 blocos). O app divide sozinho, aqui no aparelho,
+// em partes de ~150 KB, sempre no início de uma mensagem, e envia uma parte por requisição:
+// a Vercel limita o tamanho (4,5 MB) e o tempo de cada requisição. As partes ficam invisíveis.
+const MAX_ARQUIVO = 10 * 1024 * 1024;
+const MAX_BLOCOS = 3000;
+const TAMANHO_PARTE = 150000;
+const CABECALHO_MSG = /^‎?\[?(\d{1,2})\/(\d{1,2})\/\d{2,4},?\s+\d{1,2}:\d{2}/;
+let importacao = null; // { partes, mesPrimeiro, vazias, feitas, memorias, chunks }
+
+function dividirConversa(texto) {
+  const partes = [];
+  let atual = [];
+  let tamanho = 0;
+  for (const linha of texto.replace(/\r\n/g, "\n").split("\n")) {
+    // só corta quando a parte já está grande E a linha começa uma mensagem nova
+    if (tamanho >= TAMANHO_PARTE && CABECALHO_MSG.test(linha)) {
+      partes.push(atual.join("\n"));
+      atual = [];
+      tamanho = 0;
+    }
+    atual.push(linha);
+    tamanho += linha.length + 1;
+  }
+  if (atual.length) partes.push(atual.join("\n"));
+  return partes;
+}
+
+// Rede de segurança: se uma parte gerou blocos demais (conversa muito "picada"), divide ao meio,
+// no início da mensagem mais próxima do centro, e o app tenta de novo com as duas metades.
+function dividirAoMeio(parte) {
+  const linhas = parte.split("\n");
+  const meio = Math.floor(linhas.length / 2);
+  for (let d = 0; d < meio; d++) {
+    for (const i of [meio + d, meio - d]) {
+      if (i > 0 && i < linhas.length && CABECALHO_MSG.test(linhas[i])) {
+        return [linhas.slice(0, i).join("\n"), linhas.slice(i).join("\n")];
+      }
+    }
+  }
+  return null; // uma única mensagem enorme: não há onde cortar
+}
+
+// Formato da data detectado no ARQUIVO INTEIRO (uma parte sozinha pode não revelar):
+// se alguma data tem o 2º número > 12, ele só pode ser o dia → mês/dia (aparelhos em inglês).
+function detectarMesPrimeiro(texto) {
+  for (const linha of texto.split("\n")) {
+    const m = CABECALHO_MSG.exec(linha.replace(/‎/g, ""));
+    if (m && Number(m[2]) > 12) return true;
+  }
+  return false;
+}
+
+function corpoParte(i, confirmar) {
+  const f = $("#form-importar");
+  return { conteudo: importacao.partes[i], nome_conversa: f.nome.value.trim() || "Conversa",
+           categoria: f.categoria.value, confirmar, mes_primeiro: importacao.mesPrimeiro };
+}
+
+function limparImportacao() {
+  importacao = null;
+  $("#previa-importar").hidden = true;
+  $("#form-importar").reset();
+  $("#arquivo-nome").textContent = "Escolher arquivo .txt";
+  $(".arquivo").classList.remove("escolhido");
+  $("#botao-importar span").textContent = "Importar para o Lembra";
+}
 
 $("#form-importar").arquivo.addEventListener("change", async (e) => {
   const arq = e.target.files[0];
   $("#previa-importar").hidden = true;
   $("#erro-importar").textContent = "";
+  importacao = null;
   if (!arq) return;
-  if (arq.size > 3000000) return ($("#erro-importar").textContent = "Arquivo grande demais (máx. 3 MB). Exporte um período menor.");
-  conteudoImportar = await arq.text(); // lido no próprio aparelho; só o texto vai para a API
+  if (arq.size > MAX_ARQUIVO) {
+    return ($("#erro-importar").textContent = "Arquivo grande demais (máx. 10 MB). Exporte um período menor.");
+  }
+  const texto = await arq.text(); // lido no próprio aparelho; só o texto vai para a API
+  importacao = { partes: dividirConversa(texto), mesPrimeiro: detectarMesPrimeiro(texto),
+                 vazias: new Set(), feitas: new Set(), memorias: 0, chunks: 0 };
   $("#arquivo-nome").textContent = arq.name;
   e.target.closest(".arquivo").classList.add("escolhido");
   const f = $("#form-importar");
   if (!f.nome.value) f.nome.value = arq.name.replace(/^(Conversa do WhatsApp com|WhatsApp Chat with)\s*/i, "").replace(/\.txt$/i, "");
 });
 
-function corpoImportar(confirmar) {
-  const f = $("#form-importar");
-  return { conteudo: conteudoImportar, nome_conversa: f.nome.value.trim() || "Conversa",
-           categoria: f.categoria.value, confirmar };
-}
-
 $("#form-importar").addEventListener("submit", async (e) => {
   e.preventDefault();
   const erro = $("#erro-importar");
   erro.textContent = "";
-  if (!conteudoImportar) return (erro.textContent = "Escolha o arquivo .txt exportado do WhatsApp.");
+  if (!importacao) return (erro.textContent = "Escolha o arquivo .txt exportado do WhatsApp.");
   const b = $("#botao-previa");
+  const texto = b.querySelector("span");
+  const rotulo = texto.textContent;
   b.disabled = true;
   try {
-    const r = await chamar("/importar/whatsapp", { metodo: "POST", corpo: corpoImportar(false) });
+    // Prévia: cada parte é lida no servidor SEM IA (rápido e grátis); o app soma os resultados.
+    const total = { mensagens: 0, blocos: 0, de: null, ate: null, participantes: new Set(), exemplo: "" };
+    importacao.vazias = new Set();
+    for (let i = 0; i < importacao.partes.length; i++) {
+      const n = importacao.partes.length;
+      if (n > 1) texto.textContent = `Lendo a conversa… ${Math.round(((i + 1) / n) * 100)}%`;
+      let r;
+      try {
+        r = await chamar("/importar/whatsapp", { metodo: "POST", corpo: corpoParte(i, false) });
+      } catch (err) {
+        if (err.status === 400 && /Não reconheci mensagens/.test(err.message) && n > 1) {
+          importacao.vazias.add(i); // parte só com avisos do sistema: ignora
+          continue;
+        }
+        const metades = err.status === 400 && /blocos \(máximo/.test(err.message) && dividirAoMeio(importacao.partes[i]);
+        if (metades) {
+          importacao.partes.splice(i, 1, ...metades); // troca a parte pelas duas metades
+          i--; // e lê de novo a partir da primeira metade
+          continue;
+        }
+        throw err;
+      }
+      total.mensagens += r.mensagens;
+      total.blocos += r.blocos;
+      total.de = total.de || r.de;
+      total.ate = r.ate;
+      r.participantes.forEach((p) => total.participantes.add(p));
+      total.exemplo = total.exemplo || r.exemplo;
+    }
+    if (total.blocos > MAX_BLOCOS) {
+      throw new Error(`A conversa gerou ${total.blocos} blocos (máximo ${MAX_BLOCOS}). Exporte um período menor.`);
+    }
     const ul = $("#previa-numeros");
     ul.replaceChildren();
     const item = (rot, val, largo) => {
@@ -661,38 +758,51 @@ $("#form-importar").addEventListener("submit", async (e) => {
       li.append(el("b", null, String(val)), document.createTextNode(rot));
       ul.append(li);
     };
-    item("mensagens", r.mensagens);
-    item("blocos (viram memórias)", r.blocos);
-    item("período", `${r.de} → ${r.ate}`, true);
-    item("participantes", r.participantes.join(", "), true);
-    $("#previa-exemplo").textContent = r.exemplo + (r.exemplo.length >= 600 ? "…" : "");
+    item("mensagens", total.mensagens);
+    item("blocos (viram memórias)", total.blocos);
+    item("período", `${total.de} → ${total.ate}`, true);
+    item("participantes", [...total.participantes].join(", "), true);
+    $("#previa-exemplo").textContent = total.exemplo + (total.exemplo.length >= 600 ? "…" : "");
     $("#previa-importar").hidden = false;
     $("#previa-importar").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (err) {
     erro.textContent = err.message;
   } finally {
     b.disabled = false;
+    texto.textContent = rotulo;
   }
 });
 
 $("#botao-importar").addEventListener("click", async (e) => {
+  if (!importacao) return;
   const b = e.currentTarget;
+  const span = b.querySelector("span");
+  const erro = $("#erro-importar");
+  erro.textContent = "";
   b.disabled = true;
-  b.querySelector("span").textContent = "Importando e entendendo…";
+  const pendentes = importacao.partes.map((_, i) => i)
+    .filter((i) => !importacao.feitas.has(i) && !importacao.vazias.has(i));
+  const total = importacao.partes.length - importacao.vazias.size;
   try {
-    const r = await chamar("/importar/whatsapp", { metodo: "POST", corpo: corpoImportar(true) });
-    avisar(`Conversa importada: ${r.memorias_criadas} memória(s), ${r.chunks} chunk(s)`);
-    $("#previa-importar").hidden = true;
-    $("#form-importar").reset();
-    $("#arquivo-nome").textContent = "Escolher arquivo .txt";
-    $(".arquivo").classList.remove("escolhido");
-    conteudoImportar = null;
+    for (const i of pendentes) {
+      const feitas = importacao.feitas.size;
+      span.textContent = total > 1 ? `Importando… ${Math.round((feitas / total) * 100)}%` : "Importando e entendendo…";
+      const r = await chamar("/importar/whatsapp", { metodo: "POST", corpo: corpoParte(i, true) });
+      importacao.feitas.add(i); // só marca depois de salvar: "continuar" nunca repete uma parte
+      importacao.memorias += r.memorias_criadas;
+      importacao.chunks += r.chunks;
+    }
+    avisar(`Conversa importada: ${importacao.memorias} memória(s), ${importacao.chunks} chunk(s)`);
+    limparImportacao();
     carregarCategorias().catch(() => {});
   } catch (err) {
-    $("#erro-importar").textContent = err.message;
+    // Parou no meio (ex.: limite diário da IA): o que foi salvo fica; o botão retoma do ponto exato.
+    const feitas = importacao.feitas.size;
+    erro.textContent = `${err.message} Já foram salvas ${importacao.memorias} memória(s) ` +
+      `(${Math.round((feitas / total) * 100)}% da conversa). Toque no botão para continuar de onde parou.`;
+    span.textContent = "Continuar importação";
   } finally {
     b.disabled = false;
-    b.querySelector("span").textContent = "Importar para o Lembra";
   }
 });
 

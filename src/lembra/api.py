@@ -128,11 +128,14 @@ MODELOS_LLM = {
 
 
 class ImportacaoWhatsApp(BaseModel):
-    conteudo: str = Field(min_length=1, max_length=3_000_000)  # ~3 MB de texto
+    # UMA PARTE do arquivo (o app divide arquivos de até 10 MB em partes de ~300 KB; a Vercel
+    # limita o corpo de cada requisição a 4,5 MB)
+    conteudo: str = Field(min_length=1, max_length=3_000_000)
     nome_conversa: str = Field(min_length=1, max_length=80)
     categoria: str = Field(default="conversas", max_length=40)
     pausa_horas: float = Field(default=6, ge=0.5, le=72)
     confirmar: bool = False
+    mes_primeiro: bool | None = None  # formato da data detectado pelo app no arquivo inteiro
 
 
 class TextoMemoria(BaseModel):
@@ -334,7 +337,7 @@ def importar_whatsapp(dados: ImportacaoWhatsApp, repo: RepositorioSupabase = Dep
     """Importa uma conversa exportada do WhatsApp (.txt). Sem `confirmar`, devolve só a prévia."""
     try:
         return rag.importar_conversa(repo, dados.conteudo, dados.nome_conversa.strip(), dados.categoria,
-                                     dados.pausa_horas, dados.confirmar)
+                                     dados.pausa_horas, dados.confirmar, mes_primeiro=dados.mes_primeiro)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     except ErroSupabase as e:

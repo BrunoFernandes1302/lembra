@@ -388,8 +388,18 @@ curtas, autores e horários. A estratégia:
   ("Conversa de WhatsApp "João" em 04/11/2026, entre Bruno, João Silva") que ajuda a busca.
 
 **Prévia antes de salvar:** mostra mensagens, blocos, período e participantes **sem chamar
-nenhuma IA**. Limite de 200 blocos por importação (protege a cota e o tempo da requisição);
-os embeddings saem em lotes de 100.
+nenhuma IA**. Os embeddings saem em lotes de 100.
+
+**Arquivos grandes (até 10 MB / 3000 blocos) sem o usuário dividir nada.** A Vercel limita cada
+requisição (corpo de 4,5 MB e tempo máximo), então o **app** divide o arquivo no próprio aparelho
+em partes de ~150 KB, sempre no início de uma mensagem, e envia uma por vez (limite de 200 blocos
+por parte). Três cuidados:
+- *Formato da data:* o app detecta dia/mês × mês/dia no **arquivo inteiro** e informa ao servidor,
+  porque uma parte sozinha pode não ter nenhuma data que revele o formato.
+- *Rede de segurança:* se uma parte passar de 200 blocos (conversa muito "picada"), o app a divide
+  ao meio e tenta de novo, sozinho. Teste com 8 MB sintéticos: 130.400 mensagens antes e depois.
+- *Continuar de onde parou:* se a cota da IA acabar no meio, o que foi salvo fica, e o botão
+  retoma só as partes que faltam (nunca repete uma parte: isso duplicaria memórias).
 
 **LGPD:** a conversa tem mensagens de outras pessoas. O app avisa para importar só o que o
 usuário tem o direito de guardar.

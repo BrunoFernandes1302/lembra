@@ -225,18 +225,21 @@ def reprocessar(repo, settings: Settings | None = None) -> dict:
     return {"memorias": len(memorias), "chunks": len(todos)}
 
 
-MAX_BLOCOS_IMPORTACAO = 200  # protege a cota do Gemini e o tempo máximo de uma requisição
+# Limite POR REQUISIÇÃO (tempo máximo da Vercel). Arquivos grandes (até 10 MB / 3000 blocos) são
+# divididos em partes pelo próprio app e enviados um de cada vez.
+MAX_BLOCOS_IMPORTACAO = 200
 
 
 def importar_conversa(
     repo, conteudo: str, nome_conversa: str, categoria: str = "conversas",
     pausa_horas: float = 6, confirmar: bool = False, settings: Settings | None = None,
+    mes_primeiro: bool | None = None,
 ) -> dict:
     """Importa uma conversa exportada do WhatsApp. Com confirmar=False só mostra a PRÉVIA
     (nada é salvo e nenhuma IA é chamada)."""
     from . import whatsapp
 
-    msgs = whatsapp.ler_exportacao(conteudo)
+    msgs = whatsapp.ler_exportacao(conteudo, mes_primeiro)
     if not msgs:
         raise ValueError("Não reconheci mensagens nesse arquivo. Exporte pelo WhatsApp: "
                          "conversa → ⋮ → Mais → Exportar conversa → Sem mídia.")
@@ -248,8 +251,8 @@ def importar_conversa(
         "exemplo": whatsapp.texto_da_memoria(blocos[0], nome_conversa)[:600],
     }
     if len(blocos) > MAX_BLOCOS_IMPORTACAO:
-        raise ValueError(f"A conversa gerou {len(blocos)} blocos (máximo {MAX_BLOCOS_IMPORTACAO}). "
-                         "Exporte um período menor ou divida o arquivo.")
+        raise ValueError(f"Esta parte gerou {len(blocos)} blocos (máximo {MAX_BLOCOS_IMPORTACAO} por parte). "
+                         "Atualize o app: ele divide arquivos grandes em partes menores.")
     if not confirmar:
         return {**resumo, "salvo": False}
 

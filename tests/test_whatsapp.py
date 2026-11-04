@@ -61,3 +61,11 @@ def test_relogio_de_12_horas_e_formato_mes_dia():
 def test_padrao_brasileiro_continua_dia_mes():
     msgs = ler_exportacao("03/11/2026 14:05 - Ana: oi\n04/11/2026 09:00 - Ana: bom dia")
     assert (msgs[0].quando.day, msgs[0].quando.month, msgs[0].quando.hour) == (3, 11, 14)
+
+
+def test_formato_da_data_informado_pelo_app_vale_para_a_parte():
+    # Uma PARTE de um arquivo mês/dia pode não ter nenhuma data com dia > 12. Sem a dica do app
+    # (que olhou o arquivo inteiro), "11/03" seria lido como 11 de março; com a dica, 3 de novembro.
+    parte = "11/03/26, 9:00 AM - Ann: hi"
+    assert ler_exportacao(parte)[0].quando.month == 3, "sem dica: assume dia/mês"
+    assert ler_exportacao(parte, mes_primeiro=True)[0].quando.month == 11, "com dica do arquivo inteiro"

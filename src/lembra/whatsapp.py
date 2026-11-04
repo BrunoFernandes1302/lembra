@@ -82,13 +82,16 @@ def _data(data: str, hora: str, ampm: str | None = None, mes_primeiro: bool = Fa
         return None
 
 
-def ler_exportacao(conteudo: str) -> list[Mensagem]:
-    """Transforma o .txt exportado em mensagens (autor, quando, texto), descartando ruído."""
+def ler_exportacao(conteudo: str, mes_primeiro: bool | None = None) -> list[Mensagem]:
+    """Transforma o .txt exportado em mensagens (autor, quando, texto), descartando ruído.
+    mes_primeiro: formato da data já detectado no ARQUIVO INTEIRO (quando o app divide um
+    arquivo grande em partes, uma parte sozinha pode não revelar se é dia/mês ou mês/dia)."""
     mensagens: list[Mensagem] = []
     atual: Mensagem | None = None
     linhas = [ln.replace("‎", "").replace(" ", " ").rstrip()
               for ln in conteudo.replace("\r\n", "\n").split("\n")]
-    mes_primeiro = _mes_primeiro(linhas)
+    if mes_primeiro is None:
+        mes_primeiro = _mes_primeiro(linhas)
     for linha in linhas:
         c = _CABECALHO.match(linha)
         quando = _data(c["data"], c["hora"], c["ampm"], mes_primeiro) if c else None
