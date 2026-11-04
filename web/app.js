@@ -219,7 +219,9 @@ function mostrarAuth() {
 async function mostrarApp() {
   $("#tela-auth").hidden = true;
   $("#app").hidden = false;
-  irPara("perguntar");
+  // atalhos do ícone instalado ("segurar o ícone → Registrar") abrem direto na tela pedida
+  const pedida = new URLSearchParams(location.search).get("tela");
+  irPara(TELAS.includes(pedida) ? pedida : "perguntar");
   await carregarCategorias().catch(() => {});
 }
 
@@ -1137,4 +1139,52 @@ document.addEventListener("input", (e) => {
   e.target.style.height = Math.min(e.target.scrollHeight + 2, innerHeight * 0.45) + "px";
 });
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+
+// ---------------- PWA: instalar e sem internet ----------------
+// Android/computador: o navegador avisa que o app é instalável (beforeinstallprompt) e guardamos esse
+// pedido para disparar no NOSSO botão. iPhone: o Safari não tem esse evento, então mostramos o passo
+// a passo. Instalado (display-mode standalone) ou dispensado: o botão não aparece.
+const jaInstalado = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const ehIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+let pedidoInstalacao = null;
+function dispensouInstalar() {
+  try { return localStorage.getItem("lembra.instalar.dispensado") === "1"; } catch { return false; }
+}
+function mostrarInstalar(sim) {
+  $("#instalar-caixa").hidden = !sim || jaInstalado() || dispensouInstalar();
+}
+addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault(); // sem isso, o navegador mostra o próprio aviso na hora que ele quiser
+  pedidoInstalacao = e;
+  mostrarInstalar(true);
+});
+if (ehIOS) mostrarInstalar(true);
+$("#instalar").addEventListener("click", async () => {
+  if (pedidoInstalacao) {
+    pedidoInstalacao.prompt();
+    const { outcome } = await pedidoInstalacao.userChoice;
+    pedidoInstalacao = null; // o pedido só pode ser usado uma vez
+    if (outcome === "accepted") mostrarInstalar(false);
+  } else if (ehIOS) {
+    $("#dialogo-ios").showModal();
+  }
+});
+$("#instalar-fechar").addEventListener("click", () => {
+  try { localStorage.setItem("lembra.instalar.dispensado", "1"); } catch {}
+  mostrarInstalar(false);
+});
+addEventListener("appinstalled", () => {
+  mostrarInstalar(false);
+  avisar("Lembra instalado ✅");
+});
+
+function atualizarConexao() {
+  $("#offline").hidden = navigator.onLine;
+}
+addEventListener("offline", atualizarConexao);
+addEventListener("online", () => {
+  atualizarConexao();
+  avisar("Conexão de volta");
+});
+atualizarConexao();
 sessao.get()?.access_token ? mostrarApp() : mostrarAuth();
