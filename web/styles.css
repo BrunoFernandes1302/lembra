@@ -620,3 +620,6 @@ a.botao { text-decoration: none; text-align: center; }
   .segmentos .segmento { font-size: .78rem; padding: 10px 2px; }
   .segmentos .segmento .ic { display: none; }
 }
+
+.link-privacidade { text-align: center; margin-top: 16px; }
+.link-privacidade a { color: var(--suave); }

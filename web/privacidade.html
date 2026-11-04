@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Privacidade · Lembra</title>
+  <meta name="description" content="Política de Privacidade do Lembra">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .doc { max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; line-height: 1.6; }
+    .doc h1 { margin: 16px 0 4px; }
+    .doc h2 { margin: 28px 0 8px; font-size: 1.1rem; }
+    .doc .atualizado { color: var(--suave); margin: 0 0 16px; }
+    .doc ul { padding-left: 20px; }
+    .doc a { color: var(--ciano); }
+  </style>
+</head>
+<body>
+  <main class="doc">
+    <a class="marca" href="./"><img src="icons/icon.svg" alt="" width="28" height="28"> <span class="titulo-gradiente">Lembra</span></a>
+    <h1>Política de Privacidade</h1>
+    <p class="atualizado">Atualizada em 4 de novembro de 2026</p>
+
+    <p>O Lembra é um assistente pessoal, em fase de testes, que guarda memórias que <b>você</b> escreve,
+      fala ou encaminha, e responde perguntas sobre elas usando inteligência artificial.</p>
+
+    <h2>Quais dados guardamos</h2>
+    <ul>
+      <li><b>Conta:</b> seu e-mail e senha (a senha é guardada só como <i>hash</i>, nunca em texto).</li>
+      <li><b>Memórias:</b> os textos que você registra, suas categorias e datas, e "vetores" (números que representam o significado do texto, usados na busca).</li>
+      <li><b>Preferências:</b> ajustes do app, avaliações 👍/👎 das respostas e o perfil de estilo gerado a partir delas.</li>
+      <li><b>WhatsApp (se você vincular):</b> seu número de telefone e o identificador técnico de cada mensagem (para não processá-la duas vezes, apagado após 7 dias).</li>
+    </ul>
+    <p>Áudios são transcritos e <b>não são guardados</b>: só o texto resultante, se você o salvar como memória.</p>
+
+    <h2>Quem processa os dados</h2>
+    <ul>
+      <li><b>Supabase</b> (banco de dados e login, servidores no Brasil): cada pessoa só acessa as próprias memórias (isolamento no próprio banco).</li>
+      <li><b>Google Gemini</b> (IA): recebe os trechos necessários para gerar respostas, embeddings, categorias e transcrições. No plano gratuito, o Google pode usar esse conteúdo para melhorar seus produtos. Você pode desligar a IA em Ajustes.</li>
+      <li><b>Vercel</b> (hospedagem do app).</li>
+      <li><b>Meta / WhatsApp</b> (só se você vincular seu número): transporta as mensagens entre você e o Lembra.</li>
+    </ul>
+    <p>Não vendemos nem compartilhamos seus dados com mais ninguém, e não há anúncios.</p>
+
+    <h2>Para que usamos</h2>
+    <p>Exclusivamente para o funcionamento do app: guardar, buscar e responder sobre suas memórias, e adaptar o
+      estilo das respostas a você.</p>
+
+    <h2>Seus direitos e como apagar seus dados (LGPD)</h2>
+    <ul>
+      <li><b>Memórias:</b> apague qualquer memória a qualquer momento em <i>Memórias</i>.</li>
+      <li><b>WhatsApp:</b> desvincule em <i>Ajustes → WhatsApp</i>; o Lembra deixa de responder ao seu número.</li>
+      <li><b>Conta inteira:</b> peça a exclusão ao responsável pelo app (contato abaixo). Ao excluir a conta, todas as memórias, ajustes e vínculos são apagados em definitivo.</li>
+    </ul>
+
+    <h2>Contato</h2>
+    <p>Responsável: Bruno Fernandes (projeto pessoal, sem fins comerciais). Para dúvidas ou pedidos de exclusão,
+      fale com quem te convidou para testar o Lembra ou use o contato do app na Meta.</p>
+  </main>
+</body>
+</html>
