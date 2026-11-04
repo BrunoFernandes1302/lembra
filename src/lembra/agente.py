@@ -104,7 +104,7 @@ DECLARACOES = [
 def _no_mes(ano: int, mes: int, tipo: str, dia=None, dia_semana=None, ordem=None) -> tuple[date | None, bool]:
     """A ocorrência DENTRO de um mês (ou None se não existir, ex.: 5ª segunda). Devolve (data, ajustada)."""
     ultimo = calendar.monthrange(ano, mes)[1]
-    if tipo == "dia_do_mes":
+    if tipo == "dia_do_mes":  # dia já validado (1-31); 29-31 em mês curto vira o último dia
         return date(ano, mes, min(int(dia), ultimo)), int(dia) > ultimo  # dia 31 em fev → último dia
     alvo = DIAS.index(dia_semana)
     dias = [d for d in range(1, ultimo + 1) if date(ano, mes, d).weekday() == alvo]
@@ -114,10 +114,24 @@ def _no_mes(ano: int, mes: int, tipo: str, dia=None, dia_semana=None, ordem=None
     return (date(ano, mes, dias[ordem - 1]), False) if 1 <= ordem <= len(dias) else (None, False)
 
 
+def _ler_data(texto: str) -> date:
+    """Aceita dd/mm/aaaa e aaaa-mm-dd (formato comum dos LLMs); outro formato vira erro claro."""
+    for formato in ("%d/%m/%Y", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(str(texto).strip(), formato).date()
+        except ValueError:
+            continue
+    raise ValueError(f"data inválida: {texto!r} (use dd/mm/aaaa)")
+
+
 def proximas_ocorrencias(tipo: str, hoje: date, quantidade: int = 1, dia=None, dia_semana=None, ordem=None,
                          n=None, a_partir_de=None) -> list[tuple[date, bool]]:
     """Próximas datas (a partir de hoje, inclusive) de uma regra recorrente."""
     quantidade = max(1, min(int(quantidade or 1), 6))
+    if tipo == "dia_do_mes" and not 1 <= int(dia) <= 31:
+        raise ValueError(f"dia precisa estar entre 1 e 31 (recebi {dia})")
+    if tipo == "ordem_no_mes" and int(ordem) not in (-1, 1, 2, 3, 4, 5):
+        raise ValueError(f"ordem precisa ser 1 a 5, ou -1 para a última (recebi {ordem})")
     if tipo == "dia_da_semana":
         primeira = hoje + timedelta(days=(DIAS.index(dia_semana) - hoje.weekday()) % 7)
         return [(primeira + timedelta(weeks=k), False) for k in range(quantidade)]
@@ -125,7 +139,7 @@ def proximas_ocorrencias(tipo: str, hoje: date, quantidade: int = 1, dia=None, d
         n = int(n)
         if n < 1:
             raise ValueError("n precisa ser pelo menos 1")
-        base = datetime.strptime(a_partir_de, "%d/%m/%Y").date()
+        base = _ler_data(a_partir_de)
         saltos = max(0, -(-(hoje - base).days // n))  # arredonda para cima: primeira ocorrência >= hoje
         return [(base + timedelta(days=n * (saltos + k)), False) for k in range(quantidade)]
     if tipo not in ("dia_do_mes", "ordem_no_mes"):

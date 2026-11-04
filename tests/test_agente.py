@@ -157,3 +157,18 @@ def test_dia_da_semana_conta_hoje():
 def test_a_cada_n_dias():
     assert _datas(tipo="a_cada_n_dias", n=15, a_partir_de="01/10/2026") == ["15/11/2026"]
     assert _datas(tipo="a_cada_n_dias", n=15, a_partir_de="20/12/2026") == ["20/12/2026"], "base no futuro"
+
+
+@pytest.mark.parametrize(("regra", "trecho"), [
+    ({"tipo": "dia_do_mes", "dia": 45}, "entre 1 e 31"),
+    ({"tipo": "dia_do_mes", "dia": 0}, "entre 1 e 31"),
+    ({"tipo": "ordem_no_mes", "ordem": 0, "dia_semana": "quinta-feira"}, "ordem precisa"),
+    ({"tipo": "a_cada_n_dias", "n": 7, "a_partir_de": "1 de outubro"}, "use dd/mm/aaaa"),
+])
+def test_regra_invalida_vira_erro_claro(regra, trecho):
+    with pytest.raises(ValueError, match=trecho):
+        proximas_ocorrencias(hoje=HOJE, **regra)
+
+
+def test_a_cada_n_dias_aceita_data_iso():
+    assert _datas(tipo="a_cada_n_dias", n=15, a_partir_de="2026-10-01") == ["15/11/2026"]
