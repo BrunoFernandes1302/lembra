@@ -643,3 +643,13 @@ a.botao { text-decoration: none; text-align: center; }
 .dialogo::backdrop { background: rgba(0, 0, 0, .55); backdrop-filter: blur(4px); }
 .dialogo h3 { margin: 0 0 8px; }
 .dialogo .botao { width: 100%; margin-top: 8px; }
+
+/* ---------- Conversa com memória ---------- */
+.entendida { margin: 0 0 8px; font-size: .8rem; color: var(--suave); border-left: 2px solid var(--violeta); padding-left: 8px; }
+.entendida b { color: var(--texto); font-weight: 600; }
+.nova-conversa { display: flex; width: fit-content; align-items: center; gap: 6px; margin: 0 auto 8px;
+  border: 1px solid var(--borda-forte); background: var(--vidro-forte); color: var(--suave); border-radius: 999px;
+  font: inherit; font-size: .8rem; font-weight: 600; padding: 6px 12px; cursor: pointer; backdrop-filter: blur(14px); }
+.nova-conversa[hidden] { display: none; }
+.nova-conversa .ic { width: 14px; height: 14px; }
+@media (hover: hover) { .nova-conversa:hover { color: var(--texto); } }

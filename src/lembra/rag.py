@@ -12,6 +12,7 @@ G = Generation  : o LLM responde usando SÓ esse material.
 from __future__ import annotations
 
 import logging
+import re
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import date, datetime
@@ -79,6 +80,7 @@ class Resposta:
     fontes: list[Trecho]
     gerada_por_ia: bool = False
     passos: list[dict] = field(default_factory=list)  # modo agente: ferramentas usadas
+    pergunta_entendida: str | None = None  # conversa com memória: a pergunta reescrita, se foi
 
 
 def alimentar(
@@ -176,10 +178,61 @@ def filtrar_proximos_do_melhor(trechos: list[Trecho], margem: float = MARGEM_REL
     return [t for t in trechos if t.similaridade >= melhor - margem]
 
 
+# ---------------------------------------------------------------- conversa com memória
+# "e em setembro?" sozinha não diz nada para a BUSCA (o vetor não tem "mercado"). Antes de buscar,
+# a IA reescreve a pergunta usando as últimas trocas: "Quanto gastei de mercado em setembro?".
+MAX_TURNOS_HISTORICO = 3
+# Sinais de que a pergunta depende da anterior: começa com conectivo ou usa referência ("isso", "dele"...)
+_DEPENDENTE = re.compile(
+    r"^\s*(e|mas|então|entao|também|tambem|só|so)\b|\b(isso|isto|disso|nisso|dele|dela|deles|delas|esse|essa|"
+    r"esses|essas|nesse|nessa|desse|dessa|mesmo|mesma|ele|ela|eles|elas|lá|aquilo|anterior|outro|outra)\b",
+    re.IGNORECASE)
+
+PROMPT_REESCRITA = """Você reescreve a ÚLTIMA pergunta de uma conversa para que ela faça sentido SOZINHA, \
+sem a conversa. Complete o que estiver implícito (assunto, pessoa, lugar, período) usando a conversa.
+- Mantenha o sentido e o português do usuário; não acrescente nada que ele não perguntou.
+- Se a pergunta já fizer sentido sozinha, devolva-a igual.
+- NÃO responda à pergunta. Devolva só a pergunta reescrita, numa linha, sem aspas."""
+
+
+def precisa_reescrever(pergunta: str, historico: list[dict]) -> bool:
+    """Economia de tokens: só chama a IA quando a pergunta PARECE depender da anterior (curta ou com
+    referência). Pergunta longa e completa segue direto, sem a chamada extra."""
+    if not historico:
+        return False
+    return len(pergunta.split()) <= 6 or bool(_DEPENDENTE.search(pergunta))
+
+
+def reescrever_pergunta(pergunta: str, historico: list[dict], s: Settings) -> str:
+    llm = get_llm(s) if s.usar_ia else None
+    if llm is None or not precisa_reescrever(pergunta, historico):
+        return pergunta
+    conversa = "\n".join(f"Usuário: {t['pergunta']}\nLembra: {t['resposta'][:400]}"
+                         for t in historico[-MAX_TURNOS_HISTORICO:])
+    try:
+        nova = llm.gerar(PROMPT_REESCRITA, f"CONVERSA:\n{conversa}\n\nÚLTIMA PERGUNTA: {pergunta}")
+    except Exception as e:  # noqa: BLE001 — sem reescrita a pergunta ainda funciona (só pior)
+        logger.warning("reescrita falhou (%s): %s", type(e).__name__, e)
+        return pergunta
+    nova = nova.strip().strip('"“”').strip()
+    return nova if 0 < len(nova) <= 500 else pergunta  # nunca confiar cegamente na saída do LLM
+
+
 def perguntar(
-    repo: Repositorio, pergunta: str, categoria: str | None = None, settings: Settings | None = None
+    repo: Repositorio, pergunta: str, categoria: str | None = None, settings: Settings | None = None,
+    historico: list[dict] | None = None,
 ) -> Resposta:
+    # Config e vetor em paralelo (como antes): quem não tem histórico não espera nada a mais.
     s, vetor = _config_e_vetor(repo, pergunta, settings)
+    entendida = reescrever_pergunta(pergunta, historico or [], s)
+    if entendida != pergunta:
+        vetor = None  # a busca precisa do vetor da pergunta COMPLETA
+    r = _responder(repo, entendida, categoria, s, vetor)
+    r.pergunta_entendida = entendida if entendida != pergunta else None
+    return r
+
+
+def _responder(repo, pergunta: str, categoria: str | None, s: Settings, vetor) -> Resposta:
     if s.usar_ia and s.modo_agente and s.llm_provider == "gemini":
         resposta = _perguntar_com_agente(repo, pergunta, categoria, s)
         if resposta is not None:

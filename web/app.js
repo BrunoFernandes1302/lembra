@@ -825,6 +825,20 @@ $("#conversa").addEventListener("click", (e) => {
   f.requestSubmit();
 });
 
+// Conversa com memória: as últimas trocas ficam SÓ aqui, na tela (nem no aparelho, nem no servidor).
+// Guardamos a pergunta JÁ ENTENDIDA (completa): assim "e em agosto?" depois de "e em setembro?"
+// ainda sabe que o assunto é mercado.
+const MAX_TURNOS = 3;
+let historico = [];
+const dicaInicial = $("#dica-perguntar")?.cloneNode(true);
+
+function novaConversa() {
+  historico = [];
+  $("#nova-conversa").hidden = true;
+  $("#conversa").replaceChildren(...(dicaInicial ? [dicaInicial.cloneNode(true)] : []));
+}
+$("#nova-conversa").addEventListener("click", novaConversa);
+
 $("#form-perguntar").addEventListener("submit", async (e) => {
   e.preventDefault();
   const f = e.target;
@@ -840,10 +854,18 @@ $("#form-perguntar").addEventListener("submit", async (e) => {
 
   try {
     const r = await chamar("/perguntar", { metodo: "POST",
-      corpo: { pergunta, categoria: f.categoria.value || null } });
+      corpo: { pergunta, categoria: f.categoria.value || null, historico: historico.slice(-MAX_TURNOS) } });
     pensando.classList.remove("pensando");
     pensando.replaceChildren();
+    if (r.pergunta_entendida) {
+      const ent = el("p", "entendida");
+      ent.append(el("b", null, "Entendi como: "), document.createTextNode(r.pergunta_entendida));
+      pensando.append(ent);
+    }
     renderizarResposta(pensando, r.resposta);
+    historico = [...historico, { pergunta: r.pergunta_entendida || pergunta, resposta: r.resposta.slice(0, 600) }]
+      .slice(-MAX_TURNOS);
+    $("#nova-conversa").hidden = false;
     if (!r.gerada_por_ia) pensando.classList.add("sem-ia");
     if (r.passos?.length) pensando.append(blocoPassos(r.passos));
     if (r.gerada_por_ia) pensando.append(blocoAvaliacao(pergunta, r.resposta));

@@ -547,6 +547,30 @@ precisa do contexto que falta nas memórias, como a data de hoje.
 - a descrição da ferramenta avisa que ela já sabe a data de hoje: o agente deixou de chamar
   `data_de_hoje` antes (3 → 2 chamadas por pergunta = uma ida e volta a menos com a IA).
 
+### 12.2 Conversa com memória: reescrever a pergunta (*query rewriting*)
+
+**O problema:** cada pergunta era isolada. "Quanto gastei de mercado em outubro?" e depois "e em
+setembro?": a busca procurava por "e em setembro?", cujo vetor não tem nada de "mercado".
+
+**A técnica:** antes de buscar, uma chamada curta à IA lê as últimas 3 trocas e reescreve a
+pergunta para fazer sentido sozinha ("Quanto gastei de mercado em setembro?"). Busca e resposta
+usam a versão completa; o app mostra "Entendi como: …" (transparência: dá para ver se a IA entendeu
+errado). Gemini real: "e o do meu pai?" → "Quando é o aniversário do meu pai?"; "e isso vence que
+dia?" → "E o aluguel vence que dia?".
+
+**Por que não só mandar o histórico junto?** Ajudaria a *resposta*, mas não a *busca* (o vetor de
+"e em setembro?" continua vazio de sentido), e gastaria mais tokens em toda pergunta.
+
+**Custos e cuidados:**
+- só reescreve quando a pergunta *parece* depender da anterior (até 6 palavras, ou começa com
+  "e/mas/também", ou usa "isso/dele/nesse…"); pergunta completa não paga a chamada extra;
+- histórico curto (3 trocas, respostas cortadas) e **só na tela**: não fica no aparelho nem no
+  servidor; "Nova conversa" zera;
+- o histórico guarda a pergunta **já entendida**: na 3ª pergunta ("e em agosto?") o contexto
+  ainda é "mercado", não "e em setembro?";
+- a saída da IA é conferida (vazia ou longa demais → usa a original) e, se a reescrita falhar, a
+  pergunta segue como veio; o vetor original (calculado em paralelo) só é descartado se reescreveu.
+
 ## Desempenho: medir antes de otimizar
 
 Medição de uma pergunta comum: o Gemini respondia em ~1 s (sem "pensar"); o lento eram duas
@@ -678,4 +702,5 @@ o mesmo juiz.
 | **HMAC** | Assinatura feita com um segredo compartilhado: prova que a mensagem veio de quem tem o segredo e não foi alterada |
 | **Timing attack** | Descobrir um segredo medindo quanto tempo uma comparação demora |
 | **Cache de prompt** | Desconto do provedor quando o começo do prompt se repete entre chamadas |
+| **Query rewriting** | Reescrever a pergunta com o contexto da conversa antes de buscar |
 | **Idempotência** | Processar a mesma coisa duas vezes dá o mesmo resultado que uma vez |

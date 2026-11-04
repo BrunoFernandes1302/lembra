@@ -11,7 +11,7 @@ o sistema respondeu e o que era esperado.
 | 3 | **Categorias e configuração do RAG** | Categorias por usuário, filtros, editar memória, ajustes do RAG no app, Laboratório, IA sugere categoria | ✅ |
 | 4 | **Avaliação (LLM-as-judge)** | Conjunto de perguntas de teste, recall@K, fidelidade; um LLM "juiz" avalia as respostas | ✅ v1 (próximo: conjunto maior e repetições) |
 | 5 | **Agentes** | LLM que decide quais ferramentas usar (buscar, listar, calcular, contar dias) | ✅ experimental |
-| 6 | **RAG avançado** | Busca híbrida, re-ranking, chat com histórico | ⬜ |
+| 6 | **RAG avançado** | Busca híbrida, re-ranking, chat com histórico | 🟡 conversa com memória (reescrita da pergunta) ✅; busca híbrida e re-ranking ⬜ |
 | 7 | **LLM local** | Ollama, quantização, privacidade | 🟡 LoRA avaliado (correta 50→60%, fiel 70→80%, admite não saber 0→50%); falta servir no Ollama |
 | 8 | **Fine-tuning** | Congelar o modelo e treinar só a "ponta" / LoRA | ✅ experimentos (adaptador de embeddings e LoRA) |
 | 8b | **Visual e integrações** | Redesenho moderno "cara de IA" ✅ v1; importar conversas do WhatsApp ✅; Lembra como contato no WhatsApp (API oficial) 🟡 no ar e configurado; aguardando a Meta liberar envio para o Brasil (erro 130497); importação até 10 MB ✅ | 🟡 |
