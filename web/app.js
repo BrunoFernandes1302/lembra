@@ -1145,7 +1145,9 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catc
 // pedido para disparar no NOSSO botão. iPhone: o Safari não tem esse evento, então mostramos o passo
 // a passo. Instalado (display-mode standalone) ou dispensado: o botão não aparece.
 const jaInstalado = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
-const ehIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+// iPadOS 13+ se identifica como Mac: um "Mac" com tela de toque é um iPad
+const ehIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+  (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 let pedidoInstalacao = null;
 function dispensouInstalar() {
   try { return localStorage.getItem("lembra.instalar.dispensado") === "1"; } catch { return false; }
