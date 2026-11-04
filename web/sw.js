@@ -1,7 +1,7 @@
 // Service worker do Lembra.
 // Guarda só a "casca" do app (telas, estilos, ícones) para abrir rápido.
 // NUNCA guarda dados da API (memórias, respostas): privacidade.
-const VERSAO = "lembra-v12";
+const VERSAO = "lembra-v14";
 const CASCA = ["./", "index.html", "styles.css", "app.js", "config.js", "manifest.webmanifest",
                "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png"];
 
@@ -27,6 +27,6 @@ self.addEventListener("fetch", (e) => {
   e.respondWith(
     fetch(e.request)
       .then((r) => { const copia = r.clone(); caches.open(VERSAO).then((c) => c.put(e.request, copia)); return r; })
-      .catch(() => caches.match(e.request))
+      .catch(() => caches.match(e.request, { ignoreSearch: true })) // atalhos "?tela=" usam a mesma casca
   );
 });

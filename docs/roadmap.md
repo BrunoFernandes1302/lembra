@@ -7,7 +7,7 @@ o sistema respondeu e o que era esperado.
 | Fase | Tema | O que se aprende | Status |
 |------|------|------------------|--------|
 | 1 | **RAG básico** | Chunking, embeddings, banco vetorial, prompt com contexto | ✅ |
-| 2 | **App de verdade** | PWA mobile, login/senha, multiusuário isolado, deploy, banco na nuvem | ✅ no ar em lembra-nu.vercel.app |
+| 2 | **App de verdade** | PWA mobile (botão de instalar, atalhos, aviso sem internet), login/senha, multiusuário isolado, deploy, banco na nuvem | ✅ no ar em lembra-nu.vercel.app |
 | 3 | **Categorias e configuração do RAG** | Categorias por usuário, filtros, editar memória, ajustes do RAG no app, Laboratório, IA sugere categoria | ✅ |
 | 4 | **Avaliação (LLM-as-judge)** | Conjunto de perguntas de teste, recall@K, fidelidade; um LLM "juiz" avalia as respostas | ✅ v1 (próximo: conjunto maior e repetições) |
 | 5 | **Agentes** | LLM que decide quais ferramentas usar (buscar, listar, calcular, contar dias) | ✅ experimental |

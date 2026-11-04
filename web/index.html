@@ -80,7 +80,13 @@
   <div id="app" hidden>
     <header class="topo">
       <span class="marca"><img src="icons/icon.svg" alt=""><span class="titulo-gradiente">Lembra</span></span>
-      <button type="button" class="botao-icone" id="sair" aria-label="Sair" title="Sair"><svg class="ic"><use href="#i-logout"/></svg></button>
+      <div class="topo-acoes">
+        <div class="instalar-caixa" id="instalar-caixa" hidden>
+          <button type="button" class="botao-instalar" id="instalar"><svg class="ic"><use href="#i-down"/></svg><span>Instalar</span></button>
+          <button type="button" class="instalar-fechar" id="instalar-fechar" aria-label="Não mostrar de novo" title="Não mostrar de novo">×</button>
+        </div>
+        <button type="button" class="botao-icone" id="sair" aria-label="Sair" title="Sair"><svg class="ic"><use href="#i-logout"/></svg></button>
+      </div>
     </header>
 
     <main>
@@ -320,6 +326,17 @@
   </div>
 
   <div id="aviso" class="aviso" role="status" hidden></div>
+  <div id="offline" class="faixa-offline" role="status" hidden>Sem internet: dá para ler a tela, mas nada é salvo nem respondido até a conexão voltar.</div>
+
+  <dialog id="dialogo-ios" class="dialogo">
+    <h3>Instalar no iPhone ou iPad</h3>
+    <ol class="dicas">
+      <li>Toque em <b>Compartilhar</b> (o quadrado com uma seta para cima): no <b>Safari</b> fica na barra de baixo; no <b>Chrome</b> ou <b>Edge</b>, na barra de endereço.</li>
+      <li>Role a lista e toque em <b>Adicionar à Tela de Início</b>.</li>
+      <li>Toque em <b>Adicionar</b>. O Lembra aparece na tela como um app.</li>
+    </ol>
+    <form method="dialog"><button class="botao primario">Entendi</button></form>
+  </dialog>
 
   <script src="config.js"></script>
   <script src="app.js"></script>

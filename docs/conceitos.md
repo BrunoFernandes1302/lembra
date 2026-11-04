@@ -292,6 +292,28 @@ app entra em `ALLOWED_ORIGINS`.
 
 ---
 
+### 8.1 PWA completo: instalar, atalhos e sem internet
+
+**Instalável ≠ instalado.** Manifest + ícones + service worker tornam o app *instalável* (o
+diagnóstico do Chrome, `getInstallabilityErrors`, não aponta nenhum erro), mas quase ninguém acha
+o "Instalar app" escondido no menu do navegador. Por isso o app oferece o próprio botão:
+- **Android/computador:** o navegador dispara `beforeinstallprompt` quando o app é instalável. O app
+  **segura** esse evento (`preventDefault`) e o dispara no botão "Instalar", na hora que o usuário
+  quiser. O pedido só pode ser usado uma vez.
+- **iPhone:** o Safari não tem esse evento; o botão abre um passo a passo (Compartilhar →
+  Adicionar à Tela de Início).
+- O botão some se o app já está instalado (`display-mode: standalone`) ou se a pessoa dispensou (×).
+
+**Atalhos do ícone:** segurar o ícone instalado mostra "Perguntar" e "Registrar" (`shortcuts` no
+manifest → `./?tela=registrar`). O service worker serve a mesma casca para qualquer `?tela=`
+(`ignoreSearch`), então os atalhos abrem até sem internet.
+
+**Cores de abertura:** `background_color`/`theme_color` do manifest iguais ao tema padrão (escuro),
+para não piscar uma tela branca ao abrir.
+
+**Sem internet:** uma faixa avisa quando a conexão cai (`offline`/`online` do navegador) e some
+quando volta. A casca abre do cache; dados nunca ficam no cache (privacidade, seção 8).
+
 ## 9. Configurar o RAG pelo app (Ajustes)
 
 Cada pessoa tem a **sua** configuração (tabela `config_rag`, com RLS). Sem configuração salva,

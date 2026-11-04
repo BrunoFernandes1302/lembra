@@ -623,3 +623,23 @@ a.botao { text-decoration: none; text-align: center; }
 
 .link-privacidade { text-align: center; margin-top: 16px; }
 .link-privacidade a { color: var(--suave); }
+
+/* ---------- PWA: instalar e sem internet ---------- */
+.topo-acoes { display: flex; align-items: center; gap: 8px; }
+.instalar-caixa { display: flex; align-items: center; border-radius: 999px; background: var(--gradiente-suave);
+  box-shadow: inset 0 0 0 1px var(--borda-forte); animation: entrar 300ms cubic-bezier(.2, .8, .2, 1) both; }
+.instalar-caixa[hidden] { display: none; }
+.botao-instalar { display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; color: var(--texto);
+  font: inherit; font-size: .85rem; font-weight: 600; padding: 8px 4px 8px 12px; cursor: pointer; }
+.botao-instalar .ic { width: 16px; height: 16px; }
+.instalar-fechar { border: 0; background: none; color: var(--suave); font-size: 1.1rem; line-height: 1;
+  padding: 8px 12px 8px 6px; cursor: pointer; }
+@media (hover: hover) { .instalar-fechar:hover, .botao-instalar:hover { color: var(--texto); } }
+.faixa-offline { position: fixed; left: 0; right: 0; bottom: calc(88px + var(--seguro-baixo)); margin: 0 16px; z-index: 19;
+  padding: 10px 14px; border-radius: 14px; font-size: .85rem; text-align: center; color: #fff;
+  background: rgba(120, 30, 45, .9); border: 1px solid rgba(251, 113, 133, .4); backdrop-filter: blur(14px); }
+.dialogo { max-width: min(420px, calc(100% - 32px)); border: 1px solid var(--borda-forte); border-radius: var(--raio);
+  background: var(--fundo-2); color: var(--texto); padding: 20px; }
+.dialogo::backdrop { background: rgba(0, 0, 0, .55); backdrop-filter: blur(4px); }
+.dialogo h3 { margin: 0 0 8px; }
+.dialogo .botao { width: 100%; margin-top: 8px; }
