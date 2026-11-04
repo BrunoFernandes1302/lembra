@@ -14,7 +14,7 @@ o sistema respondeu e o que era esperado.
 | 6 | **RAG avançado** | Busca híbrida, re-ranking, chat com histórico | ⬜ |
 | 7 | **LLM local** | Ollama, quantização, privacidade | 🟡 LoRA avaliado (correta 50→60%, fiel 70→80%, admite não saber 0→50%); falta servir no Ollama |
 | 8 | **Fine-tuning** | Congelar o modelo e treinar só a "ponta" / LoRA | ✅ experimentos (adaptador de embeddings e LoRA) |
-| 8b | **Visual e integrações** | Redesenho moderno "cara de IA" ✅ v1; importar conversas do WhatsApp ✅; Lembra como contato no WhatsApp (API oficial) 🟡 código pronto, falta configurar a Meta | 🟡 |
+| 8b | **Visual e integrações** | Redesenho moderno "cara de IA" ✅ v1; importar conversas do WhatsApp ✅; Lembra como contato no WhatsApp (API oficial) 🟡 no ar e configurado; aguardando a Meta liberar envio para o Brasil (erro 130497); importação até 10 MB ✅ | 🟡 |
 | 8c | **Multimodal** | Áudio (falar em vez de digitar) ✅; imagens (fotos de recibos, documentos) ⬜ futuro | 🟡 |
 | 9 | **Empresa** | Documentos reais, permissões, LGPD, custos | ⬜ |
 

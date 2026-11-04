@@ -15,7 +15,9 @@ Lista viva. Cada ideia tem o **conceito de IA/engenharia** que ela ensina.
   3. *Agir sem o login do usuário:* ~~chave de serviço com filtro manual~~ → **decidido:** o
      servidor emite um crachá (JWT) de 5 min para o dono do número, e o RLS continua valendo
      (ver `docs/conceitos.md`, seção 11.1).
-- **Status:** 🟡 código, banco e tela prontos (`src/lembra/whatsapp_bot.py`); falta configurar a Meta.
+- **Status:** 🟡 no ar e configurado (app Meta publicado, webhook assinado, mensagens chegando). A Meta
+  bloqueia o envio para o Brasil (erro 130497) até liberar a conta; se não liberar: verificação da
+  empresa ou número brasileiro próprio. Falta também um token permanente (o temporário vence em 24 h).
 - **Precisa do dono:** conta de desenvolvedor Meta + app com WhatsApp (número de teste é grátis).
 - **Conceitos:** webhooks, assinaturas HMAC, autenticação entre serviços, idempotência (a Meta
   pode reenviar a mesma mensagem; não podemos salvar duas vezes).
