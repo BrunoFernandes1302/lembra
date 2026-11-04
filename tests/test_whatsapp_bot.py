@@ -110,6 +110,8 @@ class BancoFalso:
     def vincular(self, codigo, tel):
         if codigo == "BLOQUEADO":
             raise ErroSupabase(400, "muitas tentativas; aguarde uma hora")
+        if codigo == "QUEBRADO":
+            raise ErroSupabase(500, "function public.whatsapp_vincular: permission denied")
         dono = self.codigos.pop(codigo, None)
         if dono:
             self.vinculos[tel] = dono
@@ -166,7 +168,7 @@ def test_vincular_com_codigo_valido_invalido_e_bloqueado(rag_falso):
     assert responder(_texto("VINCULAR abcd2345"), banco, MetaFalsa()).startswith("✅")
     assert banco.dono(ANA) == "uid-ana"
     assert "inválido" in responder(_texto("VINCULAR ABCD2345", mid="m2"), banco, MetaFalsa()), "uso único"
-    assert "aguarde" in responder(_texto("VINCULAR BLOQUEADO", mid="m3"), banco, MetaFalsa())
+    assert "aguarde" in responder(_texto("VINCULAR BLOQUEADO", mid="m3"), banco, MetaFalsa()).lower()
 
 
 def test_mensagem_repetida_pela_meta_e_ignorada(rag_falso):
@@ -265,3 +267,8 @@ def test_falha_de_entrega_e_registrada_sem_conteudo(rag_falso):
     banco, meta = BancoFalso(), MetaFalsa()
     assert processar_webhook(payload, banco, meta) == 0 and meta.enviadas == []
     assert banco.falhas == [(131026, "Message undeliverable", "motivo")], "só código e motivo, sem número"
+
+
+def test_erro_interno_no_vinculo_nao_vaza_para_o_usuario(rag_falso):
+    r = responder(_texto("VINCULAR QUEBRADO"), BancoFalso(), MetaFalsa())
+    assert "permission" not in r and "function" not in r and "Não consegui vincular" in r

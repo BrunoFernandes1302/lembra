@@ -245,7 +245,10 @@ def responder(msg: MensagemRecebida, banco: BancoDoBot, meta: MetaWhatsApp) -> s
             try:
                 ok = banco.vincular(conteudo, msg.telefone)
             except ErroSupabase as e:
-                return f"⏳ {e.mensagem}"
+                if "muitas tentativas" in e.mensagem:  # o único erro "de produto" desta função
+                    return "⏳ Muitas tentativas com código errado. Aguarde uma hora e gere um código novo."
+                logger.exception("falha ao vincular")  # detalhe interno: vai para o log, não para o usuário
+                return "😕 Não consegui vincular agora. Tente de novo em instantes."
             return ("✅ Pronto! Este WhatsApp está ligado à sua conta do Lembra.\n\n" + AJUDA) if ok else \
                    "❌ Código inválido ou expirado. Gere outro no app (vale 10 minutos)."
 
