@@ -272,3 +272,16 @@ def test_falha_de_entrega_e_registrada_sem_conteudo(rag_falso):
 def test_erro_interno_no_vinculo_nao_vaza_para_o_usuario(rag_falso):
     r = responder(_texto("VINCULAR QUEBRADO"), BancoFalso(), MetaFalsa())
     assert "permission" not in r and "function" not in r and "Não consegui vincular" in r
+
+
+def test_recusa_imediata_da_meta_tambem_e_registrada(rag_falso):
+    class MetaQueRecusa(MetaFalsa):
+        def enviar(self, tel, texto):
+            super().enviar(tel, texto)
+            return {"codigo": 131030, "titulo": "Recipient phone number not in allowed list", "detalhe": ""}
+
+    payload = {"entry": [{"changes": [{"value": {"messages": [
+        {"id": "m1", "from": ANA, "type": "text", "text": {"body": "oi"}}]}}]}]}
+    banco = BancoFalso()
+    processar_webhook(payload, banco, MetaQueRecusa())
+    assert banco.falhas == [(131030, "Recipient phone number not in allowed list", "")]

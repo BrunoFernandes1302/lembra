@@ -209,12 +209,20 @@ class MetaWhatsApp:
         self.phone_id = phone_id
         self.cabecalhos = {"Authorization": f"Bearer {token}"}
 
-    def enviar(self, telefone: str, texto: str) -> None:
+    def enviar(self, telefone: str, texto: str) -> dict | None:
+        """Envia e devolve None se a Meta aceitou, ou {codigo, titulo, detalhe} se recusou na hora."""
         corpo = {"messaging_product": "whatsapp", "to": numero_para_envio(telefone), "type": "text",
                  "text": {"body": texto[:LIMITE_WHATSAPP]}}
         r = _http.post(f"{GRAPH}/{self.phone_id}/messages", headers=self.cabecalhos, json=corpo, timeout=TIMEOUT)
-        if not r.ok:
-            logger.warning("Meta recusou o envio (%s): %s", r.status_code, r.text[:300])
+        if r.ok:
+            return None
+        logger.warning("Meta recusou o envio (%s): %s", r.status_code, r.text[:300])
+        try:
+            erro = r.json().get("error", {})
+        except ValueError:
+            erro = {}
+        return {"codigo": erro.get("code") or r.status_code, "titulo": erro.get("message") or "recusado",
+                "detalhe": (erro.get("error_data") or {}).get("details", "")}
 
     def baixar_midia(self, midia_id: str) -> bytes:
         """Dois passos: o id vira uma URL temporária; a URL (com o token) devolve o arquivo."""
@@ -287,12 +295,15 @@ def responder(msg: MensagemRecebida, banco: BancoDoBot, meta: MetaWhatsApp) -> s
 
 def processar_webhook(payload: dict, banco: BancoDoBot, meta: MetaWhatsApp) -> int:
     """Trata todas as mensagens do envio; um erro numa mensagem não impede as outras."""
-    for falha in extrair_falhas(payload):
+    def registrar(falha: dict) -> None:
         logger.warning("Meta não entregou uma resposta: %s", falha)
         try:
             banco.registrar_falha(falha["codigo"], falha["titulo"], falha["detalhe"])
         except ErroSupabase:
             logger.exception("não consegui registrar a falha de entrega")
+
+    for falha in extrair_falhas(payload):  # recusas DEPOIS de aceitar (aviso de status "failed")
+        registrar(falha)
     tratadas = 0
     for msg in extrair_mensagens(payload):
         try:
@@ -301,6 +312,8 @@ def processar_webhook(payload: dict, banco: BancoDoBot, meta: MetaWhatsApp) -> i
             logger.exception("falha ao tratar mensagem %s", msg.id)
             texto = "😕 Tive um problema para processar isso. Tente de novo em instantes."
         if texto:
-            meta.enviar(msg.telefone, texto)
+            recusa = meta.enviar(msg.telefone, texto)  # recusa NA HORA (ex.: número fora da lista)
+            if recusa:
+                registrar(recusa)
             tratadas += 1
     return tratadas
