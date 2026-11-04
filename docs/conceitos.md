@@ -444,6 +444,13 @@ gravamos o id numa tabela com chave única. Se já existia, é reenvio e ignoram
 previsíveis, grátis e instantâneas; a IA fica onde ela agrega (categoria, resposta, transcrição).
 "Vincular" falado num áudio é recusado de propósito: transcrição pode errar letras.
 
+**Lição do 1º teste real: o 9º dígito.** As mensagens chegavam (a tabela de idempotência
+registrava cada uma), mas o Lembra não respondia. O WhatsApp entrega o remetente brasileiro no
+formato antigo, sem o 9 (`55 31 8888-7777`, 12 dígitos), e a Meta recusava o envio para esse
+formato (erro 131030). Correção: na hora de **enviar**, celular BR de 12 dígitos ganha o 9; para
+**identificar** a pessoa, o número fica como veio. Diagnóstico: separar o caminho em etapas
+(chegou? passou na assinatura? enviou?) e olhar a pista que cada etapa deixa.
+
 **Custo.** Responder a quem escreveu para o bot (janela de 24 h) é gratuito ou tem franquia
 mensal, conforme a regra vigente da Meta; o número de teste também é gratuito.
 

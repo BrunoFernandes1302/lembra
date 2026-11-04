@@ -241,3 +241,13 @@ def test_webhook_sem_configuracao_responde_503(monkeypatch):
     monkeypatch.delenv("WHATSAPP_APP_SECRET", raising=False)
     r = TestClient(api.app).post("/whatsapp/webhook", content=b"{}")
     assert r.status_code == 503
+
+
+@pytest.mark.parametrize(("veio", "envia"), [
+    ("553188887777", "5531988887777"),   # celular BR sem o 9 -> ganha o 9 depois do DDD
+    ("5531988887777", "5531988887777"),  # já completo: intacto
+    ("553133334444", "553133334444"),    # fixo (começa com 3): intacto
+    ("15551568101", "15551568101"),      # outro país: intacto
+])
+def test_numero_para_envio_corrige_o_nono_digito(veio, envia):
+    assert whatsapp_bot.numero_para_envio(veio) == envia

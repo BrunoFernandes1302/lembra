@@ -174,6 +174,16 @@ class BancoDoBot:
         return RepositorioSupabase(self.url, self.chave_publica, token)
 
 
+def numero_para_envio(telefone: str) -> str:
+    """Celulares brasileiros: o WhatsApp entrega o remetente no formato ANTIGO, sem o 9º dígito
+    (55 + DDD + 8 dígitos), mas a Meta só aceita enviar para o número completo, com o 9
+    (senão: erro 131030, "não está na lista permitida"). Só mexe em celular (começa com 6-9);
+    fixo e outros países passam intactos. O vínculo continua usando o número como veio."""
+    if len(telefone) == 12 and telefone.startswith("55") and telefone[4] in "6789":
+        return telefone[:4] + "9" + telefone[4:]
+    return telefone
+
+
 class MetaWhatsApp:
     """Enviar mensagens e baixar áudios pela Graph API da Meta."""
 
@@ -182,7 +192,7 @@ class MetaWhatsApp:
         self.cabecalhos = {"Authorization": f"Bearer {token}"}
 
     def enviar(self, telefone: str, texto: str) -> None:
-        corpo = {"messaging_product": "whatsapp", "to": telefone, "type": "text",
+        corpo = {"messaging_product": "whatsapp", "to": numero_para_envio(telefone), "type": "text",
                  "text": {"body": texto[:LIMITE_WHATSAPP]}}
         r = _http.post(f"{GRAPH}/{self.phone_id}/messages", headers=self.cabecalhos, json=corpo, timeout=TIMEOUT)
         if not r.ok:
