@@ -113,12 +113,15 @@ memórias do usuário. Julgue a RESPOSTA DO ASSISTENTE com dois critérios indep
 2. fiel (true/false):
    - true se TODAS as afirmações factuais da resposta estão apoiadas nas MEMÓRIAS ENTREGUES.
      Contas corretas feitas a partir delas contam como apoiadas. Dizer "não encontrei" é fiel.
+     O assistente também sabe a DATA DE HOJE (informada abaixo): datas, anos, dias da semana e
+     "quantos dias faltam" deduzidos dela + das memórias contam como apoiados.
    - false se afirmar qualquer coisa que não esteja nas memórias entregues, mesmo que pareça plausível.
 
 Dê uma justificativa curta (1 a 2 frases), em português."""
 
 
-def julgar(cliente, modelo: str, pergunta: str, esperada: str, trechos: list[Trecho], resposta: str) -> Veredito:
+def julgar(cliente, modelo: str, pergunta: str, esperada: str, trechos: list[Trecho], resposta: str,
+           hoje: str | None = None) -> Veredito:
     from google.genai import types
 
     memorias = "\n\n".join(f"[{i}] {t.texto}" for i, t in enumerate(trechos, 1)) or "(nenhuma)"
@@ -127,7 +130,10 @@ def julgar(cliente, modelo: str, pergunta: str, esperada: str, trechos: list[Tre
         tipo, esperada_txt = "SEM RESPOSTA", "(o usuário nunca registrou essa informação)"
     else:
         tipo, esperada_txt = "TEM RESPOSTA", esperada
-    conteudo = (f"TIPO DE PERGUNTA: {tipo}\n\nPERGUNTA:\n{pergunta}\n\nRESPOSTA ESPERADA:\n{esperada_txt}\n\n"
+    # O juiz precisa saber a mesma "data de hoje" que o assistente recebeu; sem isso, "12/11/2026"
+    # parece um ano inventado e respostas certas viram "não fiel".
+    data = f"DATA DE HOJE (a mesma que o assistente recebeu): {hoje}\n\n" if hoje else ""
+    conteudo = (f"{data}TIPO DE PERGUNTA: {tipo}\n\nPERGUNTA:\n{pergunta}\n\nRESPOSTA ESPERADA:\n{esperada_txt}\n\n"
                 f"MEMÓRIAS ENTREGUES AO ASSISTENTE:\n{memorias}\n\nRESPOSTA DO ASSISTENTE:\n{resposta}")
     r = cliente.models.generate_content(
         model=modelo, contents=conteudo,
@@ -225,7 +231,8 @@ def main():
                 resposta = com_novas_tentativas(llm.gerar, rag.prompt_do_sistema(s),
                                                 rag.montar_prompt(q["pergunta"], trechos, hoje=hoje))
                 time.sleep(a.pausa)
-                v = com_novas_tentativas(julgar, juiz, a.modelo_juiz, q["pergunta"], q["esperada"], trechos, resposta)
+                v = com_novas_tentativas(julgar, juiz, a.modelo_juiz, q["pergunta"], q["esperada"], trechos, resposta,
+                                         hoje=(hoje or rag.hoje_em_sp()).strftime("%d/%m/%Y"))
                 tentativas.append({"resposta": resposta, "correta": v.correta, "fiel": v.fiel,
                                    "justificativa": v.justificativa})
             # taxa de acerto nas repetições (ex.: 2 de 3 = 0,67)
