@@ -76,9 +76,9 @@ class RepositorioEmMemoria:
 
 
 # ---------------------------------------------------------------- chamadas com nova tentativa
-def com_novas_tentativas(func, *args, tentativas=6, **kwargs):
+def com_novas_tentativas(func, *args, tentativas=10, **kwargs):
     """O nível gratuito tem limite por minuto (429) e às vezes fica sobrecarregado (503):
-    espera e tenta de novo, dobrando a espera (backoff exponencial)."""
+    espera e tenta de novo, dobrando a espera (backoff exponencial, até 2 min)."""
     espera = 5
     for i in range(tentativas):
         try:
@@ -90,7 +90,7 @@ def com_novas_tentativas(func, *args, tentativas=6, **kwargs):
                 raise
             print(f"    (limite/instabilidade da API, esperando {espera}s...)", flush=True)
             time.sleep(espera)
-            espera = min(espera * 2, 60)
+            espera = min(espera * 2, 120)
 
 
 # ---------------------------------------------------------------- juiz
@@ -214,39 +214,48 @@ def main():
         juiz = genai.Client(api_key=s.gemini_api_key)
 
     resultados = []
+    parou_em = None  # se a API cair de vez, salva o que já foi feito em vez de perder a rodada
     for q in conjunto["perguntas"]:
-        trechos = com_novas_tentativas(rag.buscar, repo, q["pergunta"], None, s)
-        busca = medir_busca(trechos, q["relevantes"])
-        item = {**q, "busca": busca, "fontes": [t.metadados["memoria_id"] for t in trechos]}
-        linha = f"{q['id']} [{q['tipo']:<22}] "
-        if q["relevantes"]:
-            linha += f"recall={busca['recall']:.2f} acerto@1={'✓' if busca['acerto1'] else '✗'}"
-        else:
-            linha += f"(sem resposta; melhor nota {busca['nota_top1']:.2f})"
+        try:
+            trechos = com_novas_tentativas(rag.buscar, repo, q["pergunta"], None, s)
+            busca = medir_busca(trechos, q["relevantes"])
+            item = {**q, "busca": busca, "fontes": [t.metadados["memoria_id"] for t in trechos]}
+            linha = f"{q['id']} [{q['tipo']:<22}] "
+            if q["relevantes"]:
+                linha += f"recall={busca['recall']:.2f} acerto@1={'✓' if busca['acerto1'] else '✗'}"
+            else:
+                linha += f"(sem resposta; melhor nota {busca['nota_top1']:.2f})"
 
-        if not a.so_busca:
-            tentativas = []
-            for _ in range(a.repeticoes):
-                time.sleep(a.pausa)
-                resposta = com_novas_tentativas(llm.gerar, rag.prompt_do_sistema(s),
-                                                rag.montar_prompt(q["pergunta"], trechos, hoje=hoje))
-                time.sleep(a.pausa)
-                v = com_novas_tentativas(julgar, juiz, a.modelo_juiz, q["pergunta"], q["esperada"], trechos, resposta,
-                                         hoje=(hoje or rag.hoje_em_sp()).strftime("%d/%m/%Y"))
-                tentativas.append({"resposta": resposta, "correta": v.correta, "fiel": v.fiel,
-                                   "justificativa": v.justificativa})
-            # taxa de acerto nas repetições (ex.: 2 de 3 = 0,67)
-            item.update(tentativas=tentativas,
-                        correta=media(float(t["correta"]) for t in tentativas),
-                        fiel=media(float(t["fiel"]) for t in tentativas))
-            simb = lambda x: "✓" if x == 1 else ("✗" if x == 0 else f"{x:.0%}")
-            linha += f" | correta={simb(item['correta'])} fiel={simb(item['fiel'])}"
-        print(linha, flush=True)
-        if not a.so_busca:
-            for t in item["tentativas"]:
-                if not (t["correta"] and t["fiel"]):
-                    print(f"      resposta: {t['resposta'][:160]}\n      juiz: {t['justificativa']}")
-        resultados.append(item)
+            if not a.so_busca:
+                tentativas = []
+                for _ in range(a.repeticoes):
+                    time.sleep(a.pausa)
+                    resposta = com_novas_tentativas(llm.gerar, rag.prompt_do_sistema(s),
+                                                    rag.montar_prompt(q["pergunta"], trechos, hoje=hoje))
+                    time.sleep(a.pausa)
+                    v = com_novas_tentativas(julgar, juiz, a.modelo_juiz, q["pergunta"], q["esperada"], trechos, resposta,
+                                             hoje=(hoje or rag.hoje_em_sp()).strftime("%d/%m/%Y"))
+                    tentativas.append({"resposta": resposta, "correta": v.correta, "fiel": v.fiel,
+                                       "justificativa": v.justificativa})
+                # taxa de acerto nas repetições (ex.: 2 de 3 = 0,67)
+                item.update(tentativas=tentativas,
+                            correta=media(float(t["correta"]) for t in tentativas),
+                            fiel=media(float(t["fiel"]) for t in tentativas))
+                simb = lambda x: "✓" if x == 1 else ("✗" if x == 0 else f"{x:.0%}")
+                linha += f" | correta={simb(item['correta'])} fiel={simb(item['fiel'])}"
+            print(linha, flush=True)
+            if not a.so_busca:
+                for t in item["tentativas"]:
+                    if not (t["correta"] and t["fiel"]):
+                        print(f"      resposta: {t['resposta'][:160]}\n      juiz: {t['justificativa']}")
+            resultados.append(item)
+        except Exception as e:  # noqa: BLE001 — falha persistente da API: interrompe, mas salva o parcial
+            parou_em = q["id"]
+            print(f"\n⚠️ Parou em {q['id']} ({type(e).__name__}: {str(e)[:120]}). Salvando o resultado PARCIAL "
+                  f"({len(resultados)} de {len(conjunto['perguntas'])} perguntas).", flush=True)
+            break
+    if not resultados:
+        raise SystemExit("Nenhuma pergunta foi avaliada; nada para salvar.")
 
     # 2) resumo
     com_resp = [r for r in resultados if r["relevantes"]]
@@ -286,6 +295,7 @@ def main():
                    "juiz": None if a.so_busca else a.modelo_juiz, "chunks_indexados": len(todos),
                    "prompt": versao_prompt, "prompt_arquivo": a.prompt, "repeticoes": a.repeticoes,
                    "conjunto": a.conjunto, "hoje": conjunto.get("hoje")},
+        "parcial": parou_em is not None, "parou_em": parou_em,
         "resumo": resumo, "resultados": resultados,
     }, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\nSalvo em {arquivo.relative_to(RAIZ)}")
