@@ -76,6 +76,14 @@ class RepositorioEmMemoria:
 
 
 # ---------------------------------------------------------------- chamadas com nova tentativa
+def erro_da_api(e: BaseException) -> bool:
+    """Falha de rede/API (pode salvar o parcial) × erro de programação (deve quebrar com traceback)."""
+    import httpx
+    from google.genai.errors import APIError
+
+    return isinstance(e, (APIError, httpx.HTTPError, OSError))
+
+
 def com_novas_tentativas(func, *args, tentativas=10, **kwargs):
     """O nível gratuito tem limite por minuto (429) e às vezes fica sobrecarregado (503):
     espera e tenta de novo, dobrando a espera (backoff exponencial, até 2 min)."""
@@ -249,7 +257,9 @@ def main():
                     if not (t["correta"] and t["fiel"]):
                         print(f"      resposta: {t['resposta'][:160]}\n      juiz: {t['justificativa']}")
             resultados.append(item)
-        except Exception as e:  # noqa: BLE001 — falha persistente da API: interrompe, mas salva o parcial
+        except Exception as e:
+            if not erro_da_api(e):
+                raise  # bug no código: a rodada deve quebrar, não virar "parcial"
             parou_em = q["id"]
             print(f"\n⚠️ Parou em {q['id']} ({type(e).__name__}: {str(e)[:120]}). Salvando o resultado PARCIAL "
                   f"({len(resultados)} de {len(conjunto['perguntas'])} perguntas).", flush=True)
