@@ -1,0 +1,1316 @@
+{
+  "rotulo": "dificil40",
+  "quando": "2026-11-05T13:25:10",
+  "config": {
+    "chunk_size": 800,
+    "chunk_overlap": 150,
+    "top_k": 5,
+    "embeddings": "gemini-embedding-001",
+    "llm": "gemini-flash-lite-latest",
+    "juiz": "gemini-flash-lite-latest",
+    "chunks_indexados": 30,
+    "prompt": "8f0b7da7",
+    "prompt_arquivo": null,
+    "repeticoes": 1,
+    "conjunto": "conjunto_dificil.json",
+    "hoje": "03/11/2026"
+  },
+  "parcial": false,
+  "parou_em": null,
+  "resumo": {
+    "recall@K": 1.0,
+    "acerto@1": 0.9090909090909091,
+    "MRR": 0.9545454545454546,
+    "correta": 0.975,
+    "fiel": 0.975,
+    "abstencao_correta": 0.8571428571428571,
+    "correta_por_tipo": {
+      "calculo_3_mais": 1.0,
+      "confusao_parecidas": 1.0,
+      "desatualizada": 1.0,
+      "mesmo_nome": 1.0,
+      "multi_hop": 1.0,
+      "negacao": 1.0,
+      "parafrase": 1.0,
+      "sem_resposta": 0.8571428571428571,
+      "tempo": 1.0
+    }
+  },
+  "resultados": [
+    {
+      "id": "d01",
+      "tipo": "desatualizada",
+      "pergunta": "Quanto eu pago de aluguel hoje?",
+      "esperada": "2.000 reais por mês (subiu em março de 2026; antes era 1.800).",
+      "relevantes": [
+        "aluguel_2026"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": false,
+        "rr": 0.5,
+        "nota_top1": 0.7306807322098787
+      },
+      "fontes": [
+        "aluguel_2025",
+        "aluguel_2026",
+        "condominio",
+        "salario",
+        "mercado_set"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Hoje, o seu aluguel é de 2.000 reais por mês [2].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com o valor atual do aluguel de 2.000 reais, informação presente nas memórias."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d02",
+      "tipo": "calculo_3_mais",
+      "pergunta": "Quanto gasto por mês com moradia, somando aluguel atual, condomínio e internet?",
+      "esperada": "2.570 reais (2.000 + 450 + 120).",
+      "relevantes": [
+        "aluguel_2026",
+        "condominio",
+        "internet"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": false,
+        "rr": 0.5,
+        "nota_top1": 0.7266944006362016
+      },
+      "fontes": [
+        "aluguel_2025",
+        "condominio",
+        "internet",
+        "aluguel_2026",
+        "salario"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Com base nas suas memórias, o seu gasto mensal com moradia é de **2.570 reais**, valor que é a soma do aluguel atual (2.000 reais) [4], do condomínio (450 reais) [2] e da internet (120 reais) [3].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente calculou corretamente a soma dos gastos com moradia usando as informações e atualizações das memórias fornecidas."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d03",
+      "tipo": "confusao_parecidas",
+      "pergunta": "Qual dentista fez meu tratamento de canal?",
+      "esperada": "A Dra. Renata, endodontista na Savassi.",
+      "relevantes": [
+        "dentista_renata"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7422423958335093
+      },
+      "fontes": [
+        "dentista_renata",
+        "dentista_paulo",
+        "joao",
+        "emprego_antigo",
+        "viagem_floripa"
+      ],
+      "tentativas": [
+        {
+          "resposta": "O tratamento de canal foi feito com a Dra. Renata [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com a informação essencial da memória correta e de forma totalmente fiel."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d04",
+      "tipo": "confusao_parecidas",
+      "pergunta": "Quando é minha próxima consulta no dentista?",
+      "esperada": "12 de novembro às 14h, com o Dr. Paulo.",
+      "relevantes": [
+        "dentista_paulo"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7392167957052432
+      },
+      "fontes": [
+        "dentista_paulo",
+        "joao",
+        "dentista_renata",
+        "aniversarios",
+        "viagem_floripa"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Sua próxima consulta no dentista será no dia 12 de novembro de 2026 (quarta-feira), às 14h, para uma limpeza com o Dr. Paulo [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "A resposta forneceu corretamente a data, hora, profissional e detalhe da consulta conforme registrado nas memórias."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d05",
+      "tipo": "negacao",
+      "pergunta": "Que remédio para dor eu não posso tomar?",
+      "esperada": "Dipirona (você tem alergia); ibuprofeno pode.",
+      "relevantes": [
+        "alergia"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.6700095166247231
+      },
+      "fontes": [
+        "alergia",
+        "remedio",
+        "joao",
+        "comida",
+        "dentista_paulo"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Você não pode tomar dipirona, pois tem alergia a ela [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "A resposta trouxe a informação essencial sobre a alergia à dipirona de forma correta e totalmente baseada nas memórias."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d06",
+      "tipo": "mesmo_nome",
+      "pergunta": "Onde mora a Ana?",
+      "esperada": "Sua irmã Ana mora em Curitiba (há também a Ana Souza, sua gestora, sem informação de onde mora).",
+      "relevantes": [
+        "ana_irma"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7254847706628392
+      },
+      "fontes": [
+        "ana_irma",
+        "aniversarios",
+        "ana_trabalho",
+        "mel",
+        "emprego_antigo"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Sua irmã Ana mora em Curitiba [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente onde a irmã Ana mora com base nas memórias, sem inventar informações."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d07",
+      "tipo": "mesmo_nome",
+      "pergunta": "Em que dia minha gestora prefere receber relatórios?",
+      "esperada": "Às sextas (Ana Souza).",
+      "relevantes": [
+        "ana_trabalho"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7600533765477339
+      },
+      "fontes": [
+        "ana_trabalho",
+        "aluguel_2025",
+        "condominio",
+        "aniversarios",
+        "ingles"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Sua gestora prefere receber relatórios às sextas-feiras [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com base na memória fornecida, informando que a gestora prefere relatórios às sextas."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d08",
+      "tipo": "multi_hop",
+      "pergunta": "Quando é o aniversário da dona do gato Thor?",
+      "esperada": "21 de agosto (sua prima Carla).",
+      "relevantes": [
+        "carla"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7724860559430514
+      },
+      "fontes": [
+        "carla",
+        "aniversarios",
+        "mel",
+        "ana_trabalho",
+        "vet"
+      ],
+      "tentativas": [
+        {
+          "resposta": "O aniversário da dona do gato Thor é em 21 de agosto [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com a data de aniversário da dona do gato Thor baseando-se estritamente nas memórias."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d09",
+      "tipo": "desatualizada",
+      "pergunta": "Onde eu trabalho?",
+      "esperada": "Na empresa Fluxo, como engenheiro de dados, desde 2024 (antes, no Banco Horizonte).",
+      "relevantes": [
+        "emprego_atual"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7345670435064686
+      },
+      "fontes": [
+        "emprego_atual",
+        "emprego_antigo",
+        "salario",
+        "ana_trabalho",
+        "ingles"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Você trabalha como engenheiro de dados na empresa Fluxo, em regime híbrido [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "A resposta fornecida traz a informação essencial sobre o local de trabalho presente nas memórias e é totalmente apoiada por elas."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d10",
+      "tipo": "confusao_parecidas",
+      "pergunta": "Quanto gastei de mercado em outubro?",
+      "esperada": "1.150 reais.",
+      "relevantes": [
+        "mercado_out"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.8404773646633359
+      },
+      "fontes": [
+        "mercado_out",
+        "vet",
+        "mercado_set",
+        "aluguel_2025",
+        "salario"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Em outubro, você gastou 1.150 reais de mercado, contando as compras grandes do Atacadão [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com o valor gasto em outubro no mercado e todas as informações vieram diretamente das memórias."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d11",
+      "tipo": "calculo_3_mais",
+      "pergunta": "Quanto custa meu carro por ano, somando as parcelas e o seguro?",
+      "esperada": "17.400 reais por ano (12 × 1.250 + 2.400).",
+      "relevantes": [
+        "carro",
+        "seguro"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7436238048768132
+      },
+      "fontes": [
+        "seguro",
+        "carro",
+        "aluguel_2025",
+        "mercado_out",
+        "salario"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Para calcular o custo anual do seu carro somando as parcelas do financiamento e o seguro, temos os seguintes valores:\n\n* **Parcelas do financiamento:** Como você paga 1.250 reais por mês [2], o custo anual das parcelas é de 15.000 reais (1.250 x 12).\n* **Seguro:** O seguro custa 2.400 reais por ano [1].\n\nSomando os dois valores (15.000 + 2.400), o custo total é de **17.400 reais por ano**.",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente calculou corretamente o valor anual somando as 12 parcelas do financiamento com o seguro, utilizando apenas as informações fornecidas nas memórias."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d12",
+      "tipo": "multi_hop",
+      "pergunta": "Quem vai comigo para Floripa e qual a profissão dele?",
+      "esperada": "O João, seu melhor amigo, que é dentista.",
+      "relevantes": [
+        "viagem_floripa",
+        "joao"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7007872193056957
+      },
+      "fontes": [
+        "viagem_floripa",
+        "joao",
+        "ana_irma",
+        "emprego_atual",
+        "carla"
+      ],
+      "tentativas": [
+        {
+          "resposta": "O João vai com você para Floripa [1], e a profissão dele é dentista [2].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente quem vai para Floripa e a profissão dele, baseando-se integralmente nas memórias fornecidas."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d13",
+      "tipo": "parafrase",
+      "pergunta": "Quanto gastei com a minha pet no veterinário?",
+      "esperada": "280 reais em outubro (vacina V10 e consulta da Mel).",
+      "relevantes": [
+        "vet"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.759050362737125
+      },
+      "fontes": [
+        "vet",
+        "mercado_out",
+        "viagem_chile",
+        "viagem_floripa",
+        "salario"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Você gastou 280 reais na consulta e vacina V10 ao levar a Mel ao veterinário em outubro [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "A resposta forneceu corretamente a informação essencial presente na memória e baseou-se exclusivamente nela."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d14",
+      "tipo": "calculo_3_mais",
+      "pergunta": "Quanto pago por mês somando academia e inglês?",
+      "esperada": "410 reais (120 + 290).",
+      "relevantes": [
+        "academia",
+        "ingles"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7529725481643411
+      },
+      "fontes": [
+        "ingles",
+        "academia",
+        "aluguel_2025",
+        "mercado_out",
+        "seguro"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Você paga 120 reais por mês pela academia e 290 reais por mês pelo inglês [1, 2]. Somando os dois, o total é de 410 reais por mês [1, 2].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com o valor total da soma da academia e do inglês e baseou-se inteiramente nas memórias fornecidas."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d15",
+      "tipo": "parafrase",
+      "pergunta": "Que remédio de uso contínuo eu tomo e para quê?",
+      "esperada": "Losartana 50 mg todo dia de manhã, para pressão.",
+      "relevantes": [
+        "remedio"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7348010405017591
+      },
+      "fontes": [
+        "remedio",
+        "academia",
+        "aluguel_2025",
+        "ingles",
+        "mel"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Você toma losartana 50 mg todo dia de manhã para pressão, remédio que foi receitado pelo cardiologista Dr. Henrique [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com a informação essencial da memória e manteve total fidelidade aos fatos fornecidos."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d16",
+      "tipo": "multi_hop",
+      "pergunta": "Em quais dias da semana eu vou ao escritório e tenho aula à noite ao mesmo tempo?",
+      "esperada": "Terça e quinta (escritório na Fluxo e inglês à noite).",
+      "relevantes": [
+        "emprego_atual",
+        "ingles"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.6835850993332963
+      },
+      "fontes": [
+        "ingles",
+        "violao",
+        "academia",
+        "emprego_atual",
+        "dentista_paulo"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Você vai ao escritório e tem aula à noite ao mesmo tempo às terças e quintas-feiras. Nesses dias, você trabalha no escritório em regime híbrido [4] e faz inglês online à noite [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com base nas memórias e não incluiu informações falsas."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d17",
+      "tipo": "sem_resposta",
+      "pergunta": "Qual o meu tipo sanguíneo?",
+      "esperada": "NAO_SABE",
+      "relevantes": [],
+      "busca": {
+        "recall": null,
+        "acerto1": null,
+        "rr": null,
+        "nota_top1": 0.5878197084207573
+      },
+      "fontes": [
+        "aniversarios",
+        "salario",
+        "comida",
+        "emprego_atual",
+        "remedio"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Não encontrei isso nas memórias.",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "Como a pergunta era sem resposta e o assistente informou corretamente que não encontrou a informação nas memórias, a resposta está correta e fiel."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d18",
+      "tipo": "sem_resposta",
+      "pergunta": "Qual é a placa do meu carro?",
+      "esperada": "NAO_SABE",
+      "relevantes": [],
+      "busca": {
+        "recall": null,
+        "acerto1": null,
+        "rr": null,
+        "nota_top1": 0.6189547336126197
+      },
+      "fontes": [
+        "carro",
+        "seguro",
+        "mel",
+        "senha_wifi",
+        "salario"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Não encontrei a placa do seu carro nas memórias.",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente reconheceu corretamente que a informação não estava disponível nas memórias, sem inventar dados."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d19",
+      "tipo": "sem_resposta",
+      "pergunta": "Quanto o João pagou pela pousada?",
+      "esperada": "NAO_SABE",
+      "relevantes": [],
+      "busca": {
+        "recall": null,
+        "acerto1": null,
+        "rr": null,
+        "nota_top1": 0.7393443187600616
+      },
+      "fontes": [
+        "viagem_floripa",
+        "condominio",
+        "carro",
+        "viagem_chile",
+        "aluguel_2025"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Nas suas memórias consta apenas que você reservou a pousada em Floripa com o João por 650 reais, mas não há informação sobre quanto cada um pagou [1].",
+          "correta": false,
+          "fiel": false,
+          "justificativa": "O tipo de pergunta era 'SEM RESPOSTA', mas a memória continha o valor de 650 reais para a pousada, e o assistente errou ao afirmar que a informação não estava disponível."
+        }
+      ],
+      "correta": 0.0,
+      "fiel": 0.0
+    },
+    {
+      "id": "d20",
+      "tipo": "sem_resposta",
+      "pergunta": "Onde mora a Ana Souza?",
+      "esperada": "NAO_SABE",
+      "relevantes": [],
+      "busca": {
+        "recall": null,
+        "acerto1": null,
+        "rr": null,
+        "nota_top1": 0.7078174717013318
+      },
+      "fontes": [
+        "ana_trabalho",
+        "ana_irma",
+        "aniversarios",
+        "emprego_antigo",
+        "comida"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Não encontrei informações nas suas memórias sobre onde a Ana Souza mora. A memória que menciona uma \"Ana\" refere-se à sua irmã Ana, que mora em Curitiba [2].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente corretamente identificou que não há informações sobre onde a gestora Ana Souza mora, diferenciando-a corretamente da irmã Ana."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d21",
+      "tipo": "tempo",
+      "pergunta": "Quantos dias faltam para a viagem a Floripa?",
+      "esperada": "45 dias (a viagem começa em 18 de dezembro de 2026).",
+      "relevantes": [
+        "viagem_floripa"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7101827165838911
+      },
+      "fontes": [
+        "viagem_floripa",
+        "dentista_paulo",
+        "meta_2027",
+        "condominio",
+        "viagem_chile"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Faltam 45 dias para a sua viagem a Floripa, que será de 18 a 21 de dezembro de 2026 [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com o número exato de dias restantes até a viagem e utilizou apenas as informações fornecidas nas memórias."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d22",
+      "tipo": "tempo",
+      "pergunta": "Quando vence o próximo condomínio?",
+      "esperada": "10 de novembro de 2026 (vence todo dia 10; 450 reais).",
+      "relevantes": [
+        "condominio"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7532967363422494
+      },
+      "fontes": [
+        "condominio",
+        "meta_2027",
+        "aluguel_2026",
+        "aluguel_2025",
+        "viagem_floripa"
+      ],
+      "tentativas": [
+        {
+          "resposta": "O próximo condomínio vence no dia 10 de novembro de 2026 (terça-feira) [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente informou corretamente a data de vencimento do condomínio com base nas memórias, calculando corretamente o mês subsequente a partir da data de hoje."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d23",
+      "tipo": "tempo",
+      "pergunta": "Quando é o próximo aniversário do meu pai e quantos dias faltam?",
+      "esperada": "15 de dezembro de 2026; faltam 42 dias.",
+      "relevantes": [
+        "aniversarios"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.6924553044545125
+      },
+      "fontes": [
+        "aniversarios",
+        "carla",
+        "dentista_paulo",
+        "aluguel_2025",
+        "viagem_floripa"
+      ],
+      "tentativas": [
+        {
+          "resposta": "O aniversário do seu pai é em 15 de dezembro de 2026 [1]. Como hoje é 03/11/2026, faltam 42 dias para o próximo aniversário dele.",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente informou corretamente a data do aniversário do pai e calculou os dias restantes com base na data de hoje fornecida."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d24",
+      "tipo": "tempo",
+      "pergunta": "O aniversário da minha mãe já passou este ano?",
+      "esperada": "Sim, foi em 3 de março.",
+      "relevantes": [
+        "aniversarios"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7154409815422308
+      },
+      "fontes": [
+        "aniversarios",
+        "carla",
+        "dentista_paulo",
+        "viagem_floripa",
+        "ana_trabalho"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Como hoje é 03/11/2026 e o aniversário da sua mãe é em 3 de março [1], ele já passou este ano [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente utilizando as informações da memória e a data atual fornecida."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d25",
+      "tipo": "tempo",
+      "pergunta": "Quando é a minha próxima aula de violão?",
+      "esperada": "Amanhã, quarta-feira, 4 de novembro de 2026, às 19h, com o professor Marcos.",
+      "relevantes": [
+        "violao"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7137815382133225
+      },
+      "fontes": [
+        "violao",
+        "dentista_paulo",
+        "ingles",
+        "academia",
+        "viagem_floripa"
+      ],
+      "tentativas": [
+        {
+          "resposta": "A sua próxima aula de violão será amanhã, quarta-feira, 04/11/2026, às 19h [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com base na data de hoje e na memória fornecida, deduzindo que a aula ocorre às quartas-feiras."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d26",
+      "tipo": "calculo_3_mais",
+      "pergunta": "Quanto gastei de mercado somando setembro e outubro?",
+      "esperada": "2.130 reais (980 + 1.150).",
+      "relevantes": [
+        "mercado_set",
+        "mercado_out"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7957388234794556
+      },
+      "fontes": [
+        "mercado_out",
+        "mercado_set",
+        "vet",
+        "aluguel_2025",
+        "salario"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Somando setembro e outubro, você gastou 2.130 reais de mercado (980 reais em setembro e 1.150 reais em outubro) [1], [2].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente somou corretamente os gastos de mercado de setembro e outubro usando as memórias fornecidas, chegando ao valor esperado."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d27",
+      "tipo": "calculo_3_mais",
+      "pergunta": "Quanto sobra do meu salário depois de pagar o aluguel atual e o condomínio?",
+      "esperada": "7.050 reais (9.500 − 2.000 − 450).",
+      "relevantes": [
+        "salario",
+        "aluguel_2026",
+        "condominio"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7146863870183445
+      },
+      "fontes": [
+        "salario",
+        "aluguel_2025",
+        "aluguel_2026",
+        "condominio",
+        "mercado_out"
+      ],
+      "tentativas": [
+        {
+          "resposta": "O seu salário líquido atual é de 9.500 reais [1]. O seu aluguel atual é de 2.000 reais [3] e o condomínio é de 450 reais [4]. \n\nSubtraindo esses valores do seu salário (9.500 - 2.000 - 450), sobrará 7.050 reais [1], [3], [4].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com o cálculo exato baseado nas memórias entregues."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d28",
+      "tipo": "calculo_3_mais",
+      "pergunta": "Quanto vou pagar no total nas parcelas do carro?",
+      "esperada": "60.000 reais (48 parcelas de 1.250).",
+      "relevantes": [
+        "carro"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7463334939261563
+      },
+      "fontes": [
+        "carro",
+        "seguro",
+        "aluguel_2025",
+        "salario",
+        "aluguel_2026"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Você vai pagar um total de 60.000 reais nas parcelas do carro, referentes ao financiamento em 48 parcelas de 1.250 reais [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com o valor total e os detalhes do financiamento presentes nas memórias."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d29",
+      "tipo": "multi_hop",
+      "pergunta": "Quantos sobrinhos eu tenho pela minha irmã e como eles se chamam?",
+      "esperada": "Dois: Pedro e Lia.",
+      "relevantes": [
+        "ana_irma"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.6647569106596691
+      },
+      "fontes": [
+        "ana_irma",
+        "aniversarios",
+        "carla",
+        "comida",
+        "mel"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Você tem dois sobrinhos pela sua irmã Ana, e eles se chamam Pedro e Lia [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "A resposta forneceu corretamente a quantidade e os nomes dos sobrinhos conforme consta nas memórias, sem inventar informações."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d30",
+      "tipo": "multi_hop",
+      "pergunta": "Qual a especialidade da médica que fez meu canal e onde ela atende?",
+      "esperada": "Endodontista; atende na Savassi (Dra. Renata).",
+      "relevantes": [
+        "dentista_renata"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7489741014936279
+      },
+      "fontes": [
+        "dentista_renata",
+        "remedio",
+        "dentista_paulo",
+        "mel",
+        "vet"
+      ],
+      "tentativas": [
+        {
+          "resposta": "A médica que fez o seu canal é endodontista e ela atende na Savassi [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com a especialidade e o local de atendimento contidos nas memórias, mantendo total fidelidade."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d31",
+      "tipo": "confusao_parecidas",
+      "pergunta": "Quanto eu pago pelo wi-fi?",
+      "esperada": "120 reais por mês (internet da Vivo, 500 mega).",
+      "relevantes": [
+        "internet"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.707439476497126
+      },
+      "fontes": [
+        "internet",
+        "senha_wifi",
+        "aluguel_2025",
+        "ingles",
+        "condominio"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Você paga 120 reais por mês pela internet da Vivo [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com o valor do wi-fi e a informação está totalmente baseada nas memórias entregues."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d32",
+      "tipo": "confusao_parecidas",
+      "pergunta": "Qual é a senha da internet de casa?",
+      "esperada": "girassol2026.",
+      "relevantes": [
+        "senha_wifi"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7949654788917313
+      },
+      "fontes": [
+        "senha_wifi",
+        "internet",
+        "aluguel_2025",
+        "condominio",
+        "ingles"
+      ],
+      "tentativas": [
+        {
+          "resposta": "A senha do wi-fi de casa é girassol2026 [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com a senha da internet informada nas memórias e sem inventar dados."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d33",
+      "tipo": "negacao",
+      "pergunta": "Que comida eu não gosto?",
+      "esperada": "Jiló.",
+      "relevantes": [
+        "comida"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7574841238115422
+      },
+      "fontes": [
+        "comida",
+        "alergia",
+        "mel",
+        "remedio",
+        "ana_trabalho"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Você não gosta de jiló [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com base nas memórias e não incluiu informações falsas."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d34",
+      "tipo": "negacao",
+      "pergunta": "Posso tomar ibuprofeno?",
+      "esperada": "Sim; a alergia é a dipirona (e a camarão), ibuprofeno pode.",
+      "relevantes": [
+        "alergia"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7358340578218966
+      },
+      "fontes": [
+        "alergia",
+        "remedio",
+        "dentista_paulo",
+        "meta_2027",
+        "joao"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Sim, você pode tomar ibuprofeno sem problema [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com base na memória fornecida, afirmando que o usuário pode tomar ibuprofeno."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d35",
+      "tipo": "parafrase",
+      "pergunta": "Do que a minha cachorra tem medo?",
+      "esperada": "De trovão.",
+      "relevantes": [
+        "mel"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7425519754309158
+      },
+      "fontes": [
+        "mel",
+        "vet",
+        "comida",
+        "carla",
+        "remedio"
+      ],
+      "tentativas": [
+        {
+          "resposta": "A sua cachorra, a Mel, tem medo de trovão [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com base nas memórias e não incluiu informações falsas."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d36",
+      "tipo": "desatualizada",
+      "pergunta": "Quanto eu pagava de aluguel em 2025?",
+      "esperada": "1.800 reais por mês (desde março de 2026 são 2.000).",
+      "relevantes": [
+        "aluguel_2025"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": false,
+        "rr": 0.5,
+        "nota_top1": 0.7532514782747263
+      },
+      "fontes": [
+        "aluguel_2026",
+        "aluguel_2025",
+        "carro",
+        "viagem_floripa",
+        "meta_2027"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Em 2025, o seu aluguel era de 1.800 reais por mês [2].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "A resposta informou corretamente o valor do aluguel em 2025 com base na memória correspondente, sem inventar dados."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d37",
+      "tipo": "sem_resposta",
+      "pergunta": "Qual era o nome do meu chefe no Banco Horizonte?",
+      "esperada": "NAO_SABE",
+      "relevantes": [],
+      "busca": {
+        "recall": null,
+        "acerto1": null,
+        "rr": null,
+        "nota_top1": 0.7146002941365491
+      },
+      "fontes": [
+        "emprego_antigo",
+        "ana_trabalho",
+        "emprego_atual",
+        "salario",
+        "remedio"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Não encontrei essa informação nas suas memórias.",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente reconheceu corretamente que a informação sobre o chefe no Banco Horizonte não consta nas memórias e informou isso sem inventar dados."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d38",
+      "tipo": "sem_resposta",
+      "pergunta": "Quanto custa a aula de violão?",
+      "esperada": "NAO_SABE",
+      "relevantes": [],
+      "busca": {
+        "recall": null,
+        "acerto1": null,
+        "rr": null,
+        "nota_top1": 0.7111358947961048
+      },
+      "fontes": [
+        "violao",
+        "ingles",
+        "academia",
+        "mercado_set",
+        "internet"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Não encontrei informações sobre o custo da aula de violão nas suas memórias.",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "Como a informação sobre o custo da aula de violão não existe nas memórias, o assistente respondeu corretamente que não encontrou, sendo fiel aos dados fornecidos."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d39",
+      "tipo": "sem_resposta",
+      "pergunta": "Quando é o aniversário do João?",
+      "esperada": "NAO_SABE",
+      "relevantes": [],
+      "busca": {
+        "recall": null,
+        "acerto1": null,
+        "rr": null,
+        "nota_top1": 0.6816844612221501
+      },
+      "fontes": [
+        "aniversarios",
+        "joao",
+        "viagem_floripa",
+        "carla",
+        "dentista_paulo"
+      ],
+      "tentativas": [
+        {
+          "resposta": "Não encontrei a data do aniversário do João nas suas memórias.",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente que a informação não estava disponível, mantendo-se fiel às memórias."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    },
+    {
+      "id": "d40",
+      "tipo": "mesmo_nome",
+      "pergunta": "Quantos filhos a Ana tem?",
+      "esperada": "Sua irmã Ana tem dois filhos (Pedro e Lia); sobre a Ana Souza, sua gestora, não há essa informação.",
+      "relevantes": [
+        "ana_irma"
+      ],
+      "busca": {
+        "recall": 1.0,
+        "acerto1": true,
+        "rr": 1.0,
+        "nota_top1": 0.7016225540111741
+      },
+      "fontes": [
+        "ana_irma",
+        "aniversarios",
+        "ana_trabalho",
+        "carla",
+        "comida"
+      ],
+      "tentativas": [
+        {
+          "resposta": "A sua irmã Ana tem dois filhos, Pedro e Lia [1].",
+          "correta": true,
+          "fiel": true,
+          "justificativa": "O assistente respondeu corretamente com base nas memórias, mencionando que a irmã Ana tem dois filhos (Pedro e Lia)."
+        }
+      ],
+      "correta": 1.0,
+      "fiel": 1.0
+    }
+  ]
+}

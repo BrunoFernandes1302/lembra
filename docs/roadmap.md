@@ -9,7 +9,7 @@ o sistema respondeu e o que era esperado.
 | 1 | **RAG básico** | Chunking, embeddings, banco vetorial, prompt com contexto | ✅ |
 | 2 | **App de verdade** | PWA mobile (botão de instalar, atalhos, aviso sem internet), login/senha, multiusuário isolado, deploy, banco na nuvem | ✅ no ar em lembra-nu.vercel.app |
 | 3 | **Categorias e configuração do RAG** | Categorias por usuário, filtros, editar memória, ajustes do RAG no app, Laboratório, IA sugere categoria | ✅ |
-| 4 | **Avaliação (LLM-as-judge)** | Conjunto de perguntas de teste, recall@K, fidelidade; um LLM "juiz" avalia as respostas | ✅ v1 (próximo: conjunto maior e repetições) |
+| 4 | **Avaliação (LLM-as-judge)** | Conjunto de perguntas de teste, recall@K, fidelidade; um LLM "juiz" avalia as respostas | ✅ conjunto difícil com 40 perguntas (correta 98%, tempo 100%); próximo: dificultar a busca |
 | 5 | **Agentes** | LLM que decide quais ferramentas usar (buscar, listar, calcular, contar dias) | ✅ experimental |
 | 6 | **RAG avançado** | Busca híbrida, re-ranking, chat com histórico | 🟡 conversa com memória (reescrita da pergunta) ✅; busca híbrida e re-ranking ⬜ |
 | 7 | **LLM local** | Ollama, quantização, privacidade | 🟡 LoRA avaliado (correta 50→60%, fiel 70→80%, admite não saber 0→50%); falta servir no Ollama |

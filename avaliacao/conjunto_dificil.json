@@ -1,6 +1,6 @@
 {
   "hoje": "03/11/2026",
-  "descricao": "Conjunto DIFÍCIL: 30 memórias com armadilhas realistas (informação desatualizada, memórias parecidas, pessoas com o mesmo nome, contas com 3+ memórias, negação). Feito para medir melhorias que o conjunto fácil (100% em tudo) não consegue mostrar.",
+  "descricao": "Conjunto DIFÍCIL: 30 memórias e 40 perguntas com armadilhas realistas (informação desatualizada, memórias parecidas, pessoas com o mesmo nome, contas com 3+ memórias, negação). Feito para medir melhorias que o conjunto fácil (100% em tudo) não consegue mostrar.",
   "memorias": [
     {"id": "aluguel_2025", "categoria": "finanças", "data_evento": "01/2025", "texto": "Meu aluguel é 1.800 reais por mês, pago todo dia 5."},
     {"id": "aluguel_2026", "categoria": "finanças", "data_evento": "03/2026", "texto": "O aluguel subiu: a partir de março de 2026 passei a pagar 2.000 reais por mês."},
@@ -53,6 +53,26 @@
     {"id": "d17", "tipo": "sem_resposta", "pergunta": "Qual o meu tipo sanguíneo?", "esperada": "NAO_SABE", "relevantes": []},
     {"id": "d18", "tipo": "sem_resposta", "pergunta": "Qual é a placa do meu carro?", "esperada": "NAO_SABE", "relevantes": []},
     {"id": "d19", "tipo": "sem_resposta", "pergunta": "Quanto o João pagou pela pousada?", "esperada": "NAO_SABE", "relevantes": []},
-    {"id": "d20", "tipo": "sem_resposta", "pergunta": "Onde mora a Ana Souza?", "esperada": "NAO_SABE", "relevantes": []}
+    {"id": "d20", "tipo": "sem_resposta", "pergunta": "Onde mora a Ana Souza?", "esperada": "NAO_SABE", "relevantes": []},
+    {"id": "d21", "tipo": "tempo", "pergunta": "Quantos dias faltam para a viagem a Floripa?", "esperada": "45 dias (a viagem começa em 18 de dezembro de 2026).", "relevantes": ["viagem_floripa"]},
+    {"id": "d22", "tipo": "tempo", "pergunta": "Quando vence o próximo condomínio?", "esperada": "10 de novembro de 2026 (vence todo dia 10; 450 reais).", "relevantes": ["condominio"]},
+    {"id": "d23", "tipo": "tempo", "pergunta": "Quando é o próximo aniversário do meu pai e quantos dias faltam?", "esperada": "15 de dezembro de 2026; faltam 42 dias.", "relevantes": ["aniversarios"]},
+    {"id": "d24", "tipo": "tempo", "pergunta": "O aniversário da minha mãe já passou este ano?", "esperada": "Sim, foi em 3 de março.", "relevantes": ["aniversarios"]},
+    {"id": "d25", "tipo": "tempo", "pergunta": "Quando é a minha próxima aula de violão?", "esperada": "Amanhã, quarta-feira, 4 de novembro de 2026, às 19h, com o professor Marcos.", "relevantes": ["violao"]},
+    {"id": "d26", "tipo": "calculo_3_mais", "pergunta": "Quanto gastei de mercado somando setembro e outubro?", "esperada": "2.130 reais (980 + 1.150).", "relevantes": ["mercado_set", "mercado_out"]},
+    {"id": "d27", "tipo": "calculo_3_mais", "pergunta": "Quanto sobra do meu salário depois de pagar o aluguel atual e o condomínio?", "esperada": "7.050 reais (9.500 − 2.000 − 450).", "relevantes": ["salario", "aluguel_2026", "condominio"]},
+    {"id": "d28", "tipo": "calculo_3_mais", "pergunta": "Quanto vou pagar no total nas parcelas do carro?", "esperada": "60.000 reais (48 parcelas de 1.250).", "relevantes": ["carro"]},
+    {"id": "d29", "tipo": "multi_hop", "pergunta": "Quantos sobrinhos eu tenho pela minha irmã e como eles se chamam?", "esperada": "Dois: Pedro e Lia.", "relevantes": ["ana_irma"]},
+    {"id": "d30", "tipo": "multi_hop", "pergunta": "Qual a especialidade da médica que fez meu canal e onde ela atende?", "esperada": "Endodontista; atende na Savassi (Dra. Renata).", "relevantes": ["dentista_renata"]},
+    {"id": "d31", "tipo": "confusao_parecidas", "pergunta": "Quanto eu pago pelo wi-fi?", "esperada": "120 reais por mês (internet da Vivo, 500 mega).", "relevantes": ["internet"]},
+    {"id": "d32", "tipo": "confusao_parecidas", "pergunta": "Qual é a senha da internet de casa?", "esperada": "girassol2026.", "relevantes": ["senha_wifi"]},
+    {"id": "d33", "tipo": "negacao", "pergunta": "Que comida eu não gosto?", "esperada": "Jiló.", "relevantes": ["comida"]},
+    {"id": "d34", "tipo": "negacao", "pergunta": "Posso tomar ibuprofeno?", "esperada": "Sim; a alergia é a dipirona (e a camarão), ibuprofeno pode.", "relevantes": ["alergia"]},
+    {"id": "d35", "tipo": "parafrase", "pergunta": "Do que a minha cachorra tem medo?", "esperada": "De trovão.", "relevantes": ["mel"]},
+    {"id": "d36", "tipo": "desatualizada", "pergunta": "Quanto eu pagava de aluguel em 2025?", "esperada": "1.800 reais por mês (desde março de 2026 são 2.000).", "relevantes": ["aluguel_2025"]},
+    {"id": "d37", "tipo": "sem_resposta", "pergunta": "Qual era o nome do meu chefe no Banco Horizonte?", "esperada": "NAO_SABE", "relevantes": []},
+    {"id": "d38", "tipo": "sem_resposta", "pergunta": "Quanto custa a aula de violão?", "esperada": "NAO_SABE", "relevantes": []},
+    {"id": "d39", "tipo": "sem_resposta", "pergunta": "Quando é o aniversário do João?", "esperada": "NAO_SABE", "relevantes": []},
+    {"id": "d40", "tipo": "mesmo_nome", "pergunta": "Quantos filhos a Ana tem?", "esperada": "Sua irmã Ana tem dois filhos (Pedro e Lia); sobre a Ana Souza, sua gestora, não há essa informação.", "relevantes": ["ana_irma"]}
   ]
 }

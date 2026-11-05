@@ -625,6 +625,16 @@ Treinar a cada mensagem seria caro (GPU), instável (o modelo "esquece" o que sa
 30 memórias com armadilhas: informação desatualizada, memórias parecidas, mesmo nome, contas
 com 3 ou mais memórias, negação. Busca: acerto@1 de 88% (a régua mede alguma coisa). Respostas: 100%.
 
+**Ampliado para 40 perguntas (05/11/2026)**, com o tipo novo **tempo** ("quantos dias faltam",
+"próxima aula") e data de referência fixa (03/11/2026). Resultado: correta 98%, fiel 98%, recall
+100%, acerto@1 91%; **tempo 100%** (as melhorias de data funcionaram). O único erro (d19, "quanto
+o João pagou pela pousada?") foi **do juiz**: o Lembra disse corretamente que não sabe quanto cada um
+pagou, e o juiz confundiu com o valor total (650). Lições:
+- o juiz também precisa saber a data de referência (sem ela, "12/11/2026" parecia ano inventado);
+- **efeito teto de novo:** 98% significa que este conjunto já não separa versões boas de ótimas.
+  Para medir as próximas melhorias (busca híbrida, re-ranking) será preciso dificultar a **busca**
+  (mais memórias, mais parecidas entre si), não as perguntas.
+
 ### 13.4 LoRA num modelo pequeno: o resultado (`finetuning/dados/resultado_lora.json`)
 
 **O experimento.** Qwen2.5-0.5B-Instruct (0,5 bilhão de parâmetros, roda em computador comum).
