@@ -290,11 +290,65 @@ $$(".aba").forEach((a) => a.addEventListener("click", () => irPara(a.dataset.tel
 $$(".segmento[data-sub]").forEach((s) =>
   s.addEventListener("click", () => {
     $$(".segmento[data-sub]").forEach((x) => x.classList.toggle("ativo", x === s));
-    ["rag", "lab", "cats", "zap"].forEach((n) => ($(`#sub-${n}`).hidden = n !== s.dataset.sub));
+    ["rag", "lab", "cats", "zap", "conta"].forEach((n) => ($(`#sub-${n}`).hidden = n !== s.dataset.sub));
     if (s.dataset.sub === "cats") desenharCategorias();
     if (s.dataset.sub === "zap") carregarWhatsApp();
   })
 );
+
+// ---------------- Minha conta: exportar e apagar (LGPD) ----------------
+$("#exportar-dados").addEventListener("click", async (e) => {
+  const b = e.currentTarget;
+  const texto = b.querySelector("span");
+  $("#erro-exportar").textContent = "";
+  b.disabled = true;
+  texto.textContent = "Preparando…";
+  try {
+    const dados = await chamar("/conta/exportar");
+    // o navegador cria o arquivo na hora, no próprio aparelho; nada é guardado em lugar nenhum
+    const url = URL.createObjectURL(new Blob([JSON.stringify(dados, null, 2)], { type: "application/json" }));
+    const a = el("a");
+    a.href = url;
+    a.download = "lembra-meus-dados.json";
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    avisar(`Arquivo gerado: ${dados.memorias.length} memória(s)`);
+  } catch (err) {
+    $("#erro-exportar").textContent = err.message;
+  } finally {
+    b.disabled = false;
+    texto.textContent = "Baixar meus dados";
+  }
+});
+
+// O botão só destrava com senha preenchida E a palavra certa: duas barreiras contra o toque sem querer
+const formApagar = $("#form-apagar-conta");
+function validarApagar() {
+  $("#botao-apagar").disabled =
+    !(formApagar.senha.value && formApagar.confirmacao.value.trim().toUpperCase() === "APAGAR");
+}
+formApagar.addEventListener("input", validarApagar);
+formApagar.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const erro = $("#erro-apagar");
+  erro.textContent = "";
+  if (!confirm("Última chance: apagar a conta e TODOS os dados para sempre?")) return;
+  const b = $("#botao-apagar");
+  b.disabled = true;
+  try {
+    await chamar("/conta", { metodo: "DELETE",
+      corpo: { senha: formApagar.senha.value, confirmacao: formApagar.confirmacao.value.trim().toUpperCase() } });
+    sessao.limpar();
+    formApagar.reset();
+    mostrarAuth();
+    avisar("Conta apagada. Obrigado por ter usado o Lembra.");
+  } catch (err) {
+    erro.textContent = err.message;
+    validarApagar();
+  }
+});
 
 // ---------------- WhatsApp (vínculo número ↔ conta) ----------------
 let numeroLembra = "";

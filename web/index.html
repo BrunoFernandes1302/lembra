@@ -32,6 +32,7 @@
     <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></symbol>
     <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
     <symbol id="i-flask" viewBox="0 0 24 24"><path d="M10 2v7.53a2 2 0 0 1-.21.9L4.72 20.55A1 1 0 0 0 5.62 22h12.76a1 1 0 0 0 .9-1.45l-5.07-10.12a2 2 0 0 1-.21-.9V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
     <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></symbol>
     <symbol id="i-message-dots" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></symbol>
     <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
@@ -82,7 +83,7 @@
       <span class="marca"><img src="icons/icon.svg" alt=""><span class="titulo-gradiente">Lembra</span></span>
       <div class="topo-acoes">
         <div class="instalar-caixa" id="instalar-caixa" hidden>
-          <button type="button" class="botao-instalar" id="instalar"><svg class="ic"><use href="#i-down"/></svg><span>Instalar</span></button>
+          <button type="button" class="botao-instalar" id="instalar"><svg class="ic"><use href="#i-download"/></svg><span>Instalar</span></button>
           <button type="button" class="instalar-fechar" id="instalar-fechar" aria-label="Não mostrar de novo" title="Não mostrar de novo">×</button>
         </div>
         <button type="button" class="botao-icone" id="sair" aria-label="Sair" title="Sair"><svg class="ic"><use href="#i-logout"/></svg></button>
@@ -200,6 +201,7 @@
           <button type="button" class="segmento" data-sub="lab"><svg class="ic"><use href="#i-flask"/></svg>Laboratório</button>
           <button type="button" class="segmento" data-sub="cats"><svg class="ic"><use href="#i-tag"/></svg>Categorias</button>
           <button type="button" class="segmento" data-sub="zap"><svg class="ic"><use href="#i-message-dots"/></svg>WhatsApp</button>
+          <button type="button" class="segmento" data-sub="conta"><svg class="ic"><use href="#i-user"/></svg>Conta</button>
         </div>
 
         <!-- Configurar RAG -->
@@ -313,6 +315,30 @@
               </div>
             </div>
             <p class="erro" id="erro-zap" role="alert"></p>
+          </div>
+        </div>
+
+        <!-- Minha conta -->
+        <div id="sub-conta" class="sub" hidden>
+          <div class="cartao">
+            <h3><svg class="ic"><use href="#i-download"/></svg> Exportar meus dados</h3>
+            <p class="ajuda">Baixe tudo o que o Lembra guarda sobre você num arquivo <b>.json</b>: memórias, categorias, ajustes, avaliações e o vínculo do WhatsApp. É o seu direito de levar os dados com você (LGPD).</p>
+            <button type="button" class="botao secundario" id="exportar-dados"><svg class="ic"><use href="#i-download"/></svg><span>Baixar meus dados</span></button>
+            <p class="erro" id="erro-exportar" role="alert"></p>
+          </div>
+          <div class="cartao zona-perigo">
+            <h3><svg class="ic"><use href="#i-trash"/></svg> Apagar minha conta</h3>
+            <p class="ajuda">Apaga a conta e <b>tudo</b> o que está nela: memórias, categorias, ajustes, avaliações e o vínculo do WhatsApp. <b>Não dá para desfazer.</b> Baixe seus dados antes, se quiser guardá-los.</p>
+            <form id="form-apagar-conta" novalidate>
+              <label>Sua senha
+                <input type="password" name="senha" autocomplete="current-password" required>
+              </label>
+              <label>Digite <b>APAGAR</b> para confirmar
+                <input type="text" name="confirmacao" autocomplete="off" autocapitalize="characters" required>
+              </label>
+              <p class="erro" id="erro-apagar" role="alert"></p>
+              <button type="submit" class="botao perigo-botao" id="botao-apagar" disabled><svg class="ic"><use href="#i-trash"/></svg><span>Apagar minha conta para sempre</span></button>
+            </form>
           </div>
         </div>
       </section>

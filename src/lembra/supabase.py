@@ -77,6 +77,12 @@ class SupabaseAuth:
         )
         return _sessao(_checar(r))
 
+    def email_de(self, access_token: str) -> str:
+        """E-mail do dono do crachá (o Supabase confirma o crachá e devolve o usuário)."""
+        r = _http.get(f"{self.url}/auth/v1/user", headers={**self.headers, "Authorization": f"Bearer {access_token}"},
+                      timeout=TIMEOUT)
+        return _checar(r)["email"]
+
     def renovar(self, refresh_token: str) -> dict:
         """Troca o refresh token por um crachá novo, sem pedir a senha de novo."""
         r = _http.post(
@@ -233,6 +239,23 @@ class RepositorioSupabase:
         # Sem filtro explícito: o RLS ("dono apaga seu vinculo") já limita ao próprio usuário.
         r = _http.delete(f"{self.url}/whatsapp_vinculos", headers=self.headers,
                          params={"telefone": "not.is.null"}, timeout=TIMEOUT)
+        _checar(r)
+
+    def exportar_tudo(self) -> dict:
+        """Portabilidade (LGPD art. 18, V): tudo o que é DESTA pessoa, em formato aberto. Os chunks e
+        vetores ficam de fora: são derivados do texto e podem ser recalculados."""
+        config = self.obter_config() or {}
+        return {
+            "memorias": self.listar_memorias(limite=100_000),
+            "categorias": self.listar_categorias(),
+            "configuracoes": {k: v for k, v in config.items() if k != "user_id"},
+            "avaliacoes": self.listar_feedback(limite=100_000),
+            "whatsapp": self.vinculo_whatsapp(),
+        }
+
+    def apagar_conta(self) -> None:
+        """Apaga a conta de quem está logado e, em cascata, todos os dados dela (ver a migration)."""
+        r = _http.post(f"{self.url}/rpc/apagar_minha_conta", headers=self.headers, json={}, timeout=TIMEOUT)
         _checar(r)
 
     def apagar_memoria(self, memoria_id: str) -> bool:

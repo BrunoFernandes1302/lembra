@@ -314,6 +314,33 @@ para não piscar uma tela branca ao abrir.
 **Sem internet:** uma faixa avisa quando a conexão cai (`offline`/`online` do navegador) e some
 quando volta. A casca abre do cache; dados nunca ficam no cache (privacidade, seção 8).
 
+### 8.2 Seus dados são seus: exportar e apagar a conta (LGPD)
+
+**Dois direitos do titular** (Lei Geral de Proteção de Dados, art. 18): **portabilidade** (levar os
+dados com você) e **eliminação** (pedir que sejam apagados). A política de privacidade já os prometia;
+agora o app cumpre (Ajustes → Conta).
+
+**Exportar** (`GET /conta/exportar`): um `.json` com memórias, categorias, ajustes, avaliações e o
+vínculo do WhatsApp, só do dono do crachá (o RLS garante). Chunks e vetores ficam de fora: são
+*derivados* do texto e se recalculam; incluí-los só deixaria o arquivo enorme. O arquivo é montado no
+próprio aparelho, sem passar por nenhum armazenamento.
+
+**Apagar** (`DELETE /conta`): irreversível, então tem três barreiras:
+1. digitar **APAGAR** (e o botão só destrava com isso + a senha preenchida);
+2. **reautenticação**: a senha é conferida de novo no servidor. Estar logado não basta: um celular
+   desbloqueado com o app aberto não pode apagar a vida de alguém;
+3. um `confirm()` final, "última chance".
+
+**Como apaga tudo:** todas as tabelas do app apontam para o usuário com `ON DELETE CASCADE`
+(conferido no catálogo do Postgres: memórias, chunks, categorias, ajustes, avaliações, vínculo e
+códigos do WhatsApp). A função `apagar_minha_conta()` é `SECURITY DEFINER` (o usuário comum não pode
+mexer em `auth.users`), mas só apaga `auth.uid()`: **quem chama, e mais ninguém**. Sem cascata em
+alguma tabela, sobrariam dados órfãos, o que violaria a promessa de eliminação.
+
+**Lição de interface:** um ícone reaproveitado pelo nome errado (`i-down` era o 👎 das avaliações)
+apareceu como "polegar para baixo" nos botões *Instalar* e *Baixar meus dados*. Ícone novo
+(`i-download`) e a conferência passou a ser olhar o botão, não só o fluxo.
+
 ## 9. Configurar o RAG pelo app (Ajustes)
 
 Cada pessoa tem a **sua** configuração (tabela `config_rag`, com RLS). Sem configuração salva,
@@ -713,4 +740,6 @@ o mesmo juiz.
 | **Timing attack** | Descobrir um segredo medindo quanto tempo uma comparação demora |
 | **Cache de prompt** | Desconto do provedor quando o começo do prompt se repete entre chamadas |
 | **Query rewriting** | Reescrever a pergunta com o contexto da conversa antes de buscar |
+| **Portabilidade / Eliminação** | Direitos da LGPD: levar os dados com você / pedir que sejam apagados |
+| **Reautenticação** | Pedir a senha de novo antes de uma ação perigosa, mesmo com a sessão aberta |
 | **Idempotência** | Processar a mesma coisa duas vezes dá o mesmo resultado que uma vez |
