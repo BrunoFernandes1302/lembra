@@ -653,3 +653,10 @@ a.botao { text-decoration: none; text-align: center; }
 .nova-conversa[hidden] { display: none; }
 .nova-conversa .ic { width: 14px; height: 14px; }
 @media (hover: hover) { .nova-conversa:hover { color: var(--texto); } }
+
+/* ---------- Minha conta ---------- */
+.zona-perigo { border-color: rgba(251, 113, 133, .35); }
+.zona-perigo h3 { color: var(--erro); }
+.botao.perigo-botao { background: linear-gradient(135deg, #e11d48, #fb7185); color: #fff; width: 100%; }
+.botao.perigo-botao:disabled { opacity: .4; cursor: not-allowed; }
+.botao.perigo-botao .ic { width: 17px; height: 17px; }

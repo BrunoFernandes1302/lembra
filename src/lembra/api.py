@@ -14,12 +14,13 @@ import json
 import logging
 import os
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, EmailStr, Field
 
@@ -458,6 +459,45 @@ def buscar(dados: Pergunta, repo: RepositorioSupabase = Depends(repositorio)):
               similaridade=round(t.similaridade, 3))
         for t in trechos
     ]
+
+
+# ---------- Minha conta (LGPD: portabilidade e eliminação) ----------
+
+class ApagarConta(BaseModel):
+    senha: str = Field(min_length=1, max_length=200)
+    confirmacao: str = Field(max_length=20)
+
+
+@app.get("/conta/exportar", tags=["conta"])
+def exportar_conta(repo: RepositorioSupabase = Depends(repositorio)):
+    """Tudo o que o Lembra guarda desta pessoa, em JSON (baixado pelo app)."""
+    try:
+        dados = repo.exportar_tudo()
+    except ErroSupabase as e:
+        _erro(e)
+    return JSONResponse(
+        {"exportado_em": datetime.now(UTC).isoformat(timespec="seconds"), **dados},
+        headers={"Content-Disposition": 'attachment; filename="lembra-meus-dados.json"'})
+
+
+@app.delete("/conta", tags=["conta"], status_code=204)
+def apagar_conta(dados: ApagarConta, cred: HTTPAuthorizationCredentials = Depends(_bearer),
+                 auth: SupabaseAuth = Depends(_auth), repo: RepositorioSupabase = Depends(repositorio)):
+    """Apaga a conta e TODOS os dados. Ação irreversível: exige digitar APAGAR e a SENHA de novo
+    (reautenticação: um celular desbloqueado com o app aberto não basta)."""
+    if dados.confirmacao.strip() != "APAGAR":
+        raise HTTPException(status_code=400, detail='Digite APAGAR para confirmar.')
+    try:
+        email = auth.email_de(cred.credentials)
+        try:
+            auth.entrar(email, dados.senha)
+        except ErroSupabase as e:
+            if e.status in (400, 401, 422):
+                raise HTTPException(status_code=403, detail="Senha incorreta.") from e
+            raise
+        repo.apagar_conta()
+    except ErroSupabase as e:
+        _erro(e)
 
 
 # ---------- WhatsApp (bot oficial) ----------

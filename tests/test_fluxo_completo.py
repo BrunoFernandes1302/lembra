@@ -14,7 +14,7 @@ from fastapi import Depends
 from fastapi.testclient import TestClient
 
 from lembra import api, rag
-from lembra.supabase import Trecho
+from lembra.supabase import ErroSupabase, Trecho
 
 
 class EmbedderFalso:
@@ -144,6 +144,15 @@ class RepoFalso:
         BANCO["memorias"] = [m for m in BANCO["memorias"] if not (m["id"] == mid and m["dono"] == self.dono)]
         BANCO["chunks"] = [c for c in BANCO["chunks"] if not (c["memoria_id"] == mid and c["dono"] == self.dono)]
         return len(BANCO["memorias"]) < antes
+
+    def exportar_tudo(self):
+        meu = lambda tabela: [{k: v for k, v in x.items() if k != "dono"} for x in BANCO[tabela] if x["dono"] == self.dono]
+        return {"memorias": meu("memorias"), "categorias": self.listar_categorias(),
+                "configuracoes": self.obter_config() or {}, "avaliacoes": meu("feedback"), "whatsapp": None}
+
+    def apagar_conta(self):
+        for tabela in BANCO.values():
+            tabela[:] = [x for x in tabela if x["dono"] != self.dono]  # cascata: some tudo do dono
 
     def buscar(self, vetor, k, categoria=None, modelo=None):
         meus = [c for c in BANCO["chunks"] if c["dono"] == self.dono
@@ -440,3 +449,67 @@ def test_perfil_editavel_e_isolado(cliente):
     cliente.put("/config", headers=ANA, json={**CFG, "perfil_estilo": "- me chama de chefe"})
     assert cliente.get("/config", headers=ANA).json()["perfil_estilo"] == "- me chama de chefe"
     assert cliente.get("/config", headers=BETO).json()["perfil_estilo"] == ""
+
+
+# ---------------------------------------------------------------- minha conta (LGPD)
+class AuthFalso:
+    """Login falso: só a senha 'senha-certa' vale. Registra quem tentou entrar."""
+    def __init__(self):
+        self.tentativas = []
+
+    def email_de(self, token):
+        return f"{token}@exemplo.com"
+
+    def entrar(self, email, senha):
+        self.tentativas.append(email)
+        if senha != "senha-certa":
+            raise ErroSupabase(400, "Invalid login credentials")
+        return {}
+
+
+@pytest.fixture
+def auth_falso():
+    auth = AuthFalso()
+    api.app.dependency_overrides[api._auth] = lambda: auth
+    yield auth
+    api.app.dependency_overrides.pop(api._auth, None)
+
+
+def _duas_contas(cliente):
+    cliente.post("/memorias", headers=ANA, json={"texto": "Minha cachorra se chama Mel.", "categoria": "pets"})
+    cliente.post("/memorias", headers=BETO, json={"texto": "Segredo do Beto.", "categoria": "geral"})
+
+
+def test_exportar_traz_so_os_dados_de_quem_pediu(cliente):
+    _duas_contas(cliente)
+    r = cliente.get("/conta/exportar", headers=ANA)
+    assert r.status_code == 200 and "lembra-meus-dados.json" in r.headers["content-disposition"]
+    dados = r.json()
+    assert [m["texto"] for m in dados["memorias"]] == ["Minha cachorra se chama Mel."]
+    assert "Beto" not in r.text and "dono" not in r.text and "exportado_em" in dados
+    assert cliente.get("/conta/exportar").status_code in (401, 403), "exige login"
+
+
+def test_apagar_conta_exige_digitar_apagar(cliente, auth_falso):
+    _duas_contas(cliente)
+    r = cliente.request("DELETE", "/conta", headers=ANA, json={"senha": "senha-certa", "confirmacao": "apagar tudo"})
+    assert r.status_code == 400 and "APAGAR" in r.json()["detail"]
+    assert auth_falso.tentativas == [], "nem confere a senha sem a confirmação"
+    assert len(BANCO["memorias"]) == 2
+
+
+def test_apagar_conta_com_senha_errada_nao_apaga_nada(cliente, auth_falso):
+    _duas_contas(cliente)
+    r = cliente.request("DELETE", "/conta", headers=ANA, json={"senha": "chute", "confirmacao": "APAGAR"})
+    assert r.status_code == 403 and r.json()["detail"] == "Senha incorreta."
+    assert len(BANCO["memorias"]) == 2
+
+
+def test_apagar_conta_apaga_tudo_de_quem_pediu_e_so_dela(cliente, auth_falso):
+    _duas_contas(cliente)
+    cliente.post("/feedback", headers=ANA, json={"pergunta": "oi", "resposta": "olá", "util": True})
+    r = cliente.request("DELETE", "/conta", headers=ANA, json={"senha": "senha-certa", "confirmacao": " APAGAR "})
+    assert r.status_code == 204
+    assert auth_falso.tentativas == ["token-da-ana@exemplo.com"], "a senha é conferida para o DONO do crachá"
+    assert all(x["dono"] != "token-da-ana" for tabela in BANCO.values() for x in tabela), "nada da Ana sobrou"
+    assert [m["texto"] for m in BANCO["memorias"]] == ["Segredo do Beto."], "a conta do Beto não é tocada"

@@ -37,6 +37,7 @@ flowchart LR
 | **Personalização** | 👍/👎 nas respostas; o perfil "Como o Lembra te conhece" é reaprendido a cada 5 avaliações |
 | **Configurar o RAG** | Ajustes → chunk, sobreposição, top-K, modelo, instruções; Laboratório para ver os chunks |
 | **Categorias** | Cada pessoa cria as suas (renomear/apagar movem as memórias, nunca as perdem) |
+| **Minha conta** | Ajustes → Conta: baixar todos os seus dados (.json) ou apagar a conta com tudo dentro (pede a senha) |
 
 ## Arquitetura
 
