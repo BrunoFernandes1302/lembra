@@ -265,15 +265,34 @@ $("#form-auth").addEventListener("submit", async (e) => {
 
 const DICA_INICIAL = $("#dica-perguntar").cloneNode(true);
 
-$("#sair").addEventListener("click", () => {
-  sessao.limpar();
-  // Limpa tudo da tela: se outra pessoa entrar neste celular, não vê nada da anterior.
+// Limpa TUDO da pessoa que estava usando: se outra entrar neste aparelho sem recarregar, não vê nada
+// da anterior, e nada dela é enviado ao servidor junto com as perguntas da próxima (o histórico da
+// conversa vai como contexto de cada pergunta). Usada por "Sair" e por "Apagar minha conta".
+function limparTela() {
+  historico = [];
+  importacao = null;
+  $("#nova-conversa").hidden = true;
   $("#conversa").replaceChildren(DICA_INICIAL.cloneNode(true));
   $("#lista-memorias").replaceChildren();
   $("#lista-categorias").replaceChildren();
   $("#lab-chunks").replaceChildren();
   $("#lab-resumo").textContent = "";
+  $("#previa-importar").hidden = true;
+  $("#perfil-estilo").value = "";
+  $("#form-config").instrucoes.value = "";
+  $("#zap-codigo").textContent = "";
+  $("#zap-codigo-caixa").hidden = true;
+  $("#zap-telefone").textContent = "";
+  $("#form-apagar-conta").reset();
+  $("#botao-apagar").disabled = true;
+  $("#form-perguntar").reset();
+  $("#form-importar").reset();
   categorias = [];
+}
+
+$("#sair").addEventListener("click", () => {
+  sessao.limpar();
+  limparTela();
   mostrarAuth();
 });
 
@@ -341,7 +360,7 @@ formApagar.addEventListener("submit", async (e) => {
     await chamar("/conta", { metodo: "DELETE",
       corpo: { senha: formApagar.senha.value, confirmacao: formApagar.confirmacao.value.trim().toUpperCase() } });
     sessao.limpar();
-    formApagar.reset();
+    limparTela();
     mostrarAuth();
     avisar("Conta apagada. Obrigado por ter usado o Lembra.");
   } catch (err) {
