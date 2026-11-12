@@ -598,6 +598,32 @@ dia?" → "E o aluguel vence que dia?".
 - a saída da IA é conferida (vazia ou longa demais → usa a original) e, se a reescrita falhar, a
   pergunta segue como veio; o vetor original (calculado em paralelo) só é descartado se reescreveu.
 
+### 12.3 Quando o banco "some": projeto gratuito pausado (e como diagnosticar)
+
+**O sintoma:** todas as perguntas falharam com "Algo deu errado" e, depois, com uma **página HTML inteira**
+na tela ("supabase.co | 521: Web server is down"). **A causa:** o projeto gratuito do Supabase é
+**pausado depois de ~7 dias sem uso**; pausado, o banco não responde e *todo* endpoint que o usa falha.
+
+**Como foi diagnosticado (e o que quase me enganou):**
+- Minha primeira suspeita foi uma mudança minha (fuso horário via `ZoneInfo`, que depende do banco de
+  fusos do sistema). Era uma fragilidade real e foi corrigida (Brasília = −03:00 fixo, sem DST desde
+  2019), mas **não era a causa**. Lição: duas explicações plausíveis; só a evidência separa.
+- A evidência veio de pistas convergentes: nenhum registro de requisição no banco, o endereço do banco
+  sem resposta, "database not accessible" e, por fim, `status: INACTIVE` na lista de projetos.
+
+**O que mudou para isso não voltar a confundir:**
+- Erro **legível**: resposta que não é JSON (página do Cloudflare) e falha de conexão viram
+  "O banco de dados está indisponível no momento", com **HTTP 503** (antes: HTML cru, ou 400).
+- Erro inesperado devolve o **tipo** do erro (`Erro interno do servidor (KeyError)`), não o texto
+  (que pode ter segredo): a causa aparece na tela de quem testa.
+- **Ping diário** (`vercel.json` → cron → `GET /saude/banco`): uma consulta mínima ao banco por dia,
+  para o Supabase registrar atividade e não pausar. Também serve de *health check* (503 se o banco
+  estiver fora). Alternativa definitiva: plano pago (sem pausa).
+
+**Conceito geral:** *dependência externa que falha* precisa de três coisas: mensagem que o usuário
+entende, status HTTP que diz a verdade (503 = "o serviço de que dependo está fora", não 400 = "você
+errou") e algo que a mantenha viva ou avise (monitoramento).
+
 ## Desempenho: medir antes de otimizar
 
 Medição de uma pergunta comum: o Gemini respondia em ~1 s (sem "pensar"); o lento eram duas
@@ -742,4 +768,5 @@ o mesmo juiz.
 | **Query rewriting** | Reescrever a pergunta com o contexto da conversa antes de buscar |
 | **Portabilidade / Eliminação** | Direitos da LGPD: levar os dados com você / pedir que sejam apagados |
 | **Reautenticação** | Pedir a senha de novo antes de uma ação perigosa, mesmo com a sessão aberta |
+| **503** | HTTP "serviço indisponível": o problema não é do pedido, e sim de algo de que o servidor depende |
 | **Idempotência** | Processar a mesma coisa duas vezes dá o mesmo resultado que uma vez |

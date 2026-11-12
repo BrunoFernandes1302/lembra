@@ -513,3 +513,15 @@ def test_apagar_conta_apaga_tudo_de_quem_pediu_e_so_dela(cliente, auth_falso):
     assert auth_falso.tentativas == ["token-da-ana@exemplo.com"], "a senha é conferida para o DONO do crachá"
     assert all(x["dono"] != "token-da-ana" for tabela in BANCO.values() for x in tabela), "nada da Ana sobrou"
     assert [m["texto"] for m in BANCO["memorias"]] == ["Segredo do Beto."], "a conta do Beto não é tocada"
+
+
+def test_erro_inesperado_devolve_o_tipo_do_erro_e_nao_o_texto(cliente, monkeypatch):
+    def quebra(*a, **k):
+        raise KeyError("detalhe interno: senha do banco")
+
+    monkeypatch.setattr(rag, "perguntar", quebra)
+    c = TestClient(api.app, raise_server_exceptions=False)
+    r = c.post("/perguntar", headers=ANA, json={"pergunta": "oi"})
+    assert r.status_code == 500
+    assert r.json()["detail"] == "Erro interno do servidor (KeyError)."
+    assert "senha" not in r.text, "o texto do erro (pode ter segredo) não vai para o usuário"

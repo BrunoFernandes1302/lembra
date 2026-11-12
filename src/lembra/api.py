@@ -17,7 +17,7 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
@@ -26,7 +26,7 @@ from pydantic import BaseModel, EmailStr, Field
 
 from . import rag, whatsapp_bot
 from .config import get_settings
-from .supabase import ErroSupabase, RepositorioSupabase, SupabaseAuth
+from .supabase import ErroSupabase, RepositorioSupabase, SupabaseAuth, ping_banco
 
 logger = logging.getLogger("lembra")
 
@@ -196,8 +196,17 @@ def repositorio(cred: HTTPAuthorizationCredentials = Depends(_bearer)) -> Reposi
 
 def _erro(e: ErroSupabase):
     # 401 = crachá vencido ou inválido (o app deve renovar a sessão).
-    # 5xx do Supabase: o app mostra a mensagem como erro do pedido (400).
-    raise HTTPException(status_code=400 if e.status >= 500 else e.status, detail=e.mensagem)
+    # 5xx vindo do Supabase = o BANCO está com problema (pausado, fora do ar): 503, "indisponível".
+    raise HTTPException(status_code=503 if e.status >= 500 else e.status, detail=e.mensagem)
+
+
+@app.exception_handler(Exception)
+async def erro_interno(_request: Request, exc: Exception):
+    """Qualquer erro inesperado: o traceback vai para o log do servidor e o app recebe o TIPO do erro
+    (ex.: "ZoneInfoNotFoundError"), não o texto, que pode ter detalhes internos. Sem isso a tela só
+    mostrava "Algo deu errado" e a causa ficava invisível para quem testa."""
+    logger.exception("erro inesperado em %s", _request.url.path)
+    return JSONResponse(status_code=500, content={"detail": f"Erro interno do servidor ({type(exc).__name__})."})
 
 
 # ---------- Rotas ----------
@@ -205,6 +214,23 @@ def _erro(e: ErroSupabase):
 @app.get("/saude")
 def saude():
     return {"ok": True}
+
+
+@app.get("/saude/banco")
+def saude_banco(authorization: str | None = Header(default=None)):
+    """Toca o banco. Chamada todo dia pelo cron da Vercel (vercel.json) para o projeto gratuito do
+    Supabase não ser pausado por inatividade; também diz se o banco está no ar (503 se não estiver).
+    Se CRON_SECRET estiver definido, exige "Authorization: Bearer <segredo>" (a Vercel envia esse cabeçalho
+    sozinha nas chamadas do cron): assim ninguém martela o banco por aqui. Sem a variável, fica aberto."""
+    segredo = os.getenv("CRON_SECRET", "")
+    if segredo and not hmac.compare_digest(authorization or "", f"Bearer {segredo}"):
+        raise HTTPException(status_code=401, detail="Não autorizado.")
+    s = get_settings()
+    try:
+        ping_banco(s.supabase_url, s.supabase_key)
+    except ErroSupabase as e:
+        _erro(e)
+    return {"banco": "ok"}
 
 
 @app.post("/auth/cadastro", tags=["auth"])

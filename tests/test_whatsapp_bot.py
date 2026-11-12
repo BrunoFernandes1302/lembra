@@ -285,3 +285,19 @@ def test_recusa_imediata_da_meta_tambem_e_registrada(rag_falso):
     banco = BancoFalso()
     processar_webhook(payload, banco, MetaQueRecusa())
     assert banco.falhas == [(131030, "Recipient phone number not in allowed list", "")]
+
+
+def test_falha_de_rede_com_a_meta_e_registrada_e_nao_derruba_o_webhook(rag_falso, monkeypatch):
+    import requests
+
+    def sem_rede(*a, **k):
+        raise requests.ConnectionError("rede caiu")
+
+    monkeypatch.setattr(whatsapp_bot._http_meta, "post", sem_rede)
+    payload = {"entry": [{"changes": [{"value": {"messages": [
+        {"id": "m1", "from": ANA, "type": "text", "text": {"body": "oi"}}]}}]}]}
+    banco = BancoFalso()
+    meta = whatsapp_bot.MetaWhatsApp("token", "phone")
+    assert processar_webhook(payload, banco, meta) == 1, "não levantou exceção"
+    codigo, titulo, _ = banco.falhas[0]
+    assert codigo == 0 and "Meta" in titulo and "banco" not in titulo.lower()
