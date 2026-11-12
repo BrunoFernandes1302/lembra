@@ -56,6 +56,7 @@ def test_api_responde_503_com_aviso_quando_o_banco_esta_fora():
 
 
 def test_ping_do_banco_ok_e_banco_fora(monkeypatch):
+    monkeypatch.delenv("CRON_SECRET", raising=False)  # o teste não pode depender do ambiente da máquina
     chamadas = []
 
     def get(url, **kw):
@@ -70,3 +71,15 @@ def test_ping_do_banco_ok_e_banco_fora(monkeypatch):
     monkeypatch.setattr(_http, "get", lambda url, **kw: _resposta(521, PAGINA_CLOUDFLARE, "text/html"))
     r = c.get("/saude/banco")
     assert r.status_code == 503 and r.json()["detail"] == MSG_BANCO_FORA
+
+
+def test_ping_exige_o_segredo_do_cron_quando_configurado(monkeypatch):
+    monkeypatch.setattr(_http, "get", lambda url, **kw: _resposta(200, "[]", "application/json"))
+    c = TestClient(api.app)
+    monkeypatch.setenv("CRON_SECRET", "segredo-do-cron")
+    assert c.get("/saude/banco").status_code == 401, "sem cabeçalho"
+    assert c.get("/saude/banco", headers={"Authorization": "Bearer errado"}).status_code == 401
+    ok = c.get("/saude/banco", headers={"Authorization": "Bearer segredo-do-cron"})
+    assert ok.status_code == 200 and ok.json() == {"banco": "ok"}
+    monkeypatch.delenv("CRON_SECRET")
+    assert c.get("/saude/banco").status_code == 200, "sem segredo configurado, continua aberto"

@@ -17,7 +17,7 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
@@ -217,9 +217,14 @@ def saude():
 
 
 @app.get("/saude/banco")
-def saude_banco():
+def saude_banco(authorization: str | None = Header(default=None)):
     """Toca o banco. Chamada todo dia pelo cron da Vercel (vercel.json) para o projeto gratuito do
-    Supabase não ser pausado por inatividade; também diz se o banco está no ar (503 se não estiver)."""
+    Supabase não ser pausado por inatividade; também diz se o banco está no ar (503 se não estiver).
+    Se CRON_SECRET estiver definido, exige "Authorization: Bearer <segredo>" (a Vercel envia esse cabeçalho
+    sozinha nas chamadas do cron): assim ninguém martela o banco por aqui. Sem a variável, fica aberto."""
+    segredo = os.getenv("CRON_SECRET", "")
+    if segredo and not hmac.compare_digest(authorization or "", f"Bearer {segredo}"):
+        raise HTTPException(status_code=401, detail="Não autorizado.")
     s = get_settings()
     try:
         ping_banco(s.supabase_url, s.supabase_key)
