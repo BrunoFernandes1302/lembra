@@ -18,9 +18,8 @@ import calendar
 import logging
 import operator
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import Protocol
-from zoneinfo import ZoneInfo
 
 from .config import Settings
 from .supabase import Trecho
@@ -28,6 +27,16 @@ from .supabase import Trecho
 logger = logging.getLogger(__name__)
 
 MAX_PASSOS = 5
+# Hora de Brasília como deslocamento FIXO (-03:00): o Brasil não tem horário de verão desde 2019. Não usa
+# zoneinfo de propósito: ele depende do banco de fusos do SISTEMA, que pode não existir no servidor
+# (aí toda pergunta quebraria com ZoneInfoNotFoundError).
+BRASILIA = timezone(timedelta(hours=-3))
+
+
+def agora_sp() -> datetime:
+    return datetime.now(BRASILIA)
+
+
 DIAS = ["segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado", "domingo"]
 
 PROMPT_AGENTE = """Você é o Lembra, um assistente de organização pessoal que conhece a vida do usuário \
@@ -226,11 +235,11 @@ class Ferramentas:
         return {"expressao": expressao, "resultado": round(calcular_seguro(expressao), 6)}
 
     def data_de_hoje(self) -> dict:
-        agora = datetime.now(ZoneInfo("America/Sao_Paulo"))
+        agora = agora_sp()
         return {"data": agora.strftime("%d/%m/%Y"), "dia_da_semana": DIAS[agora.weekday()]}
 
     def dias_ate(self, dia: int, mes: int, ano: int | None = None, hoje: date | None = None) -> dict:
-        hoje = hoje or datetime.now(ZoneInfo("America/Sao_Paulo")).date()
+        hoje = hoje or agora_sp().date()
         alvo = date(int(ano) if ano else hoje.year, int(mes), int(dia))
         if ano is None and alvo < hoje:  # sem ano: próxima ocorrência (ex.: aniversário)
             alvo = date(hoje.year + 1, int(mes), int(dia))
@@ -239,7 +248,7 @@ class Ferramentas:
                 "dias": dias, "sentido": "faltam" if dias >= 0 else "passaram"}
 
     def proxima_ocorrencia(self, tipo: str, hoje: date | None = None, **regra) -> dict:
-        hoje = hoje or datetime.now(ZoneInfo("America/Sao_Paulo")).date()
+        hoje = hoje or agora_sp().date()
         datas = proximas_ocorrencias(tipo, hoje, **regra)
         if not datas:
             return {"erro": "essa regra não tem ocorrência nos próximos 2 anos"}

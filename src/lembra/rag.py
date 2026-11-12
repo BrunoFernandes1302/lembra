@@ -15,13 +15,12 @@ import logging
 import re
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date
 from typing import Protocol
-from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel
 
-from .agente import DIAS
+from .agente import DIAS, agora_sp
 from .chunking import chunk_text
 from .config import Settings, com_config_do_usuario, embedder_de, get_settings
 from .llm import get_llm
@@ -145,7 +144,7 @@ def _config_e_vetor(repo, pergunta: str, settings: Settings | None) -> tuple[Set
 
 
 def hoje_em_sp() -> date:
-    return datetime.now(ZoneInfo("America/Sao_Paulo")).date()
+    return agora_sp().date()
 
 
 def montar_prompt(pergunta: str, trechos: list[Trecho], hoje: date | None = None) -> str:

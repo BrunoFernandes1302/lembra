@@ -1,4 +1,5 @@
 from dataclasses import replace
+from datetime import date
 
 import pytest
 
@@ -106,3 +107,19 @@ def test_reescrita_que_falha_nao_derruba_a_pergunta(ambiente, monkeypatch):
     monkeypatch.setattr(llm, "gerar", quebra)
     r = rag.perguntar(object(), "e em setembro?", historico=HIST)
     assert r.pergunta_entendida is None and buscadas[0][0] == "e em setembro?"
+
+
+# ---------------------------------------------------------------- data de hoje sem banco de fusos
+def test_data_de_hoje_nao_depende_do_banco_de_fusos_do_sistema():
+    """Num servidor sem /usr/share/zoneinfo, ZoneInfo quebra e TODA pergunta falharia. Roda num
+    processo à parte com o banco de fusos 'desligado' (PYTHONTZPATH) e exige que a data saia."""
+    import os
+    import subprocess
+    import sys
+
+    codigo = "from lembra.rag import hoje_em_sp, montar_prompt; print(hoje_em_sp().year); " \
+             "print('Hoje é' in montar_prompt('oi', []))"
+    r = subprocess.run([sys.executable, "-c", codigo], check=False, capture_output=True, text=True,
+                       env={**os.environ, "PYTHONTZPATH": "/nao/existe"})
+    assert r.returncode == 0, r.stderr[-400:]
+    assert r.stdout.split() == [str(date.today().year), "True"]

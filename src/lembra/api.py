@@ -200,6 +200,15 @@ def _erro(e: ErroSupabase):
     raise HTTPException(status_code=400 if e.status >= 500 else e.status, detail=e.mensagem)
 
 
+@app.exception_handler(Exception)
+async def erro_interno(_request: Request, exc: Exception):
+    """Qualquer erro inesperado: o traceback vai para o log do servidor e o app recebe o TIPO do erro
+    (ex.: "ZoneInfoNotFoundError"), não o texto, que pode ter detalhes internos. Sem isso a tela só
+    mostrava "Algo deu errado" e a causa ficava invisível para quem testa."""
+    logger.exception("erro inesperado em %s", _request.url.path)
+    return JSONResponse(status_code=500, content={"detail": f"Erro interno do servidor ({type(exc).__name__})."})
+
+
 # ---------- Rotas ----------
 
 @app.get("/saude")
