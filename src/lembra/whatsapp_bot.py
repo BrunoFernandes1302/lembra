@@ -24,10 +24,17 @@ import re
 import time
 from dataclasses import dataclass
 
+import requests
+
 from lembra import rag
-from lembra.supabase import TIMEOUT, ErroSupabase, RepositorioSupabase, _checar, _http
+from lembra.supabase import TIMEOUT, ErroSupabase, RepositorioSupabase, _checar
+from lembra.supabase import _http as _http_banco
 
 logger = logging.getLogger(__name__)
+
+# A Meta tem a SUA sessão HTTP. A do banco (supabase._http) converte falha de rede em "banco indisponível":
+# usá-la para falar com a Meta rotularia errado os erros e esconderia a causa.
+_http_meta = requests.Session()
 
 GRAPH = "https://graph.facebook.com/v25.0"
 LIMITE_WHATSAPP = 4096  # caracteres por mensagem de texto
@@ -171,7 +178,7 @@ class BancoDoBot:
     def _rpc(self, funcao: str, args: dict):
         cabecalhos = {"apikey": self.chave_publica, "Content-Type": "application/json",
                       "Authorization": f"Bearer {emitir_jwt(self.jwt_secret, 'service_role', validade=60)}"}
-        r = _http.post(f"{self.url}/rest/v1/rpc/{funcao}", headers=cabecalhos, json=args, timeout=TIMEOUT)
+        r = _http_banco.post(f"{self.url}/rest/v1/rpc/{funcao}", headers=cabecalhos, json=args, timeout=TIMEOUT)
         return _checar(r)
 
     def primeira_vez(self, mensagem_id: str) -> bool:
@@ -213,7 +220,12 @@ class MetaWhatsApp:
         """Envia e devolve None se a Meta aceitou, ou {codigo, titulo, detalhe} se recusou na hora."""
         corpo = {"messaging_product": "whatsapp", "to": numero_para_envio(telefone), "type": "text",
                  "text": {"body": texto[:LIMITE_WHATSAPP]}}
-        r = _http.post(f"{GRAPH}/{self.phone_id}/messages", headers=self.cabecalhos, json=corpo, timeout=TIMEOUT)
+        try:
+            r = _http_meta.post(f"{GRAPH}/{self.phone_id}/messages", headers=self.cabecalhos, json=corpo,
+                                timeout=TIMEOUT)
+        except requests.RequestException as e:  # rede caiu: não derruba o webhook; vira falha registrada
+            logger.warning("Falha de rede ao enviar para a Meta: %s", type(e).__name__)
+            return {"codigo": 0, "titulo": f"falha de rede ao falar com a Meta ({type(e).__name__})", "detalhe": ""}
         if r.ok:
             return None
         logger.warning("Meta recusou o envio (%s): %s", r.status_code, r.text[:300])
@@ -226,9 +238,9 @@ class MetaWhatsApp:
 
     def baixar_midia(self, midia_id: str) -> bytes:
         """Dois passos: o id vira uma URL temporária; a URL (com o token) devolve o arquivo."""
-        info = _http.get(f"{GRAPH}/{midia_id}", headers=self.cabecalhos, timeout=TIMEOUT)
+        info = _http_meta.get(f"{GRAPH}/{midia_id}", headers=self.cabecalhos, timeout=TIMEOUT)
         info.raise_for_status()
-        arquivo = _http.get(info.json()["url"], headers=self.cabecalhos, timeout=TIMEOUT)
+        arquivo = _http_meta.get(info.json()["url"], headers=self.cabecalhos, timeout=TIMEOUT)
         arquivo.raise_for_status()
         return arquivo.content
 
