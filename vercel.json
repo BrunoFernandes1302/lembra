@@ -1,5 +1,11 @@
 {
   "regions": [
     "gru1"
+  ],
+  "crons": [
+    {
+      "path": "/saude/banco",
+      "schedule": "0 12 * * *"
+    }
   ]
 }

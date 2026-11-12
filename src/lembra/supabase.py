@@ -15,7 +15,21 @@ TIMEOUT = 30
 
 # UMA sessão HTTP reaproveitada (keep-alive): a conexão segura (TLS) é aberta uma vez e reusada.
 # Sem isso, cada consulta refazia o "aperto de mão" de criptografia (várias idas e voltas pela rede).
-_http = requests.Session()
+MSG_BANCO_FORA = "O banco de dados está indisponível no momento. Tente de novo em instantes."
+
+
+class _SessaoSupabase(requests.Session):
+    """Sessão que transforma falha de CONEXÃO (banco pausado, rede, tempo esgotado) num ErroSupabase 503
+    legível, em vez de uma exceção crua que o app mostraria como 'Algo deu errado'."""
+
+    def request(self, *args, **kwargs):
+        try:
+            return super().request(*args, **kwargs)
+        except requests.RequestException as e:
+            raise ErroSupabase(503, MSG_BANCO_FORA) from e
+
+
+_http = _SessaoSupabase()
 _http.mount("https://", requests.adapters.HTTPAdapter(pool_connections=4, pool_maxsize=16))
 
 
@@ -47,8 +61,22 @@ def _checar(r: requests.Response):
         corpo = r.json()
         msg = corpo.get("msg") or corpo.get("message") or corpo.get("error_description") or str(corpo)
     except ValueError:
-        msg = r.text
+        # Corpo que não é JSON = não foi o Supabase que respondeu, e sim a infraestrutura na frente dele
+        # (ex.: página HTML do Cloudflare "521 Web server is down" quando o projeto está pausado).
+        # Nunca repassar isso ao usuário: é uma página inteira.
+        msg = MSG_BANCO_FORA if r.status_code >= 500 else f"Resposta inesperada do banco (HTTP {r.status_code})."
+    if r.status_code >= 500 and len(str(msg)) > 300:
+        msg = MSG_BANCO_FORA
     raise ErroSupabase(r.status_code, msg)
+
+
+def ping_banco(url: str, chave_publica: str) -> None:
+    """Uma consulta mínima ao banco (sem login: o RLS devolve vazio). Serve só para o Supabase registrar
+    ATIVIDADE: projetos do plano gratuito são pausados depois de ~7 dias sem nenhuma."""
+    r = _http.get(f"{url.rstrip('/')}/rest/v1/memorias", headers={"apikey": chave_publica},
+                  params={"select": "id", "limit": "1"}, timeout=TIMEOUT)
+    if r.status_code >= 500:
+        _checar(r)
 
 
 class SupabaseAuth:
