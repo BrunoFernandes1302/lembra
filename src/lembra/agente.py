@@ -22,6 +22,7 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Protocol
 
 from .config import Settings
+from .llm import gerar_conteudo_gemini
 from .supabase import Trecho
 
 logger = logging.getLogger(__name__)
@@ -286,7 +287,7 @@ class MotorGemini:
         from google.genai import types
 
         self.types = types
-        self.client = genai.Client(api_key=s.gemini_api_key)
+        self.client = genai.Client(api_key=s.gemini_api_key, http_options=types.HttpOptions(timeout=10_000))
         self.modelo = s.gemini_model
         self.sistema = sistema
         self.historico = [types.Content(role="user", parts=[types.Part.from_text(text=pergunta)])]
@@ -300,7 +301,8 @@ class MotorGemini:
             system_instruction=self.sistema,
             tools=self.ferramentas if com_ferramentas else None,
             automatic_function_calling=t.AutomaticFunctionCallingConfig(disable=True))
-        return self.client.models.generate_content(model=self.modelo, contents=self.historico, config=cfg)
+        resposta, self.modelo = gerar_conteudo_gemini(self.client, self.modelo, contents=self.historico, config=cfg)
+        return resposta
 
     def proximo(self):
         r = self._gerar(True)

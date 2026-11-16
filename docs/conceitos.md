@@ -647,6 +647,12 @@ pendurada consumiria a função inteira e o retry só pioraria.
 uso", "recusou o pedido (erro 404; pode ser a chave ou o modelo)"), com o código, **sem** o texto do
 erro (pode ter detalhes internos). Antes, as três causas viravam a mesma frase e ninguém sabia qual era.
 
+**Reserva para modelo aposentado:** se o `GEMINI_MODEL` configurado responder 404 (aposentado), o app
+usa o apelido `gemini-flash-lite-latest`, registra um aviso no log e passa a usar o que funcionou.
+Trade-off: ignora em silêncio o nome que o dono configurou (por isso o aviso). Só o 404 aciona a troca;
+503/429 continuam no retry, e se o próprio padrão der 404 o erro sobe. Em produção isso já aconteceu:
+uma variável antiga na Vercel derrubou a IA ("erro 404") mesmo com o código correto.
+
 **Por que o modelo muda de nome:** o Google aposenta modelos (`gemini-2.5-flash-lite` e
 `gemini-2.0-flash-lite` já respondem 404 "no longer available"). O app usa o apelido
 `gemini-flash-lite-latest`, que o Google aponta para o modelo atual; nunca fixar o nome de um modelo.

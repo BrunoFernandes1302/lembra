@@ -11,6 +11,7 @@ Provedores atrás da mesma interface `gerar(system, prompt) -> str`
 
 from __future__ import annotations
 
+import logging
 from typing import Protocol
 
 from .config import Settings, get_settings
@@ -44,6 +45,23 @@ class ClaudeLLM:
             return "O modelo se recusou a responder essa pergunta."
         return "".join(b.text for b in response.content if b.type == "text").strip()
 
+logger = logging.getLogger(__name__)
+MODELO_PADRAO_GEMINI = "gemini-flash-lite-latest"  # apelido: o Google o aponta para o modelo atual
+
+
+def gerar_conteudo_gemini(cliente, modelo: str, **kw):
+    """Chama o Gemini; se o modelo configurado foi aposentado (404), cai no apelido padrão.
+
+    Devolve (resposta, modelo_usado) para quem chama guardar o que funcionou e não errar de novo."""
+    try:
+        return cliente.models.generate_content(model=modelo, **kw), modelo
+    except Exception as e:
+        if getattr(e, "code", None) != 404 or modelo == MODELO_PADRAO_GEMINI:
+            raise
+        logger.warning("Modelo %r não existe mais (404); usando %r. Atualize GEMINI_MODEL.",
+                       modelo, MODELO_PADRAO_GEMINI)
+        return cliente.models.generate_content(model=MODELO_PADRAO_GEMINI, **kw), MODELO_PADRAO_GEMINI
+
 
 class GeminiLLM:
     def __init__(self, model: str, api_key: str):
@@ -57,8 +75,8 @@ class GeminiLLM:
     def gerar(self, system: str, prompt: str) -> str:
         from google.genai import types
 
-        response = self.client.models.generate_content(
-            model=self.model,
+        response, self.model = gerar_conteudo_gemini(
+            self.client, self.model,
             contents=prompt,
             config=types.GenerateContentConfig(system_instruction=system),
         )
@@ -68,8 +86,8 @@ class GeminiLLM:
         """Modelo MULTIMODAL: o Gemini recebe o áudio e devolve o texto (speech-to-text)."""
         from google.genai import types
 
-        response = self.client.models.generate_content(
-            model=self.model,
+        response, self.model = gerar_conteudo_gemini(
+            self.client, self.model,
             contents=[types.Part.from_bytes(data=audio, mime_type=mime),
                       ("Transcreva fielmente este áudio em português do Brasil, com pontuação. "
                        "Responda só com a transcrição. Se não houver fala, responda vazio.")],
@@ -82,8 +100,8 @@ class GeminiLLM:
         Nada de texto solto para "decifrar" depois."""
         from google.genai import types
 
-        response = self.client.models.generate_content(
-            model=self.model,
+        response, self.model = gerar_conteudo_gemini(
+            self.client, self.model,
             contents=prompt,
             config=types.GenerateContentConfig(
                 system_instruction=system, temperature=0,
