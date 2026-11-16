@@ -182,3 +182,48 @@ def test_orcamento_de_tempo_interrompe_o_retry():
     with pytest.raises(_ErroHttp):
         rag.gerar_com_novas_tentativas(llm, "s", "p", dormir=lambda s: None, relogio=lambda: next(horas))
     assert llm.chamadas == 1
+
+
+# ---------------------------------------------------------------- modelo aposentado (404): cai no padrão
+class _ClienteGemini:
+    def __init__(self, aposentados):
+        self.aposentados, self.chamados = set(aposentados), []
+        self.models = self
+
+    def generate_content(self, model, **kw):
+        self.chamados.append(model)
+        if model in self.aposentados:
+            raise _ErroHttp(404)
+        return "ok"
+
+
+def test_modelo_aposentado_cai_no_padrao_e_lembra():
+    from lembra.llm import MODELO_PADRAO_GEMINI, gerar_conteudo_gemini
+
+    c = _ClienteGemini({"gemini-antigo"})
+    resposta, usado = gerar_conteudo_gemini(c, "gemini-antigo", contents="x")
+    assert resposta == "ok" and usado == MODELO_PADRAO_GEMINI
+    assert c.chamados == ["gemini-antigo", MODELO_PADRAO_GEMINI]
+
+
+def test_404_do_proprio_padrao_e_outros_erros_nao_sao_mascarados():
+    from lembra.llm import MODELO_PADRAO_GEMINI, gerar_conteudo_gemini
+
+    with pytest.raises(_ErroHttp):  # o padrão também sumiu: não há para onde cair
+        gerar_conteudo_gemini(_ClienteGemini({MODELO_PADRAO_GEMINI}), MODELO_PADRAO_GEMINI, contents="x")
+
+    class Sobrecarga(_ClienteGemini):
+        def generate_content(self, model, **kw):
+            raise _ErroHttp(503)
+
+    with pytest.raises(_ErroHttp):  # 503 segue para o retry, não vira troca de modelo
+        gerar_conteudo_gemini(Sobrecarga([]), "gemini-antigo", contents="x")
+
+
+def test_cliente_gemini_fixa_a_api_em_v1beta():
+    """O apelido -latest só existe na v1beta; o google-genai 3.x mudou o padrão para v1 (404 em produção)."""
+    from lembra.llm import criar_cliente_gemini
+
+    c = criar_cliente_gemini("chave-falsa", timeout_ms=10_000)
+    opcoes = c._api_client._http_options
+    assert opcoes.api_version == "v1beta" and opcoes.timeout == 10_000

@@ -22,6 +22,7 @@ from avaliar import com_novas_tentativas
 from pydantic import BaseModel
 
 from lembra.config import get_settings
+from lembra.llm import criar_cliente_gemini
 
 PASTA = Path(__file__).resolve().parent / "dados"
 
@@ -47,11 +48,10 @@ Devolva o id de cada memória exatamente como recebido."""
 
 
 def main():
-    from google import genai
     from google.genai import types
 
     s = get_settings()
-    cliente = genai.Client(api_key=s.gemini_api_key)
+    cliente = criar_cliente_gemini(s.gemini_api_key)
     memorias = json.loads((RAIZ / "avaliacao/conjunto_dificil.json").read_text(encoding="utf-8"))["memorias"]
     saida: dict[str, list[str]] = {}
     for i in range(0, len(memorias), 10):  # lotes de 10 memórias por chamada

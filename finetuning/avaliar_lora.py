@@ -23,6 +23,7 @@ from avaliar import com_novas_tentativas, julgar
 
 from lembra import rag
 from lembra.config import get_settings
+from lembra.llm import criar_cliente_gemini
 from lembra.supabase import Trecho
 
 PASTA = Path(__file__).resolve().parent
@@ -47,12 +48,11 @@ def responder(modelo, tok, prompt):
 
 
 def main():
-    from google import genai
     from peft import PeftModel
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
     s = get_settings()
-    juiz = genai.Client(api_key=s.gemini_api_key)
+    juiz = criar_cliente_gemini(s.gemini_api_key)
     conj = json.loads((RAIZ / "avaliacao/conjunto_dificil.json").read_text(encoding="utf-8"))
     mem, perg = conj["memorias"], conj["perguntas"]
     D = vetores([m["texto"] for m in mem], "doc")

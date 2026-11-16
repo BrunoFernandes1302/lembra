@@ -28,6 +28,7 @@ from pydantic import BaseModel
 
 from lembra import rag
 from lembra.config import get_settings
+from lembra.llm import criar_cliente_gemini
 from lembra.supabase import Trecho
 
 PASTA = Path(__file__).resolve().parent / "dados"
@@ -45,7 +46,6 @@ class Respostas(BaseModel):
 
 
 def main():
-    from google import genai
     from google.genai import types
 
     random.seed(7)
@@ -70,7 +70,7 @@ def main():
         exemplos.append({"pergunta": pergunta, "negativo": negativo,
                          "prompt": rag.montar_prompt(pergunta, trechos)})
 
-    cliente = genai.Client(api_key=s.gemini_api_key)
+    cliente = criar_cliente_gemini(s.gemini_api_key)
     instr = (rag.SYSTEM_PROMPT + "\n\nVocê vai receber VÁRIOS casos numerados, cada um com suas memórias e "
              "pergunta. Responda cada caso de forma independente, seguindo as regras, e devolva as respostas "
              "na mesma ordem, uma por caso.")
