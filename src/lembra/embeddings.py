@@ -42,9 +42,10 @@ class GeminiEmbedder:
     LOTE = 100  # a API aceita vários textos por chamada; mandamos em lotes
 
     def __init__(self, modelo: str, api_key: str, dimensao: int):
-        from google import genai
 
-        self.client = genai.Client(api_key=api_key)
+        from .llm import criar_cliente_gemini
+
+        self.client = criar_cliente_gemini(api_key)
         self.modelo = modelo
         self.dimensao = dimensao
 

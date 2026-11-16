@@ -49,6 +49,18 @@ logger = logging.getLogger(__name__)
 MODELO_PADRAO_GEMINI = "gemini-flash-lite-latest"  # apelido: o Google o aponta para o modelo atual
 
 
+def criar_cliente_gemini(api_key: str, timeout_ms: int | None = None):
+    """Cliente do Gemini com a versão da API FIXA em v1beta.
+
+    O apelido `-latest` só existe na v1beta. O google-genai 2.x usava v1beta por padrão, mas a 3.x
+    passou a usar v1: sem fixar, um deploy que instala a versão nova responde 404 para o mesmo modelo."""
+    from google import genai
+    from google.genai import types
+
+    return genai.Client(api_key=api_key,
+                        http_options=types.HttpOptions(api_version="v1beta", timeout=timeout_ms))
+
+
 def gerar_conteudo_gemini(cliente, modelo: str, **kw):
     """Chama o Gemini; se o modelo configurado foi aposentado (404), cai no apelido padrão.
 
@@ -65,11 +77,8 @@ def gerar_conteudo_gemini(cliente, modelo: str, **kw):
 
 class GeminiLLM:
     def __init__(self, model: str, api_key: str):
-        from google import genai
-        from google.genai import types
-
         # Sem timeout, uma chamada pendurada consome a função inteira; com ele, o retry tem limite.
-        self.client = genai.Client(api_key=api_key, http_options=types.HttpOptions(timeout=10_000))
+        self.client = criar_cliente_gemini(api_key, timeout_ms=10_000)
         self.model = model
 
     def gerar(self, system: str, prompt: str) -> str:

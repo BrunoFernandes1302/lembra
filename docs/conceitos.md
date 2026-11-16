@@ -650,8 +650,16 @@ erro (pode ter detalhes internos). Antes, as três causas viravam a mesma frase 
 **Reserva para modelo aposentado:** se o `GEMINI_MODEL` configurado responder 404 (aposentado), o app
 usa o apelido `gemini-flash-lite-latest`, registra um aviso no log e passa a usar o que funcionou.
 Trade-off: ignora em silêncio o nome que o dono configurou (por isso o aviso). Só o 404 aciona a troca;
-503/429 continuam no retry, e se o próprio padrão der 404 o erro sobe. Em produção isso já aconteceu:
-uma variável antiga na Vercel derrubou a IA ("erro 404") mesmo com o código correto.
+503/429 continuam no retry, e se o próprio padrão der 404 o erro sobe. 
+
+**A causa real do 404 em produção (e a lição):** a hipótese inicial (variável `GEMINI_MODEL` antiga na
+Vercel) estava **errada**: a variável estava correta. O log de produção dizia: *"models/gemini-flash-lite-latest
+is not found for API version **v1**"*. O `pyproject` pedia `google-genai>=1.0` sem teto; a Vercel instalou
+a 3.x, que passou a usar a API `v1` por padrão (a 2.x usava `v1beta`), e o apelido `-latest` só existe na
+`v1beta`. Em desenvolvimento, a 2.x funcionava: "na minha máquina funciona" por diferença de versão da
+dependência. Correção: `criar_cliente_gemini` fixa `api_version="v1beta"` em todos os clientes.
+**Lição:** o erro com o motivo na tela só dá o código; o texto completo estava no log (`vercel logs`).
+Diagnosticar com evidência antes de apontar causa.
 
 **Por que o modelo muda de nome:** o Google aposenta modelos (`gemini-2.5-flash-lite` e
 `gemini-2.0-flash-lite` já respondem 404 "no longer available"). O app usa o apelido

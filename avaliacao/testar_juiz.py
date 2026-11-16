@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from avaliar import com_novas_tentativas, julgar
 
 from lembra.config import get_settings
+from lembra.llm import criar_cliente_gemini
 from lembra.supabase import Trecho
 
 ALUGUEL = Trecho("Pago 1.800 reais de aluguel todo dia 5. O condomínio é 450 reais e vence no dia 10.", {}, 0.7)
@@ -43,10 +44,9 @@ CASOS = [
 
 
 def main():
-    from google import genai
 
     s = get_settings()
-    cliente = genai.Client(api_key=s.gemini_api_key)
+    cliente = criar_cliente_gemini(s.gemini_api_key)
     acertos = 0
     for desc, perg, esp, trechos, resp, c_esp, f_esp in CASOS:
         v = com_novas_tentativas(julgar, cliente, "gemini-flash-lite-latest", perg, esp, trechos, resp)

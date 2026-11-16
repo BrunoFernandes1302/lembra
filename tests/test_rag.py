@@ -218,3 +218,12 @@ def test_404_do_proprio_padrao_e_outros_erros_nao_sao_mascarados():
 
     with pytest.raises(_ErroHttp):  # 503 segue para o retry, não vira troca de modelo
         gerar_conteudo_gemini(Sobrecarga([]), "gemini-antigo", contents="x")
+
+
+def test_cliente_gemini_fixa_a_api_em_v1beta():
+    """O apelido -latest só existe na v1beta; o google-genai 3.x mudou o padrão para v1 (404 em produção)."""
+    from lembra.llm import criar_cliente_gemini
+
+    c = criar_cliente_gemini("chave-falsa", timeout_ms=10_000)
+    opcoes = c._api_client._http_options
+    assert opcoes.api_version == "v1beta" and opcoes.timeout == 10_000

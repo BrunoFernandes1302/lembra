@@ -48,7 +48,7 @@ from pydantic import BaseModel
 from lembra import rag
 from lembra.chunking import chunk_text
 from lembra.config import embedder_de, get_settings
-from lembra.llm import get_llm
+from lembra.llm import criar_cliente_gemini, get_llm
 from lembra.supabase import Trecho
 
 PASTA = Path(__file__).resolve().parent
@@ -217,9 +217,7 @@ def main():
     llm = None if a.so_busca else get_llm(s)
     juiz = None
     if not a.so_busca:
-        from google import genai
-
-        juiz = genai.Client(api_key=s.gemini_api_key)
+        juiz = criar_cliente_gemini(s.gemini_api_key)
 
     resultados = []
     parou_em = None  # se a API cair de vez, salva o que já foi feito em vez de perder a rodada

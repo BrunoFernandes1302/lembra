@@ -22,7 +22,7 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Protocol
 
 from .config import Settings
-from .llm import gerar_conteudo_gemini
+from .llm import criar_cliente_gemini, gerar_conteudo_gemini
 from .supabase import Trecho
 
 logger = logging.getLogger(__name__)
@@ -283,11 +283,10 @@ class MotorGemini:
     """Conversa com o Gemini guardando o histórico: pergunta, pedidos de ferramenta e resultados."""
 
     def __init__(self, s: Settings, sistema: str, pergunta: str):
-        from google import genai
         from google.genai import types
 
         self.types = types
-        self.client = genai.Client(api_key=s.gemini_api_key, http_options=types.HttpOptions(timeout=10_000))
+        self.client = criar_cliente_gemini(s.gemini_api_key, timeout_ms=10_000)
         self.modelo = s.gemini_model
         self.sistema = sistema
         self.historico = [types.Content(role="user", parts=[types.Part.from_text(text=pergunta)])]
