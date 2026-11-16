@@ -48,8 +48,10 @@ class ClaudeLLM:
 class GeminiLLM:
     def __init__(self, model: str, api_key: str):
         from google import genai
+        from google.genai import types
 
-        self.client = genai.Client(api_key=api_key)
+        # Sem timeout, uma chamada pendurada consome a função inteira; com ele, o retry tem limite.
+        self.client = genai.Client(api_key=api_key, http_options=types.HttpOptions(timeout=10_000))
         self.model = model
 
     def gerar(self, system: str, prompt: str) -> str:

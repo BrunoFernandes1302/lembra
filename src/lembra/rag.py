@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import logging
 import re
+import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import date
@@ -217,6 +218,47 @@ def reescrever_pergunta(pergunta: str, historico: list[dict], s: Settings) -> st
     return nova if 0 < len(nova) <= 500 else pergunta  # nunca confiar cegamente na saída do LLM
 
 
+# ---------------------------------------------------------------- falhas do LLM: tentar de novo e explicar
+ESPERAS_LLM = (1.0, 2.5)  # 3 tentativas no total
+ORCAMENTO_LLM = 12.0  # segundos: passou disso, não adianta esperar para tentar de novo
+CODIGOS_TEMPORARIOS = {429, 500, 502, 503, 504}
+
+
+def codigo_http(e: BaseException) -> int | None:
+    """Código HTTP do erro, nos dois SDKs (google-genai usa .code; anthropic, .status_code)."""
+    codigo = getattr(e, "code", None) or getattr(e, "status_code", None)
+    return codigo if isinstance(codigo, int) else None
+
+
+def gerar_com_novas_tentativas(llm, sistema: str, prompt: str, dormir=time.sleep, relogio=time.monotonic) -> str:
+    """O nível gratuito do Gemini às vezes responde 503 ("alta demanda") ou 429 (limite por minuto);
+    quase sempre passa na segunda tentativa. Erro que NÃO é temporário (chave inválida, modelo
+    aposentado) não adianta repetir: falha na hora."""
+    inicio = relogio()
+    for i in range(len(ESPERAS_LLM) + 1):
+        try:
+            return llm.gerar(sistema, prompt)
+        except Exception as e:
+            temporario = codigo_http(e) in CODIGOS_TEMPORARIOS or isinstance(e, (ConnectionError, TimeoutError))
+            if not temporario or i == len(ESPERAS_LLM) or relogio() - inicio + ESPERAS_LLM[i] > ORCAMENTO_LLM:
+                raise
+            logger.info("LLM temporariamente indisponível (%s); tentativa %s", codigo_http(e) or type(e).__name__, i + 2)
+            dormir(ESPERAS_LLM[i])
+    raise AssertionError("inalcançável")
+
+
+def motivo_da_falha(e: BaseException) -> str:
+    """Frase curta para o usuário: o que houve com a IA (sem o texto do erro, que pode ter detalhes internos)."""
+    codigo = codigo_http(e)
+    if codigo == 429:
+        return "atingiu o limite de uso"
+    if codigo in (500, 502, 503, 504):
+        return "está sobrecarregado no momento"
+    if codigo in (400, 401, 403, 404):
+        return f"recusou o pedido (erro {codigo}; pode ser a chave ou o modelo)"
+    return f"falhou ({type(e).__name__})"
+
+
 def perguntar(
     repo: Repositorio, pergunta: str, categoria: str | None = None, settings: Settings | None = None,
     historico: list[dict] | None = None,
@@ -244,12 +286,12 @@ def _responder(repo, pergunta: str, categoria: str | None, s: Settings, vetor) -
         return Resposta("Encontrei estas memórias relacionadas:",
                         filtrar_proximos_do_melhor(trechos, s.margem_relevancia))
     try:
-        texto = llm.gerar(prompt_do_sistema(s), montar_prompt(pergunta, trechos))
+        texto = gerar_com_novas_tentativas(llm, prompt_do_sistema(s), montar_prompt(pergunta, trechos))
     except Exception as e:  # noqa: BLE001 — limite diário, rede, chave inválida: não derruba o app
         logger.warning("LLM falhou (%s): %s", type(e).__name__, e)
         return Resposta(
-            "Não consegui gerar uma resposta agora (o serviço de IA está indisponível ou atingiu o "
-            "limite). Estas são as memórias que encontrei:",
+            f"Não consegui gerar a resposta agora (o serviço de IA {motivo_da_falha(e)}). "
+            "Tente de novo em instantes. Estas são as memórias que encontrei:",
             trechos,
         )
     return Resposta(texto, trechos, gerada_por_ia=True)

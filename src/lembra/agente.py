@@ -127,7 +127,7 @@ def _ler_data(texto: str) -> date:
     """Aceita dd/mm/aaaa e aaaa-mm-dd (formato comum dos LLMs); outro formato vira erro claro."""
     for formato in ("%d/%m/%Y", "%Y-%m-%d"):
         try:
-            return datetime.strptime(str(texto).strip(), formato).date()
+            return datetime.strptime(str(texto).strip(), formato).date()  # noqa: DTZ007 — só a data importa
         except ValueError:
             continue
     raise ValueError(f"data inválida: {texto!r} (use dd/mm/aaaa)")
