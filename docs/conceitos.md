@@ -657,7 +657,7 @@ Vercel) estava **errada**: a variável estava correta. O log de produção dizia
 is not found for API version **v1**"*. O `pyproject` pedia `google-genai>=1.0` sem teto; a Vercel instalou
 a 3.x, que passou a usar a API `v1` por padrão (a 2.x usava `v1beta`), e o apelido `-latest` só existe na
 `v1beta`. Em desenvolvimento, a 2.x funcionava: "na minha máquina funciona" por diferença de versão da
-dependência. Correção: `criar_cliente_gemini` fixa `api_version="v1beta"` em todos os clientes.
+dependência. Correção: `criar_cliente_gemini` fixa `api_version="v1beta"` em todos os clientes. O `pyproject` também ganhou teto de versão (`google-genai>=2.0,<4`).
 **Lição:** o erro com o motivo na tela só dá o código; o texto completo estava no log (`vercel logs`).
 Diagnosticar com evidência antes de apontar causa.
 
