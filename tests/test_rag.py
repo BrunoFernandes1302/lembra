@@ -123,3 +123,54 @@ def test_data_de_hoje_nao_depende_do_banco_de_fusos_do_sistema():
                        env={**os.environ, "PYTHONTZPATH": "/nao/existe"})
     assert r.returncode == 0, r.stderr[-400:]
     assert r.stdout.split() == [str(date.today().year), "True"]
+
+
+
+# ---------------------------------------------------------------- LLM instável: tentar de novo e explicar
+class _ErroHttp(Exception):
+    def __init__(self, code):
+        super().__init__(f"HTTP {code}")
+        self.code = code
+
+
+class _LLMInstavel:
+    def __init__(self, falhas):
+        self.falhas, self.chamadas = list(falhas), 0
+
+    def gerar(self, sistema, prompt):
+        self.chamadas += 1
+        if self.falhas:
+            raise self.falhas.pop(0)
+        return "Resposta."
+
+
+def test_sobrecarga_temporaria_passa_na_segunda_tentativa():
+    llm = _LLMInstavel([_ErroHttp(503)])
+    esperas = []
+    assert rag.gerar_com_novas_tentativas(llm, "s", "p", dormir=esperas.append) == "Resposta."
+    assert llm.chamadas == 2 and esperas == [1.0]
+
+
+def test_desiste_depois_de_tres_tentativas():
+    llm = _LLMInstavel([_ErroHttp(503)] * 5)
+    with pytest.raises(_ErroHttp):
+        rag.gerar_com_novas_tentativas(llm, "s", "p", dormir=lambda s: None)
+    assert llm.chamadas == 3
+
+
+def test_erro_que_nao_e_temporario_nao_e_repetido():
+    llm = _LLMInstavel([_ErroHttp(404)])  # modelo aposentado / chave inválida: repetir não adianta
+    with pytest.raises(_ErroHttp):
+        rag.gerar_com_novas_tentativas(llm, "s", "p", dormir=lambda s: None)
+    assert llm.chamadas == 1
+
+
+@pytest.mark.parametrize(("erro", "trecho"), [
+    (_ErroHttp(429), "limite de uso"),
+    (_ErroHttp(503), "sobrecarregado"),
+    (_ErroHttp(404), "erro 404"),
+    (KeyError("x"), "KeyError"),
+])
+def test_motivo_da_falha_explica_sem_vazar_o_texto_do_erro(erro, trecho):
+    frase = rag.motivo_da_falha(erro)
+    assert trecho in frase and "HTTP" not in frase

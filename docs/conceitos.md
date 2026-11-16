@@ -616,13 +616,38 @@ na tela ("supabase.co | 521: Web server is down"). **A causa:** o projeto gratui
   "O banco de dados está indisponível no momento", com **HTTP 503** (antes: HTML cru, ou 400).
 - Erro inesperado devolve o **tipo** do erro (`Erro interno do servidor (KeyError)`), não o texto
   (que pode ter segredo): a causa aparece na tela de quem testa.
-- **Ping diário** (`vercel.json` → cron → `GET /saude/banco`): uma consulta mínima ao banco por dia,
-  para o Supabase registrar atividade e não pausar. Também serve de *health check* (503 se o banco
-  estiver fora). Alternativa definitiva: plano pago (sem pausa).
+- **Ping diário** (`vercel.json` → cron → `GET /saude/banco`): uma consulta mínima ao banco por dia.
+  **Não funcionou como proteção:** o cron rodou nos dias 13, 14 e 15/11 (confirmado nos logs do
+  Supabase, sempre com resposta 200) e o projeto foi pausado de novo no dia 16. A documentação do
+  Supabase explica: ele pausa o projeto gratuito com pouca *atividade de usuário no banco* na semana
+  ("algumas requisições por dia" costumam bastar), e 1 consulta sem login não conta. O endpoint segue
+  útil como *health check* (503 se o banco estiver fora). Decisão do dono: **aceitar a pausa** e
+  reativar quando acontecer (a restauração leva de 30 a 40 minutos); a saída definitiva é o plano Pro.
+  **Lição:** eu havia afirmado que o ping evitaria a pausa sem ter evidência; só a observação (logs
+  + a pausa acontecendo mesmo assim) derrubou a hipótese. Medir antes de prometer.
 
 **Conceito geral:** *dependência externa que falha* precisa de três coisas: mensagem que o usuário
 entende, status HTTP que diz a verdade (503 = "o serviço de que dependo está fora", não 400 = "você
 errou") e algo que a mantenha viva ou avise (monitoramento).
+
+### 12.4 Dependência instável (LLM gratuito): tentar de novo e explicar
+
+**O sintoma:** com o banco já no ar, a pergunta trouxe as memórias, mas a resposta escrita falhou ("o
+serviço de IA está indisponível ou atingiu o limite"). O Gemini gratuito devolve de vez em quando **503**
+("alta demanda", temporário) ou **429** (limite por minuto), e o app desistia na primeira falha.
+
+**Retry com espera (*backoff*):** até 3 tentativas, esperando 1 s e 2,5 s, **só** para erros
+temporários (429, 500, 502, 503, 504, queda de conexão). Erro que repetir não resolve (chave inválida,
+modelo aposentado: 400, 401, 403, 404) falha na hora, sem gastar tempo nem cota. O total fica abaixo do
+tempo máximo da requisição.
+
+**Dizer o motivo:** a mensagem passa a explicar o que houve ("está sobrecarregado", "atingiu o limite de
+uso", "recusou o pedido (erro 404; pode ser a chave ou o modelo)"), com o código, **sem** o texto do
+erro (pode ter detalhes internos). Antes, as três causas viravam a mesma frase e ninguém sabia qual era.
+
+**Por que o modelo muda de nome:** o Google aposenta modelos (`gemini-2.5-flash-lite` e
+`gemini-2.0-flash-lite` já respondem 404 "no longer available"). O app usa o apelido
+`gemini-flash-lite-latest`, que o Google aponta para o modelo atual; nunca fixar o nome de um modelo.
 
 ## Desempenho: medir antes de otimizar
 
