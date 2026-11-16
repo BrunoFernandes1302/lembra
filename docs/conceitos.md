@@ -638,8 +638,10 @@ serviço de IA está indisponível ou atingiu o limite"). O Gemini gratuito devo
 
 **Retry com espera (*backoff*):** até 3 tentativas, esperando 1 s e 2,5 s, **só** para erros
 temporários (429, 500, 502, 503, 504, queda de conexão). Erro que repetir não resolve (chave inválida,
-modelo aposentado: 400, 401, 403, 404) falha na hora, sem gastar tempo nem cota. O total fica abaixo do
-tempo máximo da requisição.
+modelo aposentado: 400, 401, 403, 404) falha na hora, sem gastar tempo nem cota. O tempo é limitado por dois
+mecanismos: *timeout* de 10 s em cada chamada ao Gemini e um orçamento total de 12 s para o retry
+(se a próxima espera estourar o orçamento, o erro é devolvido na hora). Sem timeout, uma chamada
+pendurada consumiria a função inteira e o retry só pioraria.
 
 **Dizer o motivo:** a mensagem passa a explicar o que houve ("está sobrecarregado", "atingiu o limite de
 uso", "recusou o pedido (erro 404; pode ser a chave ou o modelo)"), com o código, **sem** o texto do

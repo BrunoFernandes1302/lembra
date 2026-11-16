@@ -122,7 +122,7 @@ def test_data_de_hoje_nao_depende_do_banco_de_fusos_do_sistema():
     r = subprocess.run([sys.executable, "-c", codigo], check=False, capture_output=True, text=True,
                        env={**os.environ, "PYTHONTZPATH": "/nao/existe"})
     assert r.returncode == 0, r.stderr[-400:]
-    assert r.stdout.split() == [str(date.today().year), "True"]
+    assert r.stdout.split() == [str(date.today().year), "True"]  # noqa: DTZ011 — o subprocesso usa a mesma data local
 
 
 
@@ -174,3 +174,11 @@ def test_erro_que_nao_e_temporario_nao_e_repetido():
 def test_motivo_da_falha_explica_sem_vazar_o_texto_do_erro(erro, trecho):
     frase = rag.motivo_da_falha(erro)
     assert trecho in frase and "HTTP" not in frase
+
+
+def test_orcamento_de_tempo_interrompe_o_retry():
+    llm = _LLMInstavel([_ErroHttp(503)] * 5)
+    horas = iter([0.0, 11.5])  # a 2ª leitura já está perto do limite: a próxima espera estouraria
+    with pytest.raises(_ErroHttp):
+        rag.gerar_com_novas_tentativas(llm, "s", "p", dormir=lambda s: None, relogio=lambda: next(horas))
+    assert llm.chamadas == 1

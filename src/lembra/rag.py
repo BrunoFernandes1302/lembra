@@ -219,7 +219,8 @@ def reescrever_pergunta(pergunta: str, historico: list[dict], s: Settings) -> st
 
 
 # ---------------------------------------------------------------- falhas do LLM: tentar de novo e explicar
-ESPERAS_LLM = (1.0, 2.5)  # 3 tentativas no total; a conta fica abaixo do tempo máximo da requisição
+ESPERAS_LLM = (1.0, 2.5)  # 3 tentativas no total
+ORCAMENTO_LLM = 12.0  # segundos: passou disso, não adianta esperar para tentar de novo
 CODIGOS_TEMPORARIOS = {429, 500, 502, 503, 504}
 
 
@@ -229,16 +230,17 @@ def codigo_http(e: BaseException) -> int | None:
     return codigo if isinstance(codigo, int) else None
 
 
-def gerar_com_novas_tentativas(llm, sistema: str, prompt: str, dormir=time.sleep) -> str:
+def gerar_com_novas_tentativas(llm, sistema: str, prompt: str, dormir=time.sleep, relogio=time.monotonic) -> str:
     """O nível gratuito do Gemini às vezes responde 503 ("alta demanda") ou 429 (limite por minuto);
     quase sempre passa na segunda tentativa. Erro que NÃO é temporário (chave inválida, modelo
     aposentado) não adianta repetir: falha na hora."""
+    inicio = relogio()
     for i in range(len(ESPERAS_LLM) + 1):
         try:
             return llm.gerar(sistema, prompt)
         except Exception as e:
             temporario = codigo_http(e) in CODIGOS_TEMPORARIOS or isinstance(e, (ConnectionError, TimeoutError))
-            if not temporario or i == len(ESPERAS_LLM):
+            if not temporario or i == len(ESPERAS_LLM) or relogio() - inicio + ESPERAS_LLM[i] > ORCAMENTO_LLM:
                 raise
             logger.info("LLM temporariamente indisponível (%s); tentativa %s", codigo_http(e) or type(e).__name__, i + 2)
             dormir(ESPERAS_LLM[i])

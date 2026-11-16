@@ -198,7 +198,7 @@ def main():
     conjunto = json.loads((PASTA / a.conjunto).read_text(encoding="utf-8"))
     # Data de referência FIXA do conjunto: perguntas como "qual a PRÓXIMA consulta?" dependem de hoje.
     # Com a data real, a resposta certa mudaria com o calendário e as rodadas deixariam de ser comparáveis.
-    hoje = datetime.strptime(conjunto["hoje"], "%d/%m/%Y").date() if conjunto.get("hoje") else None
+    hoje = datetime.strptime(conjunto["hoje"], "%d/%m/%Y").date() if conjunto.get("hoje") else None  # noqa: DTZ007 — só a data importa
     print(f"Rodada '{a.rotulo}': chunk={s.chunk_size} sobreposição={s.chunk_overlap} top_k={s.top_k} "
           f"embeddings={s.embedding_model} llm={s.gemini_model} juiz={a.modelo_juiz} "
           f"prompt={versao_prompt}{' (' + a.prompt + ')' if a.prompt else ''} repetições={a.repeticoes}\n")
@@ -297,9 +297,9 @@ def main():
 
     saida = PASTA / "resultados"
     saida.mkdir(exist_ok=True)
-    arquivo = saida / f"{datetime.now():%Y%m%d-%H%M%S}_{a.rotulo}.json"
+    arquivo = saida / f"{datetime.now().astimezone():%Y%m%d-%H%M%S}_{a.rotulo}.json"
     arquivo.write_text(json.dumps({
-        "rotulo": a.rotulo, "quando": datetime.now().isoformat(timespec="seconds"),
+        "rotulo": a.rotulo, "quando": datetime.now().astimezone().isoformat(timespec="seconds"),
         "config": {"chunk_size": s.chunk_size, "chunk_overlap": s.chunk_overlap, "top_k": s.top_k,
                    "embeddings": s.embedding_model, "llm": None if a.so_busca else s.gemini_model,
                    "juiz": None if a.so_busca else a.modelo_juiz, "chunks_indexados": len(todos),

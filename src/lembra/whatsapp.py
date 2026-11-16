@@ -77,7 +77,7 @@ def _data(data: str, hora: str, ampm: str | None = None, mes_primeiro: bool = Fa
     if ampm:  # relógio de 12 h: 12 AM = 0 h; 1-11 PM = 13-23 h
         h = h % 12 + (12 if ampm.lower() == "p" else 0)
     try:
-        return datetime(int(a), int(m), int(d), h, minuto)
+        return datetime(int(a), int(m), int(d), h, minuto)  # noqa: DTZ001 — hora local do celular, sem fuso (o export não traz)
     except ValueError:
         return None
 
